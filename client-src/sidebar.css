@@ -1,0 +1,83 @@
+[data-tanuki-shell]{grid-template-columns:var(--tanuki-shell-columns)!important;--dsh-windows-sidebar-width:var(--tanuki-left-width)!important;--tanuki-workspace-header-height:40px;--tanuki-workspace-toggle-height:28px;--tanuki-pane-duration:220ms;--tanuki-pane-ease:cubic-bezier(.22,1,.36,1);}
+[data-tanuki-shell][data-tanuki-workspace]{transition:grid-template-columns var(--tanuki-pane-duration) var(--tanuki-pane-ease)!important;}
+[data-tanuki-shell][data-dragging]{transition:none!important;}
+[data-tanuki-sidebar-col]{position:relative;}
+/* Electron preload writes data-platform from process.platform (not browser UA).
+   Replacing native topStrip/logoRow removes macOS clearance and its drag region.
+   Reserve a full-width chrome row: a closed 52px rail is narrower than the lights.
+   Mirror the native Windows frame layout, but only for desktop macOS; reuse the
+   native 48px clearance token. Removing this component's style restores the shell. */
+html[data-platform="darwin"] [data-tanuki-shell]{--tanuki-mac-chrome-height:var(--dsh-frame-top-clearance,48px);box-sizing:border-box;padding-top:var(--tanuki-mac-chrome-height);grid-template-rows:minmax(0,1fr);}
+html[data-platform="darwin"][data-fullscreen] [data-tanuki-shell]{--tanuki-mac-chrome-height:0px;}
+html[data-platform="darwin"] [data-tanuki-shell]::before{content:"";position:absolute;inset:0 0 auto;z-index:14;height:var(--tanuki-mac-chrome-height);background:var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base,#181818));-webkit-app-region:drag;}
+html[data-platform="darwin"] [data-tanuki-sidebar-col] :is(button,a,input,select,textarea,[role="button"],[role="menuitem"]){-webkit-app-region:no-drag;}
+/* Native titlebar uses this same sidebar-fill token. The inset divider cannot resize the frame. */
+[data-windows-titlebar] [data-tanuki-shell]::before{box-shadow:inset 0 -1px 0 var(--dsw-alias-border-l3,rgba(128,128,128,.22));}
+[data-tanuki-sidebar-col]{background:var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base,#181818))!important;}
+[data-tanuki-sidebar-root]{position:relative;width:var(--tanuki-workspace-width,280px)!important;margin-left:52px;box-sizing:border-box;padding:44px 10px 8px!important;background:var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base,#181818))!important;border-right:1px solid var(--dsw-alias-border-base,rgba(128,128,128,.16));opacity:1;visibility:visible;transition:opacity var(--tanuki-pane-duration) var(--tanuki-pane-ease),visibility 0s;}
+/* Non-workspace main panels retain only the 52px icon rail. Keep the native
+   subtree mounted for settings/account actions; modals never change this mode. */
+/* Keep content width stable while the parent grid clips it; do not squeeze rows.
+   Delay visibility only for painting. The workspace slot is inert immediately. */
+[data-tanuki-shell][data-tanuki-workspace="closed"] [data-tanuki-sidebar-root]{opacity:0;visibility:hidden;pointer-events:none;transition:opacity var(--tanuki-pane-duration) var(--tanuki-pane-ease),visibility 0s var(--tanuki-pane-duration);}
+/* Keep React-owned controls and picker anchors in place; only their visual header moves.
+   Native dependencies: sidebar.workspaces + WorkspaceBrowser sectionHeader/sectionLabel,
+   searchSlot/headerActions, SidebarRoot regionArea. No generated hash or localized label. */
+[data-tanuki-sidebar-root] > [class*="_regionArea"],
+[data-tanuki-sidebar-root] [data-slot="sidebar.workspaces"],
+[data-tanuki-sidebar-root] [data-slot="sidebar.workspaces"] > [class*="_root"]{position:static;}
+[data-tanuki-sidebar-root] [data-slot="sidebar.workspaces"] [class*="_sectionHeader"]{position:absolute;top:0;left:10px;right:10px;height:var(--tanuki-workspace-header-height);margin:0!important;padding:0 0 0 74px;overflow:visible;z-index:13;-webkit-app-region:no-drag;}
+[data-tanuki-sidebar-root] [data-slot="sidebar.workspaces"] [class*="_sectionLabel"]{display:none!important;}
+[data-tanuki-sidebar-root] [class*="_headerActions"]:has(>[data-tanuki-workspace-toggle-host]):not([class*="_headerActionsHidden"]){max-width:92px;}
+[data-tanuki-workspace-toggle-host]{display:inline-flex;align-items:center;flex:none;}
+[data-tanuki-workspace-toggle-host]:empty{display:none;}
+.tanuki-workspace-collapse{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:var(--tanuki-workspace-toggle-height);padding:0;border:0;border-radius:var(--dsw-radius-sm,6px);background:transparent;color:var(--dsw-alias-label-secondary,inherit);cursor:pointer;-webkit-app-region:no-drag;}
+.tanuki-workspace-collapse svg{width:16px;height:16px;}
+.tanuki-workspace-collapse:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(128,128,128,.12));}
+.tanuki-workspace-collapse:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#4d90fe);outline-offset:-2px;}
+[data-tanuki-shell] > :has(>[data-tanuki-conversation-expand-host]){position:relative;}
+/* Match the 28px collapse control centered in the 40px workspace header.
+   The narrow floating tab stays inside the native title's 20px left gutter. */
+[data-tanuki-conversation-expand-host]{position:absolute;top:calc((var(--tanuki-workspace-header-height) - var(--tanuki-workspace-toggle-height))/2);left:0;z-index:16;display:flex;pointer-events:none;-webkit-app-region:no-drag;}
+[data-tanuki-conversation-expand-host]:empty{display:none;}
+.tanuki-workspace-expand{width:18px;border:0;border-radius:0 6px 6px 0;background:#1b1b1c;color:var(--dsw-alias-label-secondary,inherit);opacity:0;transform:translateX(-6px);visibility:hidden;pointer-events:none;transition:background-color .15s,color .15s,opacity var(--tanuki-pane-duration) var(--tanuki-pane-ease),transform var(--tanuki-pane-duration) var(--tanuki-pane-ease),visibility 0s var(--tanuki-pane-duration);}
+.tanuki-workspace-expand[data-visible="true"]{opacity:1;transform:translateX(0);visibility:visible;pointer-events:auto;transition-delay:0s;}
+.tanuki-workspace-expand svg{width:12px;height:16px;}
+.tanuki-workspace-expand:hover{background:#2d2d2e;color:var(--dsw-alias-label-primary,inherit);}
+@media(prefers-reduced-motion:reduce){[data-tanuki-shell]{--tanuki-pane-duration:0ms;}.tanuki-workspace-expand{transition:none;}}
+[data-tanuki-sidebar-root] [data-slot="sidebar.workspaces"] [class*="_sectionHeader"]:has(button[aria-expanded="true"][class*="_searchButton"]){padding-left:0;}
+[data-tanuki-sidebar-col]:has([data-slot="sidebar.workspaces"] button[aria-expanded="true"][class*="_searchButton"]) .tanuki-workspace-heading{visibility:hidden;}
+[data-tanuki-sidebar-root] > [class*="_topStrip"],
+[data-tanuki-sidebar-root] > [class*="_logoRow"],
+[data-tanuki-sidebar-root] [class*="_newSession"],
+[data-tanuki-sidebar-root] > [class*="_panelList"],
+[data-tanuki-sidebar-root] > [class*="_footArea"]{display:none!important;}
+/* The native handle writes sidebar=0 below its threshold. Remove this collapse entry,
+   including keyboard focus, rather than fighting React's drag state or reparenting it. */
+[data-tanuki-shell] > [data-side="sidebar"]{display:none!important;}
+[data-tanuki-rail-host]{position:absolute;inset:0;pointer-events:none;z-index:12;}
+[data-tanuki-sidebar-root][data-tanuki-settings-anchor] > [class*="_footArea"]{display:flex!important;position:fixed;left:7px;bottom:54px;width:38px;min-width:38px;visibility:hidden!important;}
+[data-tanuki-settings-anchor] [class*="_footerActions"]{display:none!important;}
+.tanuki-rail{position:absolute;inset:0 auto 0 0;width:52px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;box-sizing:border-box;pointer-events:auto;border-right:1px solid var(--dsw-alias-border-base,rgba(128,128,128,.16));background:var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base,#181818));color:var(--dsw-alias-text-primary,inherit);-webkit-app-region:no-drag;}
+.tanuki-rail-button{position:relative;display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 38px;padding:7px;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer;opacity:.72;-webkit-app-region:no-drag;}
+.tanuki-rail-button:hover{opacity:1;background:var(--dsw-alias-bg-hover,rgba(128,128,128,.12));}
+.tanuki-rail-button[aria-current="page"],.tanuki-rail-button[aria-pressed="true"]{opacity:1;background:var(--dsw-alias-bg-active,rgba(128,128,128,.18));}
+.tanuki-rail-button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#4d90fe);outline-offset:2px;}
+.tanuki-rail-button:disabled{opacity:.35;cursor:wait;}
+.tanuki-rail-home{margin-bottom:10px;color:var(--dsw-alias-brand-primary,#4d90fe);opacity:1;}
+.tanuki-rail-spacer{flex:1;min-height:16px;}
+.tanuki-rail-button svg{width:24px;height:24px;flex-shrink:0;}
+.tanuki-restart-hold{touch-action:none;user-select:none;-webkit-user-select:none;}
+.tanuki-rail-button .tanuki-restart-ring{position:absolute;left:-1px;top:-1px;width:40px;height:40px;pointer-events:none;color:var(--dsw-alias-brand-primary,#4d90fe);}
+.tanuki-restart-hold:disabled{opacity:.75;}
+.tanuki-workspace-heading{position:absolute;left:52px;width:var(--tanuki-workspace-width,280px);top:0;height:var(--tanuki-workspace-header-height);display:flex;align-items:center;justify-content:space-between;padding:0 12px;box-sizing:border-box;pointer-events:none;font-size:13px;font-weight:600;color:var(--dsw-alias-text-primary,inherit);opacity:1;visibility:visible;transition:opacity var(--tanuki-pane-duration) var(--tanuki-pane-ease),visibility 0s;-webkit-app-region:no-drag;}
+[data-tanuki-shell][data-tanuki-workspace="closed"] .tanuki-workspace-heading{opacity:0;visibility:hidden;transition:opacity var(--tanuki-pane-duration) var(--tanuki-pane-ease),visibility 0s var(--tanuki-pane-duration);}
+.tanuki-rail-menu{position:fixed;z-index:1100;display:flex;flex-direction:column;gap:3px;box-sizing:border-box;width:250px;max-width:calc(100vw - 8px);max-height:calc(100vh - 8px);overflow-y:auto;padding:6px;border:1px solid var(--dsw-alias-border-base,rgba(128,128,128,.24));border-radius:12px;background:var(--dsw-alias-bg-layer-2,#252525);color:var(--dsw-alias-label-primary,inherit);box-shadow:0 8px 32px rgba(0,0,0,.25);pointer-events:auto;-webkit-app-region:no-drag;}
+.tanuki-rail-menu-item{display:flex;align-items:center;gap:10px;flex:none;min-height:38px;width:100%;box-sizing:border-box;padding:7px 9px;border:0;border-radius:7px;background:transparent;color:inherit;text-align:left;font:inherit;font-size:13px;cursor:pointer;}
+.tanuki-rail-menu-item>svg{width:20px;height:20px;flex:none;}
+.tanuki-rail-menu-label{flex:1;}
+.tanuki-rail-menu-status{min-width:16px;text-align:right;font-size:11px;opacity:.65;}
+.tanuki-rail-menu-item[aria-disabled="true"]{cursor:default;}
+.tanuki-rail-menu-item:not([aria-disabled="true"]):hover{background:var(--dsw-alias-bg-hover,rgba(128,128,128,.12));}
+.tanuki-rail-menu-item:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#4d90fe);outline-offset:-2px;}
+@media(max-height:400px){.tanuki-rail{gap:2px;padding-top:4px;padding-bottom:4px;overflow-y:auto;}.tanuki-rail-home{margin-bottom:2px;}.tanuki-rail-spacer{min-height:4px;}}

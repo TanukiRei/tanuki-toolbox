@@ -1,0 +1,86 @@
+{
+  "name": "dsh-local-plugin-center",
+  "version": "0.5.24",
+  "private": true,
+  "type": "module",
+  "description": "A growing collection of small components that make DeepSeek Harness easier to use.",
+  "icon": "./assets/toolbox.png",
+  "main": "./index.js",
+  "license": "MIT",
+  "dependencies": {
+    "undici": "^7.29.1"
+  },
+  "engines": {
+    "dsh": ">=0.2.0-rc.2 <0.3.0"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./plugin-center": "./components/plugin-center/index.js",
+    "./plugin-center/package.json": "./components/plugin-center/package.json",
+    "./plugin-center/locale/*.json": "./components/plugin-center/locale/*.json",
+    "./startup-guard": "./components/startup-guard/index.js",
+    "./startup-guard/package.json": "./components/startup-guard/package.json",
+    "./startup-guard/locale/*.json": "./components/startup-guard/locale/*.json",
+    "./sidebar": "./components/sidebar/index.js",
+    "./sidebar/package.json": "./components/sidebar/package.json",
+    "./sidebar/locale/*.json": "./components/sidebar/locale/*.json",
+    "./home": "./components/home/index.js",
+    "./home/package.json": "./components/home/package.json",
+    "./home/locale/*.json": "./components/home/locale/*.json",
+    "./dynamic-island": "./components/dynamic-island/index.js",
+    "./dynamic-island/package.json": "./components/dynamic-island/package.json",
+    "./dynamic-island/locale/*.json": "./components/dynamic-island/locale/*.json"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "assets",
+    "locale",
+    "components",
+    "lib",
+    "launcher",
+    "README.txt",
+    "client.template.js",
+    "VERSIONING.txt",
+    "NOTIFICATIONS.txt",
+    "recommendations.json",
+    "client-src",
+    "client-chunks",
+    "LIFECYCLE.txt",
+    "README.md",
+    "LICENSE",
+    "scripts"
+  ],
+  "tanuki": {
+    "versionScheme": 1
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanukiRei/tanuki-toolbox.git"
+  },
+  "homepage": "https://github.com/TanukiRei/tanuki-toolbox#readme",
+  "bugs": {
+    "url": "https://github.com/TanukiRei/tanuki-toolbox/issues"
+  },
+  "author": "TanukiRei",
+  "scripts": {
+    "build": "node scripts/build.cjs"
+  }
+}

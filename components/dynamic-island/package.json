@@ -1,0 +1,7 @@
+{
+  "name": "tanuki-dynamic-island",
+  "version": "0.5.24",
+  "type": "module",
+  "description": "Message delivery and visual notifications for DSH.",
+  "icon": "./icon.svg"
+}

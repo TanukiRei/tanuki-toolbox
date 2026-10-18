@@ -1,0 +1,4 @@
+{
+  "zh":{"done":"已完成","action":"需要操作","error":"出错","running":"进行中"},
+  "en":{"done":"Completed","action":"Action needed","error":"Error","running":"In progress"}
+}

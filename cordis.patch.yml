@@ -1,0 +1,13 @@
+- insert:
+    - id: tanuki-startup-guard
+      name: dsh-local-plugin-center/startup-guard
+    - id: tanuki-plugin-center
+      name: dsh-local-plugin-center/plugin-center
+    - id: tanuki-home
+      name: dsh-local-plugin-center/home
+    - id: tanuki-dynamic-island
+      name: dsh-local-plugin-center/dynamic-island
+    - id: tanuki-sidebar
+      name: dsh-local-plugin-center/sidebar
+    # An anonymous core belongs to the bundle lifecycle and has no component toggle.
+    - name: dsh-local-plugin-center

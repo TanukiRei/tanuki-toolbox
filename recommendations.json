@@ -1,0 +1,74 @@
+[
+  {
+    "repository": "https://github.com/dsh-market/dsh-market",
+    "packageName": "dshmarket",
+    "title": {
+      "zh": "插件市场",
+      "en": "dshmarket"
+    },
+    "description": {
+      "zh": "逛一逛，点一下，装好。",
+      "en": "Visual plugin market inside DeepSeek Harness — browse, search, and one-click install community plugins. · DSH 可视化插件市场：逛一逛，点一下，装好。"
+    }
+  },
+  {
+    "repository": "https://github.com/liustack/modlens",
+    "packageName": "@liustack/modlens",
+    "title": {
+      "zh": "@liustack/modlens",
+      "en": "@liustack/modlens"
+    },
+    "description": {
+      "zh": "Plug-in vision for text-only LLMs, powered by the free Antigravity CLI",
+      "en": "Plug-in vision for text-only LLMs, powered by the free Antigravity CLI"
+    }
+  },
+  {
+    "repository": "https://github.com/MichengAI/dsh-skills-manager",
+    "packageName": "@michengai/dsh-skills-manager",
+    "title": {
+      "zh": "Skills Manager",
+      "en": "Skills Manager"
+    },
+    "description": {
+      "zh": "统一加载并安全管理本机 Agent Skills。",
+      "en": "Load and safely manage local Agent Skills."
+    }
+  },
+  {
+    "repository": "https://github.com/omdsh-dev/DSH-better-sidebar",
+    "packageName": "dsh-better-sidebar",
+    "title": {
+      "zh": "Better Sidebar",
+      "en": "Better Sidebar"
+    },
+    "description": {
+      "zh": "更好用的右侧边栏——文件树、编辑器、文件变动、任务和侧边对话都收在这一栏里，每个会话互不干扰。",
+      "en": "A better right sidebar — file tree, editor, changes, tasks and side chat in one column, separate for every conversation."
+    }
+  },
+  {
+    "repository": "https://github.com/WSL043/dsh-codex-subscription",
+    "packageName": "dsh-codex-subscription",
+    "title": {
+      "zh": "Codex 订阅",
+      "en": "Codex Subscription"
+    },
+    "description": {
+      "zh": "在 DSH 中使用 ChatGPT / Codex 订阅。登录即可选模型、查额度、搜索和生图，无需 API Key。还能用 ChatGPT 手机 App 远程控制 DSH（Beta）。",
+      "en": "Use your ChatGPT / Codex subscription in DSH. Sign in to access models, track quota, search the web and generate images. No API key required. Beta: control DSH from the ChatGPT mobile app."
+    }
+  },
+  {
+    "repository": "https://github.com/DDDMUC/dsh-free-search",
+    "packageName": "dsh-free-search",
+    "title": {
+      "zh": "dsh-free-search",
+      "en": "dsh-free-search"
+    },
+    "description": {
+      "zh": "Free web search for DeepSeek Harness: 27 engines (Bing/DuckDuckGo/AnySearch/SearXNG/Exa/Tavily/Keenable/Firecrawl/Parallel keyless; Zhihu global/site via MCP and Perplexity/SerpBase/DeepSeek (official + native tools/search)/You.com/Baidu/Kimi/Aliyun/Doubao with key; OpenAI/Gemini/Claude model built-in search, explicit-only) + auto smart routing + global engine enable/disable & fallback priority + editable zh/en language pools + multi mode (parallel full language-pool merge) + multi_search cross-source tool + failure-aware fallback (quota/auth cooldown, transient retry, fallbackOn) + time filtering + platform search + domain blocklist (blockedDomains) + web_fetch, with web settings UI.",
+      "en": "Free web search for DeepSeek Harness: 27 engines (Bing/DuckDuckGo/AnySearch/SearXNG/Exa/Tavily/Keenable/Firecrawl/Parallel keyless; Zhihu global/site via MCP and Perplexity/SerpBase/DeepSeek (official + native tools/search)/You.com/Baidu/Kimi/Aliyun/Doubao with key; OpenAI/Gemini/Claude model built-in search, explicit-only) + auto smart routing + global engine enable/disable & fallback priority + editable zh/en language pools + multi mode (parallel full language-pool merge) + multi_search cross-source tool + failure-aware fallback (quota/auth cooldown, transient retry, fallbackOn) + time filtering + platform search + domain blocklist (blockedDomains) + web_fetch, with web settings UI."
+    }
+  }
+]

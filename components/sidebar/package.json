@@ -1,0 +1,7 @@
+{
+  "name": "tanuki-sidebar",
+  "version": "0.5.24",
+  "type": "module",
+  "description": "Quick navigation to Home, New session and Workspace, plus Plugins, Settings and Restart.",
+  "icon": "./icon.svg"
+}

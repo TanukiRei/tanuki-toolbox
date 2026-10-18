@@ -1,0 +1,21 @@
+黎猫工具箱 / Tanuki Toolbox — 版本规则 / Version policy
+
+当前编号从 0.2.0 开始，替代旧开发版的 2.0.x / 2.1.x 编号。
+The current numbering starts at 0.2.0, replacing the former development numbering.
+
+用户于 2026-10-18 再次明确：小修改、修复和界面调整只将第三组数字加 1，例如 0.5.15 → 0.5.16。
+Small changes, fixes and UI adjustments: increment the last number only.
+
+新增组件：第二组数字加 1，同时将第三组数字清零，例如 0.5.15 → 0.6.0；之后的小修改继续为 0.6.1、0.6.2。
+New components: increment the middle number and reset the last number to zero.
+
+第一位只有插件所有者明确允许后才能修改，不得自行提升。
+Change the first number only with explicit permission from the plugin owner.
+
+插件本体及组件保持同一版本；同一交付中的多项修改只计一次版本。
+Keep package and component versions aligned; bump once per release.
+
+package.json 的 tanuki.versionScheme: 1 标记新编号体系。
+一键安装器可将已知旧开发版迁移到新编号；新编号内部仍禁止自动降级。
+tanuki.versionScheme: 1 identifies this numbering scheme. The installer migrates
+known former development versions and preserves newer versions within this scheme.

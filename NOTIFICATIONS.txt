@@ -1,0 +1,45 @@
+消息中心 / Message Center — 全局消息与状态接口（0.5.4）
+
+消息中心启用后，以灵动岛展示消息。关闭时不收集待显示通知，不启动提示音或全局气泡。消息为运行期记录，不写入聊天历史、不调用模型。
+通知类别：plugins（插件变化及已检测更新）、tasks（任务完成/失败/需输入）、updates（DSH本体更新）。分类勾选只过滤提醒，不过滤单独开启的全局气泡。
+窗口可见且拥有焦点时只显示灵动岛；否则在标准Notification API已授权时额外尝试系统通知。设置页面提供明确用户点击的授权入口；没有桌面通知私有桥接、服务工作线程或远程推送服务，不承诺iOS网页关闭后的推送。
+
+浏览器消息：
+window.dispatchEvent(new CustomEvent('tanuki:notify', {detail: {
+  id: 'your-component:operation-unique-id',
+  category: 'plugins',
+  kind: 'plugin.available',
+  title: {zh: '插件有新更新', en: 'Plugin update available'},
+  message: {zh: '发现可用更新。', en: 'An update is available.'}
+}}));
+
+Host消息：
+ctx.emit('tanuki/global-message', {
+  id: 'your-component:operation-unique-id',
+  kind: 'error',
+  title: {zh: '操作失败', en: 'Operation failed'},
+  message: {zh: '请查看错误信息。', en: 'Please review the error.'}
+});
+
+kind以plugin./task./dsh.update开头时可推导分类；其他一般消息保留统一入口。id应标识真实操作，重复id去重。正文使用纯文本双语对象，不传HTML。kind:error显示警告，不用成功勾冒充成功。
+浏览器刷新不重播已消费的Host消息；关闭后不积攒消息。短时Host热重载可能保留尚未消费的有界记录，显式关闭清理。
+GET /tanuki-toolbox/notifications复用DSH连接授权，没有未鉴权外部消息写入接口。
+
+全局气泡（内部全量快照，不是提醒消息）：
+window.dispatchEvent(new CustomEvent('tanuki:bubble-state', {detail:{
+  source:'plugin-center',
+  items:[{id:'update:package-name',target:'plugins',packageName:'package-name',state:'action',count:1}]
+}}));
+- source当前仅notifications及plugin-center；每次items替换该source全部状态，空数组清除。
+- state:done绿、action黄、error红、running蓝。任务target:workspace并带sessionId；插件target:plugins并尽可能带packageName。
+- 发布方监听tanuki:bubble-request重播当前快照；不得把快照重播当成新的通知。
+- 同一项使用稳定id，不能每次刷新累计。任务已读及状态清除由权威状态源处理，装饰层不猜测任务状态。
+- 全局气泡单独懒加载，不发网络请求。最多三种颜色；同时四种时整泡隐藏，总数>1才显示数字，蓝圈循环增长并遵守减少动态效果设置。
+- 插件中心关闭后不保留它的状态、扫描器或更新提醒入口。原生尚无已核实的通用可更新数量接口，不能发现任意第三方插件没有暴露的更新。
+
+提示音：默认Web Audio本地合成，默认音量50。明确用户拖动结束后可试听；保存音量单独提交。恢复默认同时原子保存audio:null及volume:50，分类/气泡设置不变。自定义MP3/WAV/OGG最大5MiB，上传前解码验证。自动播放受限时不补播旧消息。设置试听资源与通知运行资源独立清理。
+
+实现：lib/notifications.cjs（Host），lib/island-client.cjs（通知队列），client-src/dynamic-island.template.js（平台状态与子功能生命周期），lib/audio-preview-client.cjs（共享音频工厂），client-src/global-bubbles.template.js及lib/global-bubbles-client.cjs（气泡）。
+新版本仅静态检查和必要构建；历史测试不代表这些新增通知/气泡/系统权限行为已通过功能或跨平台验收。
+
+0.5.17: plugin-center 源新增 plugin-updates 目标，供更新全部按钮使用。按可执行更新去重计数，复用全局气泡开关、状态颜色、优先级与数字规则；不计入 plugins 目标，避免侧栏重复计数。
