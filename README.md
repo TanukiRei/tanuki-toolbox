@@ -26,11 +26,12 @@ The package name remains `dsh-local-plugin-center` for in-place upgrades. Instal
 
 | 组件 | 功能 |
 | --- | --- |
-| 插件中心 · Plugin Center | 左侧直达插件管理，官方与第三方分类，更新提示、自定义名称及推荐插件。启用可选的 [插件市场](https://github.com/dsh-market/dsh-market) 后增加市场页和更新功能。 |
-| 消息中心 · Message Center | 顶部全局消息、通知分类、系统通知、提示音和气泡提示。 |
-| 快捷侧栏 · Sidebar | 集中导航、自动化任务入口、可收起工作区，以及工具箱设置入口。 |
-| 起始页 · Home | 提供独立主页入口。 |
-| 启动保护 · Startup Guard | 在保护启动入口启动 DSH 前检测明确声明的版本不兼容，并停用相应第三方插件。Windows 上可接管和还原识别到的快捷方式。 |
+| 启动保护 · Startup Guard | 启动前检测并停用会导致闪退的第三方插件。 |
+| 快捷栏 · Quick Bar | 将常用功能集成到可编辑的左侧快捷栏。 |
+| 起始页 · Start Page | 增加一页起始页面，提供多种有效信息。 |
+| 对话框优化 · Composer Enhancements | 优化对话框页面的各种排布和功能显示。 |
+| 消息中心 · Message Center | 增加消息推送功能。 |
+| 插件中心 · Plugin Center | 重新排列插件页面，优化显示方式，兼容「插件市场」。 |
 
 组件按需加载；关闭组件不会在冷启动时预载该组件的功能代码。已加载模块可能仍保留在引擎缓存中，详见 [生命周期说明](LIFECYCLE.txt)。界面随 DSH 切换中文和英文。
 
@@ -38,9 +39,9 @@ Features load on demand, and disabled features are not preloaded on a cold start
 
 ## 更新 / Updates
 
-安装并启用「插件市场」后，可以在插件中心查看仓库发布的更新并点击更新。每次交付同步到 `main`，同时保留版本标签和 `.tgz` 发布包；版本规则见 [VERSIONING.txt](VERSIONING.txt)。不会后台静默安装更新。
+安装并启用「插件市场」后，可以在插件中心查看仓库发布的更新并点击更新。经所有者明确要求发布后，才同步到 `main`，并保留版本标签和 `.tgz` 发布包；版本规则见 [VERSIONING.txt](VERSIONING.txt)。不会后台静默安装更新。
 
-With Plugin Market enabled, Plugin Center can check this GitHub source and offer updates. Releases are published to `main` with version tags and downloadable packages. Updates are not installed silently in the background.
+With Plugin Market enabled, Plugin Center can check this GitHub source and offer updates. Releases are published to `main` with version tags and downloadable packages only when explicitly requested by the owner. Updates are not installed silently in the background.
 
 ## 兼容性 / Compatibility
 

@@ -8,7 +8,8 @@
 - Change the first number only with the owner's explicit permission. Bump once per delivery.
 - Preserve the package name dsh-local-plugin-center so existing installations upgrade in place.
 - Build the generated client.js and client-chunks/ before publishing; GitHub installation must work without install-time build scripts.
-- Since 2026-10-18, the owner requests publishing each delivered update to GitHub, with a version tag and downloadable package. Keep main installable. Do not force-push or replace published version tags.
+- Latest owner instruction (2026-10-18): DO NOT publish/push/tag/release to GitHub unless explicitly requested for the current delivery. Local edits/build/package/install are the default. Keep main installable when publishing; never force-push or replace published tags.
+- Update the one-click installer only when explicitly requested. In an authorized installer update, replace only the Toolbox package by default; retain third-party archives unless the owner explicitly requests updating all installation packages.
 - Do not publish user profiles, credentials, conversations, backups or machine-specific installation scripts.
 - Unless explicitly requested, do not run functional tests, browser acceptance or test installations. Necessary build, packaging and the requested local plugin update are allowed. State whether tests ran.
 

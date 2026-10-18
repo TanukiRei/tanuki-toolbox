@@ -1,0 +1,4 @@
+{
+  "zh": {"title":"文件操作","preview":"预览","open":"打开","save":"另存为…","reveal":"打开所在文件夹","more":"打开方式…","copyPath":"复制文件路径","copyName":"复制文件名"},
+  "en": {"title":"File actions","preview":"Preview","open":"Open","save":"Save as…","reveal":"Show in folder","more":"Open with…","copyPath":"Copy file path","copyName":"Copy file name"}
+}

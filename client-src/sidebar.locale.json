@@ -2,6 +2,16 @@
   "zh": {
     "toolbox": "工具箱设置",
     "more": "侧栏显示设置",
+    "menu_more": "侧栏显示设置",
+    "order_top": "顶部",
+    "order_bottom": "底部",
+    "visibilityShown": "已显示，点击隐藏",
+    "visibilityHidden": "已隐藏，点击显示",
+    "reorder": "排序",
+    "reorderHint": "拖动排序，可跨组移动；Alt + ↑/↓ 调整顺序，Alt + ←/→ 切换到顶部/底部组。",
+    "alwaysVisible": "始终显示",
+    "dropHere": "拖到这里添加项目",
+    "orderSaveFailed": "侧栏顺序暂时无法保存；本次调整在当前页面有效。",
     "menu_home": "主页",
     "menu_newSession": "新建会话",
     "menu_workspace": "工作区",
@@ -28,11 +38,23 @@
     "automationsUnavailable": "自动化任务尚未启用或未准备好，请在官方插件中检查。",
     "collapseWorkspace": "收起工作区侧栏",
     "expandWorkspace": "展开工作区侧栏",
-    "paneSaveFailed": "无法保存侧栏收起状态；本次选择在当前页面有效。"
+    "paneSaveFailed": "无法保存侧栏收起状态；本次选择在当前页面有效。",
+    "resizeWorkspace": "拖动调整工作区宽度（方向键微调，Esc 取消）",
+    "widthSaveFailed": "工作区宽度暂时无法保存；本次调整在当前页面有效。"
   },
   "en": {
     "toolbox": "Toolbox settings",
     "more": "Sidebar visibility",
+    "menu_more": "Sidebar visibility",
+    "order_top": "Top",
+    "order_bottom": "Bottom",
+    "visibilityShown": "Visible; click to hide",
+    "visibilityHidden": "Hidden; click to show",
+    "reorder": "Reorder",
+    "reorderHint": "Drag to reorder or move between groups. Alt + Up/Down reorders; Alt + Left/Right moves to the top/bottom group.",
+    "alwaysVisible": "Always visible",
+    "dropHere": "Drop items here",
+    "orderSaveFailed": "Could not save sidebar order. This adjustment still applies to this page.",
     "menu_home": "Home",
     "menu_newSession": "New session",
     "menu_workspace": "Workspace",
@@ -59,6 +81,8 @@
     "automationsUnavailable": "Automations is disabled or not ready. Check the official plugins.",
     "collapseWorkspace": "Collapse workspace sidebar",
     "expandWorkspace": "Expand workspace sidebar",
-    "paneSaveFailed": "Could not save the sidebar state. Your selection still applies to this page."
+    "paneSaveFailed": "Could not save the sidebar state. Your selection still applies to this page.",
+    "resizeWorkspace": "Resize workspace (arrow keys to adjust, Esc to cancel)",
+    "widthSaveFailed": "Could not save workspace width. This adjustment still applies to this page."
   }
 }

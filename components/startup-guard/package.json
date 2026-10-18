@@ -1,7 +1,7 @@
 {
   "name": "tanuki-startup-guard",
-  "version": "0.5.25",
+  "version": "0.6.11",
   "type": "module",
-  "description": "Check for and disable third-party plugins with explicit version incompatibilities before DSH starts. (Undeclared runtime failures may not be caught.)",
+  "description": "Detect and disable third-party plugins that can cause crashes before startup.",
   "icon": "./icon.svg"
 }

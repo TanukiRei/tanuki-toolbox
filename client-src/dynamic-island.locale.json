@@ -1,8 +1,6 @@
 {
   "zh": {
     "dismiss": "关闭提示",
-    "turnRunning": "进行中",
-    "turnCompleted": "已完成",
     "islandGlobal": "全局消息",
     "islandTask": "任务已完成",
     "islandTaskDetail": "本次任务已完成，可以查看结果了。",
@@ -13,12 +11,11 @@
     "islandUpdated": "插件已更新",
     "islandLaunchDetail": "启动前已检查 {n} 个第三方插件，停用 {disabled} 个不兼容插件。",
     "islandQueued": "还有 {n} 条消息",
-    "launchProtected": "本次已通过保护启动"
+    "launchProtected": "本次已通过保护启动",
+    "openTarget": "打开相关页面"
   },
   "en": {
     "dismiss": "Dismiss",
-    "turnRunning": "In progress",
-    "turnCompleted": "Completed",
     "islandGlobal": "Notification",
     "islandTask": "Task completed",
     "islandTaskDetail": "Your task is complete. The result is ready to view.",
@@ -29,6 +26,7 @@
     "islandUpdated": "Plugin updated",
     "islandLaunchDetail": "Checked {n} third-party plugins before launch; disabled {disabled} incompatible plugins.",
     "islandQueued": "{n} more notifications",
-    "launchProtected": "This session used Protected Launch"
+    "launchProtected": "This session used Protected Launch",
+    "openTarget": "Open related page"
   }
 }

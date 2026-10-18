@@ -43,3 +43,12 @@ window.dispatchEvent(new CustomEvent('tanuki:bubble-state', {detail:{
 新版本仅静态检查和必要构建；历史测试不代表这些新增通知/气泡/系统权限行为已通过功能或跨平台验收。
 
 0.5.17: plugin-center 源新增 plugin-updates 目标，供更新全部按钮使用。按可执行更新去重计数，复用全局气泡开关、状态颜色、优先级与数字规则；不计入 plugins 目标，避免侧栏重复计数。
+
+0.6.9 消息跳转 / Navigation
+灵动岛主体及系统通知使用同一规则，关闭按钮仅关闭提示。任务按 sessionId 打开对话；插件按 packageName / pluginCategory 打开已安装列表，pluginCategory 为 official 或 installed（第三方），卸载通知保留卸载前的分类。启动保护进入工具箱的启动保护设置；dsh.update 消息打开原生更新窗口。
+可选 destination 为纯数据：
+{page:'session',sessionId:'actual-session-id'}
+{page:'plugins',category:'installed'}
+{page:'settings',section:'tanuki-toolbox',component:'composer'}
+{page:'schedules'} / {page:'home'} / {page:'updates'}
+page 仅允许上列值。settings section 必须已在原生设置中注册；component 只定位本工具箱六个组件。Host 仅传递这些受限字段，不接受任意 URL、HTML 或回调。未声明目标的一般消息进入消息中心设置。消息点击不会下载、安装更新或重新执行任务。

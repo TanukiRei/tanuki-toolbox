@@ -1,4 +1,140 @@
-黎猫工具箱 / Tanuki Toolbox 0.5.25
+黎猫工具箱 / Tanuki Toolbox 0.6.11
+
+0.6.11 日间配色适配 / Theme-aware controls
+- 侧边栏展开与收起按钮共用主题背景与悬停色，取消展开按钮写死的深色背景；保留尺寸、位置和收放动效。
+- 快捷栏选中图标的填充与未选中线条保持相同视觉浓度，选中状态仍有背景区别；气泡不受图标透明度影响。
+- 插件中心已安装页的原生添加插件分体按钮改用随主题变化的背景、文字与分隔边框，保留原有操作和菜单。
+- 清理不存在的侧栏主题变量，链接、键盘焦点、名称输入框、开关悬停、错误文字、模型控件强调色、滑条刻度与时间统计文字改用有效主题变量。气泡与灵动岛配色保留，图像素材、阴影及滑条白色滑块不作机械替换。
+- 完成构建、独立打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Use shared theme colors for workspace toggles, consistent selected/idle icon ink, and a theme-aware native add-plugin split control. Replace invalid sidebar aliases and fixed UI accents/timing text with native theme tokens. Keep notification colors and artwork. CSS-only changes; no new runtime work. Local build/package/install only, without functional tests, publishing or installer updates.
+
+0.6.10 文件右键菜单 / File context menu
+- 对话框优化新增可独立开关的“文件右键菜单”。在回答中的原生文件卡片上右键，可预览、打开、另存为、打开所在文件夹、复制路径和复制文件名；原生提供打开方式时也显示该入口。支持 Shift+F10、方向键与 Esc，中英文跟随 DSH。
+- 复用原生文件槽、预览及打开接口，不拦截普通网页链接。另存为仅在点击后按段读取文件，检查文件版本与完整性；优先使用保存选择框，不支持时采用浏览器下载方式（该回退限制为 128MiB，保存位置遵循当前下载设置）。
+- 子功能关闭时不加载代码，停用后移除菜单与卡片监听、中止读取并清理临时下载资源；保留现有原生文件操作。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Add an independent File context menu switch under Composer enhancements for native reply file cards. Reuse native preview/open/reveal and Open with when available; include Save as and copy path/name, with keyboard and bilingual support. Read bytes only on Save as, verify identity/version/completeness and prefer a save picker. Otherwise use browser download settings with a 128MiB memory limit. Disable unloads listeners, menu and active reads. Local build/package/install only; no functional tests, publishing or installer updates.
+
+0.6.9 灵动岛消息跳转 / Notification navigation
+- 灵动岛消息主体可点击，也支持 Tab、Enter 和空格；关闭按钮独立，不触发跳转。成功发起跳转后移除对应消息，系统通知复用相同跳转规则。
+- 任务消息优先打开对应对话；未提供对话目标的任务消息进入自动化任务页。
+- 插件消息进入原生已安装列表，由插件中心切到官方或第三方分类；可定位仍安装的目标插件，卸载通知保留原分类。
+- 保护启动消息定位到工具箱的启动保护设置；DSH 更新消息打开原生更新窗口；模型、侧栏与名称设置错误分别进入对应设置或列表。未来消息可显式携带受限 destination 对象。
+- 复用原生页面和设置 store，不通过临时切回对话强行重置插件页。定位设置项的临时观察器最多保留 5 秒，关闭组件立即清理；不加载关闭组件的业务代码。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Clickable, keyboard-accessible notification content opens the related conversation, plugin list/category, settings section, or native update window. Dismiss stays separate. OS notifications share the same routing. Use existing native stores and bounded click-time location work; retain disabled-component loading rules. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.8 修复详情页组件图标及本体隐藏 / Detail row identity matching
+- 原生组件行在挂载后使用带父级前缀的 entryId，未挂载时才使用短 rowId。组件图标规则现同时匹配两者，继续复用设置页的同一套六个组件图标。
+- 工具箱本体隐藏规则同步兼容带前缀的运行时 ID，避免本体及其开关再次出现在包含组件列表中。
+- 保留 tanuki-toolbox-core 固定 Loader ID，不恢复匿名条目；不增加扫描、轮询或加载关闭组件的代码。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Match both short row IDs and parent-prefixed runtime entry IDs for component artwork and internal-core hiding. Keep the stable core Loader ID to avoid profile-reconciliation flicker. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.7 组件说明、顺序与细分设置 / Component descriptions, order and collapsible settings
+- 组件顺序统一为：启动保护、快捷栏、起始页、对话框优化、消息中心、插件中心；同步原生组件列表与工具箱设置列表。
+- 六个组件的中文说明按用户指定文案替换，同步英文说明及组件清单；快捷侧栏改称快捷栏。
+- 有细分设置的组件默认收起，在标题开关旁显示展开箭头；展开区域底部增加收拢按钮，使用高度和透明度过渡，遵循系统减少动态效果偏好。
+- 收起后释放细分设置控件，收起时停止音频试听；不加载被关闭组件的业务模块。设置展开不改变组件启用状态。
+- 完成构建、独立打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Update bilingual component descriptions and order. Detailed settings start collapsed, expand from the heading arrow and collapse from a bottom action, with motion preferences respected. Collapsed controls unmount after their closing transition, and sound previews stop. Local build/package/install only; no functional tests, publishing or installer updates.
+
+0.6.6 对话框优化设置层级 / Composer settings hierarchy
+- 对话框优化大类与时间统计之间增加全宽横线，时间统计与模型选择之间增加内缩横线；沿用消息中心已有的颜色、间距和线条长度。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Reuse Message Center dividers: a full-width line below the Composer category and an inset line between Timing and Model selection. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.5 弹框右移 / Popup offset
+- 弹框右边缘改为对齐模型与恢复默认按钮组的右边缘，较上一版右移约 30px，保持位于原生语音/发送控件左侧；名称变化不参与宽度居中计算。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Anchor the popup to the right edge of the model/reset group, shifting it right by about 30px while retaining the native voice/send controls outside that edge. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.4 模型卡片排版 / Model card layout
+- 加高模型卡片到 126px，扩大标题行并禁止文字行被 flex 压缩，避免蓝色推理等级被裁切。
+- 模型名称与推理等级交换位置：模型在上，蓝色推理等级在下。
+- 弹框固定按输入框模型选择按钮的右边缘对齐，替代随名称宽度变化的居中定位；靠近窗口边缘时仍自动避让。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Increase the fixed card height and prevent label shrinking, with the model above the blue reasoning level. Anchor the popup's right edge to the composer model button instead of centering on its variable label width. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.3 修复设置变更时界面重载 / Stable bundle lifecycle
+- 为工具箱本体增加固定 Loader ID（tanuki-toolbox-core）。旧版匿名条目在 DSH 重新组合 profile 时会被删除并重新创建，可能导致浏览器卸载并重新挂载整套工具箱，短暂露出原生界面。
+- 普通模型/速度等设置保存现在可复用本体的既有条目，而不因匿名身份丢失重建本体；真正关闭或卸载插件时仍按正常生命周期释放组件。
+- 本体管理行继续在工具箱详情中隐藏，不增加独立的本体开关；不修改 DSH 或第三方插件的文件，不增加保活定时器或后台轮询。
+- 本次完成源码链路排查、构建、独立打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Give the bundle core a stable Loader entry ID. Previously, profile reconciliation treated its anonymous declaration as a new entry, disposing the previous host and potentially removing/re-adding the whole client bundle. The core row stays hidden in Toolbox details. Normal disable/uninstall cleanup remains intact. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.2 恢复默认入口 / Reset button placement
+- 恢复默认按钮移至输入框中模型选择按钮的右侧，无需展开卡片即可点击；保留悬停高亮与中英文提示。
+- 弹出卡片移除外侧重置按钮与多余宽度，与输入框模型选择按钮水平居中对齐，贴近窗口边缘时自动避让；卡片展开时点击恢复默认不会关闭卡片。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Move Reset beside the composer model trigger, available even when the popup is closed. Remove the popup's external reset area; resetting while open keeps the popup visible. Local build/package/install only; no functional tests, publishing or installer updates.
+0.6.1 模型卡片连续操作 / Continuous model selection
+- 模型卡片缩至 260×100px（右侧重置按钮独立），不支持的控件继续保留位置。
+- 暂时锁定仅阻止修改，不关闭卡片；模型、输出详略列表选择后保留展开，支持连续修改。切换会话、点击外部或 Esc 才主动关闭。
+- 保存期间保持正常亮度，滑条提交后不跳回旧值；相同选择不重复写入。保存期间焦点丢失后 Esc 仍可关闭。
+- 使用真实组件代码完成 Chromium 浏览器回归：连续修改、锁定、保存失败、默认重置、窄屏、中英文与清理；旧版临时锁定关闭问题已在模拟宿主中复现。尚未在真实 DSH 窗口复现用户所述整页闪动，浏览器组件测试不代表整机验收。
+- 本机更新与独立打包；不更新一键安装器，不上传 GitHub。
+Compact persistent model picker. Keep menus open during edits and transient host locks, avoid dimming during saves and redundant writes, and preserve Escape dismissal after temporary focus loss. Real component browser regression uses simulated host stores; full DSH-window flicker remains unverified. Local build/package/install only.
+0.6.0 对话框优化 / Composer enhancements
+- 新增独立组件“对话框优化”，包含可分别开关的“时间统计”和“模型选择”，中英文跟随 DSH。
+- 原消息中心的任务计时迁入时间统计，继续依据真实回合开始/结束记录显示进行时间及成功完成耗时；关闭消息中心不影响该子项。
+- 点击输入框模型按钮弹出固定大小的卡片：左上角闪电切换标准/高速，右上角展开输出详略，中部选择模型，下方滑条吸附模型实际支持的推理等级。所有按钮支持悬停高亮。
+- 不支持的控件隐藏但保留位置；模型列表沿用已安装提供方的可用模型与隐藏偏好。速度、输出详略复用 Codex Subscription 的原有偏好控制器，不创建虚假设置。
+- 卡片右侧独立重置按钮读取 DSH 配置的默认模型与推理等级，同时恢复标准速度和模型默认输出详略；不改写 DSH 全局默认模型。
+- 两个子项分别按需加载，关闭即卸载界面、监听及计时器；冷启动不加载已关闭子项的业务代码。新增本地小型设置字段，保留现有声音及通知配置。
+- 仅构建、打包和本机更新；未进行功能测试、浏览器或实机验收，未更新一键安装器，未上传 GitHub。
+Add Composer enhancements with independent timing and model-selection switches. Move the existing turn timer out of Message Center. The fixed-size popup offers a fast-mode lightning toggle, output-detail menu, model picker and discrete reasoning slider; unsupported controls retain their spaces. Reuse the host model directory and provider preferences, including hidden models. Reset restores the configured DSH default selection and standard/default provider options without changing the global default model. Each subfeature loads on demand and disposes on disable. Built and installed locally, without functional/UI tests, installer updates or GitHub publishing.
+
+0.5.33 插件版本展示 / Installed version labels
+- 插件中心第三方插件卡片在名称下方以小字显示已安装版本，保留自定义名称与统一卡片高度；复用现有插件清单，不增加请求或后台扫描。
+- 黎猫工具箱基础设置总标题旁增加小号版本号，随构建版本自动同步。
+- 仅构建、打包及本机更新；未运行功能测试，未更新一键安装器，未上传 GitHub。
+Show installed versions beneath third-party plugin names using existing inventory data, preserving aliases and consistent card heights. Add the build version beside the Toolbox settings heading. Built and installed locally without functional tests, installer updates or GitHub publishing.
+
+0.5.32 侧栏排序菜单精简 / Compact sidebar arrangement menu
+- 移除顶部、底部说明文字，仅保留分组横线；下方列表与实际侧栏按同一上下顺序显示，最后一项位于最底部。
+- 兼容上一版保存的排序，转换底部分组的存储顺序，保留原侧栏位置。
+- 显示状态改为睁眼，隐藏状态改为闭眼，不可隐藏项目显示灰色睁眼；悬停提示支持中英文。
+- 菜单宽度由 310px 缩至 210px，减少名称和状态图标之间的留白。
+- 仅构建、打包及本机更新；未运行功能测试，未更新一键安装器，未上传 GitHub。
+Remove group captions while retaining the divider. Both lists now follow the actual rail's visual order; migrate the previous bottom-up preference without moving existing rail icons. Use open/closed eyes for visibility and a muted open eye for required entries. Narrow the menu to 210px. Built and installed locally without functional tests, installer updates or GitHub publishing.
+
+0.5.31 快捷侧栏分组排序 / Sidebar groups and ordering
+- 三个点菜单在图标前增加拖动手柄，可调整组内顺序或跨横线移动；拖动时显示插入位置，松开后保存。
+- 横线上方按顶部向下排列，下方按底部向上排列；每组第一项分别最靠近顶部或底部。保留原显示开关与初始布局。
+- 恢复主页、新建会话、侧栏显示设置和系统设置等不可隐藏项目，标记“始终显示”；仍可拖动排序，不能隐藏。
+- 顺序在重新打开 DSH 后保留；空组保留拖入区域，菜单过长时支持拖动边缘滚动。Esc、失焦、关闭菜单或停用组件取消未完成拖动。
+- 排序手柄支持 Alt + ↑/↓ 调整顺序、Alt + ←/→ 切换到顶部/底部组；中英文跟随 DSH。
+- 仅必要构建、打包及本机更新；未运行功能测试或浏览器验收，未更新一键安装器，未上传 GitHub。
+Add drag handles before sidebar icons, move entries within or across top/bottom groups, and persist the layout on drop. The first entry in each group sits closest to its corresponding edge. Restore required entries as always visible while allowing reordering. Preserve visibility choices, handle empty groups and scrolling, cancel unfinished gestures on dismissal, and support keyboard reordering. Built and installed locally without functional/browser tests, installer updates or GitHub publishing.
+
+0.5.30 macOS 插件中心操作栏 / macOS plugin toolbar
+- 修复 Mac 原生插件页顶部避让样式覆盖工具箱定位规则的问题：刷新、更新全部、添加插件不再因额外 76px 顶部内边距而下移。
+- 对旧 Mac 导出包 0.5.14 进行隔离模拟，复现主页/工作区与窗口按钮重叠；当前版保留已加入的 48px 标题区避让，全屏取消该留白。
+- 使用真实 React、插件侧栏代码和 DSH 原生 CSS，在 Windows Chromium 中完成 5 组布局模拟：Mac 深浅色、窗口/全屏、800/900/1280px 宽度和 Windows 对照；覆盖操作栏对齐、侧栏拖动、收放、宽度重载及停用清理。
+- 模拟不等同于 Mac 实机验证；窗口按钮与内容是示例，不覆盖 Cocoa 窗口行为、原生字体、第三方插件交互或 Mac 安装流程。
+- 仅打包独立 .tgz 并更新本机；未改动 Mac/Windows 一键安装包，未上传 GitHub。
+Fix native macOS page-header padding overriding the anchored plugin toolbar. The old Mac bundle (0.5.14) reproduces the traffic-light overlap; current versions reserve a 48px titlebar area outside fullscreen. Five isolated Chromium layout scenarios passed using real React, plugin sidebar code and DSH CSS, covering toolbar alignment, resizing, collapse/expand, reload persistence and cleanup. This is Windows-based layout simulation, not real macOS verification. No installer refresh or GitHub publishing.
+
+0.5.29 设置齿轮中心镂空 / Settings gear cutout
+- 选中齿轮的中心镂空沿用原中心圆的半径与位置，取消孔边描线对镂空尺寸的挤占；齿轮外轮廓保持原样。
+- 仅本地构建、打包并更新本机；未更新一键安装器，未上传 GitHub，未运行功能测试。
+Keep the selected gear's center cutout at the original circle's radius and position, with no inner stroke shrinking the opening. Preserve the outer outline. Built and installed locally without functional tests, installer updates or GitHub publishing.
+
+0.5.28 快捷栏选中图标 / Selected navigation icons
+- 定时任务改为圆形时钟：未选中描线，选中填充表盘并镂空指针。
+- 工作区选中时填充文件夹下半部；插件中心选中时填充四个方框；设置选中时填充齿轮，中心孔保留镂空。
+- 主页保持原鲸鱼图标，选中时在头顶增加小喷水图案；黎猫工具箱入口也增加选中填充状态，随实际打开的工具箱设置页切换。
+- 图标沿用当前主题色，使用本地 SVG；没有新增后台扫描或加载其他组件。
+- 仅本地构建、打包并更新本机；未更新一键安装器，未上传 GitHub，未运行功能测试。
+Navigation icons now reflect the current page with outline and filled variants: a round clock with cutout hands, a folder with its lower body filled, four filled plugin squares and a filled gear with an open center. The original home whale gains a small water spout when selected. The toolbox shortcut also follows its settings page. Local SVG artwork uses the current theme without background polling. Built and installed locally without functional tests, installer updates or GitHub publishing.
+
+0.5.27 分割线悬停样式 / Divider hover appearance
+- 鼠标悬停或拖动工作区分割线时仅显示调宽指针，不再高亮分割线；保留键盘操作时的焦点提示。
+- 本地构建、打包及更新本机；未更新一键安装器，未上传 GitHub，未运行功能测试。
+Show only the resize cursor during pointer hover and dragging, retaining keyboard focus feedback. Built, packaged and installed locally without functional tests, installer synchronization or GitHub publishing.
+
+0.5.26 工作区拖动调宽 / Resizable workspace sidebar
+- 工作区与对话之间的分割线支持鼠标或触控拖动，松开后保存宽度；收起再展开、切换页面和重新打开 DSH 沿用保存值。
+- 拖动时关闭收放过渡，使用动画帧合并更新；支持方向键微调、Home/End 调到边界、Esc 取消本次拖动。小窗口临时限制显示宽度，不改写保存值。
+- 分割线仅在工作区展开时可用；停用侧栏清理拖动、指针捕获及监听，恢复原生布局。中英文提示随 DSH 切换。
+- 按最新交付要求，本版仅本地构建、打包并更新本机，不自动上传 GitHub。本次另外按明确要求更新一键安装器，第三方备用包固定为本次下载版本；以后需再次明确要求才更新安装器或发布。
+- 未运行功能测试或浏览器验收。
+Drag the workspace divider to resize it and save the width for reopening, navigation and restart. Support keyboard adjustments and Escape cancellation, clamp temporarily for narrow windows, and clean up pointer capture and listeners on disable. Built and packaged locally without functional or browser tests. GitHub publishing and installer updates now require an explicit request for each delivery.
 
 0.5.25 第三方插件图标 / Third-party plugin artwork
 - 修复未声明包图标的第三方插件在插件中心只显示宿主默认图案的问题；插件列表和包详情页使用同一套图标补全。

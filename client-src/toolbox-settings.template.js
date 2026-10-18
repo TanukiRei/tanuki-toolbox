@@ -8,6 +8,22 @@ document.currentScript.__tanukiRegister(function(require){
     return h('img',{className:'tanuki-settings-component-icon',src:componentIcons[name],width:24,height:24,alt:'','aria-hidden':true});
   }
   const divider=short=>h('hr',{className:'tanuki-settings-divider'+(short?' tanuki-settings-divider-short':''),'aria-hidden':true});
+  function SettingsCard({name,title,description,control,children,t,onCollapse}){
+    const [expanded,setExpanded]=React.useState(false),[mounted,setMounted]=React.useState(false),button=React.useRef(null),id=React.useId();
+    const hasDetails=React.Children.toArray(children).length>0;
+    function collapse(fromBottom=false){
+      setExpanded(false);onCollapse?.();
+      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)setMounted(false);
+      if(fromBottom)button.current?.focus({preventScroll:true});
+    }
+    const chevron=h('svg',{viewBox:'0 0 24 24',width:16,height:16,fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:'m6 9 6 6 6-6'}));
+    return h('section',{className:'tanuki-settings-card','data-tanuki-setting':name},
+      h('header',{className:'tanuki-settings-header'},h('h3',null,h(ComponentIcon,{name}),h('span',null,title)),h('div',{className:'tanuki-settings-header-actions'},
+        hasDetails?h('button',{ref:button,type:'button',className:'tanuki-settings-expand','aria-expanded':expanded,'aria-controls':id,'aria-label':t(expanded?'collapseSettings':'expandSettings')+' · '+title,title:t(expanded?'collapseSettings':'expandSettings'),onClick:()=>{if(expanded)collapse();else{setMounted(true);setExpanded(true);}}},chevron):null,control)),
+      description?h('p',{className:'tanuki-settings-description'},description):null,
+      hasDetails?h('div',{id,className:'tanuki-settings-fold','data-expanded':expanded,'aria-hidden':!expanded,inert:!expanded,onTransitionEnd:event=>{if(event.target===event.currentTarget&&event.propertyName==='grid-template-rows'&&!expanded)setMounted(false);}},
+        h('div',{className:'tanuki-settings-fold-inner'},mounted?h(React.Fragment,null,children,h('button',{type:'button',className:'tanuki-settings-collapse',onClick:()=>collapse(true)},t('collapseSettings'),chevron)):null)):null);
+  }
   function apply(ctx,{ready}){
     let alive=true;const requests=new Set(),decoders=new Set(),previews=new Set();
     ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
@@ -17,7 +33,7 @@ document.currentScript.__tanukiRegister(function(require){
       try{const r=await fetch(new URL('tanuki-toolbox/'+path,document.baseURI),{...options,credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:{'X-Tanuki-Settings':'1',...options.headers}});if(!r.ok)throw new Error(String(r.status));return await r.json();}
       finally{clearTimeout(timer);requests.delete(controller);}
     }
-    function Settings(){
+    function Settings({view}={}){
       React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());
       const [settings,setSettings]=React.useState(null),[rows,setRows]=React.useState([]),[busy,setBusy]=React.useState(false),[error,setError]=React.useState(false),[volume,setVolume]=React.useState(100),[switchBusy,setSwitchBusy]=React.useState(false),[permission,setPermission]=React.useState(()=>typeof window.Notification==='function'?window.Notification.permission:'unsupported');
       const generation=React.useRef(0),operation=React.useRef(false),switchLock=React.useRef(false),preview=React.useRef(null),fileInput=React.useRef(null),refreshRows=React.useRef(null);
@@ -70,12 +86,11 @@ document.currentScript.__tanukiRegister(function(require){
         }finally{if(decoder&&decoders.delete(decoder))void decoder.close().catch(()=>{});}
         if(!valid())return;return request('settings/audio',{method:'PUT',headers:{'content-type':type,'x-audio-name':encodeURIComponent(file.name)},body:file});});
       }
-      const names=['plugin-center','home','dynamic-island','startup-guard','sidebar'];
+      const names=view==='composer'?['composer']:['startup-guard','sidebar','home','composer','dynamic-island','plugin-center'];
       const localized=text=>text===undefined?'':ctx.locale.resolveText(text);
-      return h('div',{className:'tanuki-base-settings'},h('h2',null,t('title')),error?h('p',{role:'alert'},t('error')):null,
-        ...names.map(key=>{const row=rows.find(r=>r.moduleName==='dsh-local-plugin-center/'+key),title=localized(row?.meta?.title)||t(key),description=localized(row?.meta?.description);return h('section',{key,className:'tanuki-settings-card'},
-          h('header',{className:'tanuki-settings-header'},h('h3',null,h(ComponentIcon,{name:key}),h('span',null,title)), h(Switch,{checked:!!row?.enabled,label:t('toggle')+' '+title,disabled:switchBusy||!row||row.entryId===undefined||row.readOnlyReason!==undefined,onChange:enabled=>void toggle(row,enabled)})),
-          description?h('p',{className:'tanuki-settings-description'},description):null,
+      return h('div',{className:'tanuki-base-settings'},h('h2',{className:'tanuki-settings-title'},h('span',null,t('title')),h('small',{className:'tanuki-settings-version'},'v'+__VERSION__)),error?h('p',{role:'alert'},t('error')):null,
+        ...names.map(key=>{const row=rows.find(r=>r.moduleName==='dsh-local-plugin-center/'+key),title=localized(row?.meta?.title)||t(key),description=localized(row?.meta?.description);return h(SettingsCard,{key,name:key,title,description,t,onCollapse:()=>preview.current?.stop(),control:h(Switch,{checked:!!row?.enabled,label:t('toggle')+' '+title,disabled:switchBusy||!row||row.entryId===undefined||row.readOnlyReason!==undefined,onChange:enabled=>void toggle(row,enabled)})},
+          key==='composer'?h('div',{className:'tanuki-composer-settings'},divider(false),...['timeStats','modelSelection','fileMenu'].map((flag,index)=>h(React.Fragment,{key:flag},index>0?divider(true):null,h('div',{className:'tanuki-bubble-setting'},h('div',null,h('span',null,t(flag)),h('p',{className:'tanuki-settings-note'},t(flag+'Hint'))),h(Switch,{checked:settings?.composer?.[flag]===true,label:t(flag),disabled:busy||!settings,onChange:enabled=>change('settings',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({composer:{[flag]:enabled}})})}))))):null,
           key==='dynamic-island'?divider(false):null,
           key==='dynamic-island'?h(React.Fragment,null,
             h('fieldset',{className:'tanuki-notification-categories',disabled:busy||!settings},h('legend',null,t('categories')),...['plugins','tasks','updates'].map(category=>h('label',{key:category},h('input',{type:'checkbox',checked:settings?.island.categories?.[category]!==false,onChange:e=>patch({categories:{...(settings?.island.categories||{plugins:true,tasks:true,updates:true}),[category]:e.target.checked}})}),t('category_'+category)))),

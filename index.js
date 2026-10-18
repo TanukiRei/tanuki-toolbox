@@ -19,7 +19,7 @@ export function apply(ctx) {
     repositories:async signal=>{signal.throwIfAborted();return (await import('./lib/recommendations.cjs')).default.readRepositories(profile,signal);}
   });
   settings.register(ctx,profile);
-  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','global-bubbles'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
+  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','global-bubbles','composer','composer-clock','composer-model','composer-files'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
   assets['toolbox.png']={file:join(root,'assets/toolbox.png'),type:'image/png'};
   ctx.inject(['webServer', 'connection'], host => {
     for(const [name,asset] of Object.entries(assets))host.effect(() => host.webServer.register({

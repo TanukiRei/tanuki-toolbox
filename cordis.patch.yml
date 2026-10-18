@@ -1,13 +1,17 @@
 - insert:
     - id: tanuki-startup-guard
       name: dsh-local-plugin-center/startup-guard
-    - id: tanuki-plugin-center
-      name: dsh-local-plugin-center/plugin-center
-    - id: tanuki-home
-      name: dsh-local-plugin-center/home
-    - id: tanuki-dynamic-island
-      name: dsh-local-plugin-center/dynamic-island
     - id: tanuki-sidebar
       name: dsh-local-plugin-center/sidebar
-    # An anonymous core belongs to the bundle lifecycle and has no component toggle.
-    - name: dsh-local-plugin-center
+    - id: tanuki-home
+      name: dsh-local-plugin-center/home
+    - id: tanuki-composer
+      name: dsh-local-plugin-center/composer
+    - id: tanuki-dynamic-island
+      name: dsh-local-plugin-center/dynamic-island
+    - id: tanuki-plugin-center
+      name: dsh-local-plugin-center/plugin-center
+    # Stable identity prevents core replacement during profile reconciliation.
+    # The client hides this internal runtime row from component controls.
+    - id: tanuki-toolbox-core
+      name: dsh-local-plugin-center

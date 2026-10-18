@@ -1,1 +1,6 @@
-{"meta":{"title":"Home","description":"A blank start page. Click the DeepSeek logo to return home without creating a conversation."}}
+{
+  "meta": {
+    "title": "Start Page",
+    "description": "Add a start page with useful information."
+  }
+}

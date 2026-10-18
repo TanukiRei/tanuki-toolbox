@@ -1,0 +1,10 @@
+{
+  "zh": {
+    "turnRunning": "进行中",
+    "turnCompleted": "已完成"
+  },
+  "en": {
+    "turnRunning": "In progress",
+    "turnCompleted": "Completed"
+  }
+}

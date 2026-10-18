@@ -1,7 +1,7 @@
 {
   "name": "tanuki-plugin-center",
-  "version": "0.5.25",
+  "version": "0.6.11",
   "type": "module",
-  "description": "Open the market from the sidebar, manage plugins and see available updates. Installing and enabling Plugin Market (dshmarket) is recommended.",
+  "description": "Reorganize plugin pages, improve their presentation, and integrate with Plugin Market.",
   "icon": "./icon.svg"
 }

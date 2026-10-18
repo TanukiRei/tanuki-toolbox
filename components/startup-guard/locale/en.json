@@ -1,1 +1,6 @@
-{"meta":{"title":"Startup Guard","description":"Check for and disable third-party plugins with explicit version incompatibilities before DSH starts. (Undeclared runtime failures may not be caught.)"}}
+{
+  "meta": {
+    "title": "Startup Guard",
+    "description": "Detect and disable third-party plugins that can cause crashes before startup."
+  }
+}

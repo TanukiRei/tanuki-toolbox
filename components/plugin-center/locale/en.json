@@ -1,1 +1,6 @@
-{"meta":{"title":"Plugin Center","description":"Open the market from the sidebar, manage plugins and see available updates. Installing and enabling Plugin Market (dshmarket) is recommended."}}
+{
+  "meta": {
+    "title": "Plugin Center",
+    "description": "Reorganize plugin pages, improve their presentation, and integrate with Plugin Market."
+  }
+}

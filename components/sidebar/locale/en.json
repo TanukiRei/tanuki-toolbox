@@ -1,1 +1,6 @@
-{"meta":{"title":"Quick Sidebar","description":"Quick navigation to Home, New session and Workspace, plus Plugins, Settings and Restart."}}
+{
+  "meta": {
+    "title": "Quick Bar",
+    "description": "Bring common features together in an editable left quick bar."
+  }
+}

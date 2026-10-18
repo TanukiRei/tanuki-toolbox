@@ -3,7 +3,7 @@
 .tanuki-quiet:disabled{opacity:.55;cursor:wait;}
 .tanuki-info{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:16px;padding:0 0 8px;width:100%;}
 .tanuki-toolbox-hero{width:160px;height:160px;object-fit:contain;}
-.tanuki-link{color:#c59b6d;font-size:12px;padding:4px 8px;}
+.tanuki-link{color:var(--dsw-alias-link);font-size:12px;padding:4px 8px;}
 .tanuki-recommendations{width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#ffffff20);border-radius:14px;overflow:hidden;container-type:inline-size;container-name:tanuki-recommendations;}
 .tanuki-recommend-header{position:relative;}
 .tanuki-recommend-refresh{position:absolute;right:44px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary,#b2b2b2);cursor:pointer;}
@@ -32,7 +32,7 @@
 .tanuki-recommend-notice{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 .tanuki-install-button{min-width:60px;min-height:34px;padding:6px 10px;border:0;border-radius:9px;background:var(--dsw-alias-label-primary,#f5f5f5);color:var(--dsw-alias-bg-base,#151515);font:inherit;font-size:13px;cursor:pointer;}
 .tanuki-install-button:disabled{opacity:.45;cursor:default;}
-.tanuki-recommend-toggle:focus-visible,.tanuki-recommend-refresh:focus-visible,.tanuki-install-button:focus-visible,.tanuki-recommend-git:focus-visible{outline:2px solid #86b3ee;outline-offset:-3px;}
+.tanuki-recommend-toggle:focus-visible,.tanuki-recommend-refresh:focus-visible,.tanuki-install-button:focus-visible,.tanuki-recommend-git:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-3px;}
 .tanuki-recommend-toggle>span:first-child{padding-right:34px;}
 @container tanuki-recommendations (min-width:760px){.tanuki-recommend-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @container tanuki-recommendations (min-width:1160px){.tanuki-recommend-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}

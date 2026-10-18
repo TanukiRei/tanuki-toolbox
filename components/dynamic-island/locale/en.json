@@ -1,1 +1,6 @@
-{"meta":{"title":"Message Center","description":"Message delivery and visual notifications for DSH."}}
+{
+  "meta": {
+    "title": "Message Center",
+    "description": "Add message notifications."
+  }
+}

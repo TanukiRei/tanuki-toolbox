@@ -1,0 +1,5 @@
+.tanuki-file-menu{position:fixed;z-index:13000;box-sizing:border-box;width:210px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;padding:6px;border:1px solid var(--dsw-alias-border-l2,#ffffff24);border-radius:10px;background:var(--dsw-alias-bg-layer-2,#292929);color:var(--dsw-alias-label-primary,#eee);box-shadow:0 8px 26px #0005;font-family:inherit;-webkit-app-region:no-drag;}
+.tanuki-file-menu-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 9px 8px;margin-bottom:4px;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff18);font-size:11px;color:var(--dsw-alias-label-secondary,#aaa);}
+.tanuki-file-menu button{display:block;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:6px;padding:8px 9px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;}
+.tanuki-file-menu button:hover:not(:disabled),.tanuki-file-menu button:focus-visible{outline:none;background:var(--dsw-alias-interactive-bg-hover,#ffffff16);}
+.tanuki-file-menu button:disabled{opacity:.4;cursor:default;}

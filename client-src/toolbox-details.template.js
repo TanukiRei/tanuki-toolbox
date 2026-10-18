@@ -26,9 +26,11 @@ document.currentScript.__tanukiRegister(function(require){
     ctx.effect(()=>{
       const style=document.createElement('style');
       // Use the same assets as Settings even when the host cached older metadata.
-      // Scoped to the mounted toolbox detail; no observers or disabled-component code.
+      // Native rows use entryId (e.g. include:tanuki-sidebar) when mounted,
+      // and the short rowId when not mounted. Match both within our own bundle.
+      // No observers or disabled-component code.
       const icons=Object.entries(componentIcons).map(([name,src])=>{
-        const target='[data-plugin-detail="dsh-local-plugin-center"] [data-plugin-row="tanuki-'+name+'"] > div:first-child > span:first-child';
+        const target='[data-plugin-detail="dsh-local-plugin-center"] :is([data-plugin-row="tanuki-'+name+'"],[data-plugin-row$=":tanuki-'+name+'"]) > div:first-child > span:first-child';
         return target+'{background-image:url("'+src+'");background-position:center;background-repeat:no-repeat;background-size:24px 24px;}'+target+' > *{visibility:hidden;}';
       }).join('\n');
       style.textContent=__CSS__+'\n'+icons;document.head.appendChild(style);return()=>style.remove();

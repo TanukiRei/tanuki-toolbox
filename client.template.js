@@ -14,6 +14,9 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
     ctx.effect(()=>{
       const style=document.createElement('style');style.dataset.tanukiSwitchPalette='ios';
       style.textContent='button[role="switch"][aria-checked="false"]{background-color:#58585b!important;border-color:#58585b!important}button[role="switch"][aria-checked="true"]{background-color:#34c759!important;border-color:#34c759!important}button[role="switch"]>span:only-child{background-color:#fff!important}input[type="checkbox"][role="switch"]{accent-color:#34c759}';
+      // The core has a stable Loader id, but remains an internal bundle runtime,
+      // not an independently operated component. Keep this outside lazy features.
+      style.textContent+='[data-plugin-detail="dsh-local-plugin-center"] :is([data-plugin-row="tanuki-toolbox-core"],[data-plugin-row$=":tanuki-toolbox-core"]),[data-plugin-detail="dsh-local-plugin-center"] [data-plugin-rows]>div:first-child>span{display:none!important}';
       document.head.appendChild(style);return()=>style.remove();
     });
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
@@ -55,7 +58,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
           if(++entry.attempt<3)entry.retry=setTimeout(run,entry.attempt*2000);
           else{
             console.error('[Tanuki] Component load failed:',key,error);
-            window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{id:'load:'+key+':'+Date.now(),title:{zh:'组件未能启动',en:'Component could not start'},message:key}}));
+            window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{id:'load:'+key+':'+Date.now(),destination:{page:'settings',section:'tanuki-toolbox',component:key},title:{zh:'组件未能启动',en:'Component could not start'},message:key}}));
           }
         }
       };void run();
@@ -66,7 +69,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       flight=(async()=>{
         const result=await ctx.remote.pluginManager.listPlugins();
         if(disposed||!result.ok)return;
-        for(const key of ['plugin-center','home','dynamic-island','sidebar']){
+        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer']){
           const enabled=result.value.some(row=>row.moduleName===SELF+'/'+key&&row.enabled);
           if(enabled)start(key);else stop(key);
         }
@@ -113,6 +116,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
     ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'tanuki-toolbox',order:80,label:()=>ctx.locale.getSnapshot()?.active?.startsWith('en')?'Tanuki Toolbox':'黎猫工具箱',locale:NS},()=>h(LazyView,{moduleName:'toolbox-settings'})));
     ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key:SELF,locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-details'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-startup-guard',locale:NS},props=>h(LazyView,{...props,moduleName:'guard-settings'})));
+    ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-composer',locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-settings',view:'composer'})));
     ctx.effect(()=>()=>{disposed=true;clearTimeout(timer);off();offReset();window.removeEventListener('focus',focus);for(const key of [...entries.keys()])stop(key,false);for(const controller of loads)controller.abort();loads.clear();});
   }
   return {name:'tanuki-toolbox',inject:['slots','locale','remote','remote.pluginManager'],apply};

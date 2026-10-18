@@ -1,1 +1,6 @@
-{"meta":{"title":"消息中心","description":"DSH的消息推送及视觉提示"}}
+{
+  "meta": {
+    "title": "消息中心",
+    "description": "增加消息推送功能。"
+  }
+}

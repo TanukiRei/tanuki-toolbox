@@ -1,0 +1,2 @@
+[data-slot="conversation.composer.dock"] .tanuki-turn-clock{order:1;flex:none;white-space:nowrap;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-state-business-primary);}
+[data-slot="conversation.composer.dock"] .tanuki-turn-clock[data-state="done"]{color:var(--dsw-alias-state-success-primary);}

@@ -1,6 +1,6 @@
 {
   "name": "dsh-local-plugin-center",
-  "version": "0.5.25",
+  "version": "0.6.11",
   "private": true,
   "type": "module",
   "description": "A growing collection of small components that make DeepSeek Harness easier to use.",
@@ -33,7 +33,10 @@
     "./home/locale/*.json": "./components/home/locale/*.json",
     "./dynamic-island": "./components/dynamic-island/index.js",
     "./dynamic-island/package.json": "./components/dynamic-island/package.json",
-    "./dynamic-island/locale/*.json": "./components/dynamic-island/locale/*.json"
+    "./dynamic-island/locale/*.json": "./components/dynamic-island/locale/*.json",
+    "./composer": "./components/composer/index.js",
+    "./composer/package.json": "./components/composer/package.json",
+    "./composer/locale/*.json": "./components/composer/locale/*.json"
   },
   "dsh": {
     "manifestVersion": 1,

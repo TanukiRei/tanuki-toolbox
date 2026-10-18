@@ -176,7 +176,7 @@ document.currentScript.__tanukiRegister(function(require) {
       const schedule=()=>{clearTimeout(refreshTimer);if(alive)refreshTimer=setTimeout(()=>refresh(true),1000);};
       const offChange=ctx.get('remote').$on('plugin-manager/changed',schedule);
       const clearHandoff=()=>handoff.clear();window.addEventListener('tanuki:clear-handoff',clearHandoff);
-      const locatePlugin=event=>{const name=event.detail?.packageName;if(!alive||typeof name!=='string'||!name||name.length>250)return;publish({notificationTarget:{name,token:Date.now()+Math.random()}});};
+      const locatePlugin=event=>{const value=event.detail||{},name=value.packageName,category=['official','installed'].includes(value.category)?value.category:undefined;if(!alive||(!value.list&&(typeof name!=='string'||!name))||(name!==undefined&&(typeof name!=='string'||name.length>250)))return;rememberView({tab:'manage',...(category?{category}:{} )});publish({notificationTarget:{name,category,token:Date.now()+Math.random()}});};
       window.addEventListener('tanuki:locate-plugin',locatePlugin);
       const offReset=ctx.on('connection/reset',schedule);
       const interval=setInterval(()=>{if(document.visibilityState==='visible')void refresh();},300000);
@@ -312,7 +312,11 @@ document.currentScript.__tanukiRegister(function(require) {
           page.addEventListener('click',preserveToggle,true);page.addEventListener('scroll',measure,{passive:true});page.addEventListener('load',queue,true);page.addEventListener('error',queue,true);window.addEventListener('resize',measure);
           return()=>{observer.disconnect();resize.disconnect();cancelAnimationFrame(frame);page.removeEventListener('click',preserveToggle,true);page.removeEventListener('scroll',measure);page.removeEventListener('load',queue,true);page.removeEventListener('error',queue,true);window.removeEventListener('resize',measure);artwork.dispose();if(artworkRef.current===artwork)artworkRef.current=null;unpin();updateAllHost?.remove();for(const entry of names.values())removeName(entry);names.clear();for(const entry of entries.values()){entry.host.remove();entry.owner.style.removeProperty('--tanuki-control-width');entry.owner.style.removeProperty('--tanuki-control-height');entry.owner.style.removeProperty('--tanuki-control-radius');}};
         },[page,category]);
-        return h(React.Fragment,null,batchHost?createPortal(h(UpdateAllButton),batchHost):null,...hosts.map(({name,host,card})=>createPortal(h(React.Fragment,null,h(UpdateButton,{name}),card?h(GitButton,{name}):null,card&&category==='installed'?h(aliases.Alias,{name}):null),host)),...aliasHosts.map(({name,host,heading})=>createPortal(h(aliases.Title,{name,heading}),host,name)));
+        return h(React.Fragment,null,batchHost?createPortal(h(UpdateAllButton),batchHost):null,...hosts.map(({name,host,card})=>createPortal(h(React.Fragment,null,h(UpdateButton,{name}),card?h(GitButton,{name}):null,card&&category==='installed'?h(aliases.Alias,{name}):null),host)),...aliasHosts.map(({name,host,heading})=>{
+          const version=installedUpdates.get(name)||model.bundles.find(pkg=>pkg.name===name)?.version;
+          const label=typeof version==='string'&&version.trim()?'v'+version.trim().replace(/^v/i,''):'';
+          return createPortal(h(React.Fragment,null,h(aliases.Title,{name,heading}),label?h('small',{className:'tanuki-installed-version',title:label},label):null),host,name);
+        }));
       }
       class Boundary extends React.Component {
         constructor(p){super(p);this.state={failed:false,generation:0};}
@@ -353,12 +357,13 @@ document.currentScript.__tanukiRegister(function(require) {
           React.useEffect(()=>{
             if(!active||!s.notificationTarget)return;
             setTab('manage');const bundle=s.bundles.find(p=>p.name===s.notificationTarget.name);
-            setCategory(isOfficialBundle(bundle)?'official':'installed');
+            setCategory(s.notificationTarget.category||(isOfficialBundle(bundle)?'official':'installed'));
             if(targets)goListRef.current();
           },[active,targets,s.notificationTarget?.token]);
           React.useEffect(()=>{
             const target=s.notificationTarget;
             if(!active||!targets||!target||tab!=='manage')return;
+            if(!target.name){publish({notificationTarget:null});return;}
             let disposed=false,frame=null;
             const find=()=>{if(disposed||targets.page.querySelector(DETAIL_SELECTOR))return;
               const card=[...targets.page.querySelectorAll('[data-plugin-package]')].find(node=>node.getAttribute('data-plugin-package')===target.name&&node.getClientRects().length);

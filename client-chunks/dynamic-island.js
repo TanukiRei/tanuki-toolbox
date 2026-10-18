@@ -4,7 +4,7 @@ document.currentScript.__tanukiRegister(function(require){
   const h=React.createElement,STORAGE='tanuki-toolbox:island-v1';
   const state={queue:[],seen:[],epoch:null,cursor:0,launch:null,openedAt:Date.now(),enabled:false,listeners:new Set(),snapshot:[]};
   if(!state.restored){state.restored=true;try{const saved=JSON.parse(sessionStorage.getItem(STORAGE)||'null');if(saved){state.epoch=saved.epoch;state.cursor=Number(saved.cursor)||0;state.launch=saved.launch;}}catch{}}
-  let active=false,disposed=false,timer,flight=null;
+  let active=false,disposed=false,timer,flight=null,navigating=false,navigationEpoch=0,stopLocate=null;
   let player=null,lastSoundId=null,preferences={volume:100,audio:null,categories:{plugins:true,tasks:true,updates:true},bubbles:true,systemNotifications:false,soundEnabled:true},settingsReady=false,settingsEpoch=0,settingsRequest=null,pollRequest=null;
   const pending=[];const systemNotifications=new Set(),notificationSessions=new Map();
   let workspace=null,layout=null;
@@ -18,18 +18,67 @@ document.currentScript.__tanukiRegister(function(require){
     for(let i=pending.length-1;i>=0;i--)if(obsolete(pending[i]))pending.splice(i,1);
     change();
   };
-  function openNotification(item){
-    if(!active||disposed)return;
-    window.focus();
-    if(typeof item.sessionId==='string'&&workspace){Promise.resolve(workspace.openSession(item.sessionId)).catch(error=>console.warn('[Tanuki] Could not open notification session',error));return;}
-    if(typeof item.packageName==='string'&&layout){
-      window.dispatchEvent(new CustomEvent('tanuki:clear-handoff'));
-      // Native plugin manager resets its detail view when leaving the panel.
-      if(layout.panelInfo.getSnapshot().activePanelId==='plugins')layout.selectPanel(null);
-      layout.selectPanel('plugins');
-      window.dispatchEvent(new CustomEvent('tanuki:locate-plugin',{detail:{packageName:item.packageName}}));
-    }
+  const settingsShell=()=>ctx.slots.entries('sidebar.settings').find(entry=>typeof entry.store?.create==='function');
+  const closeSettings=()=>settingsShell()?.store.create().actions.close?.();
+  function destination(item){
+    const supplied=item.destination;
+    if(supplied&&['session','plugins','settings','schedules','home','updates'].includes(supplied.page))return supplied;
+    if(typeof item.sessionId==='string')return {page:'session',sessionId:item.sessionId};
+    if(item.packageName||item.category==='plugins'||String(item.kind).startsWith('plugin.'))return {page:'plugins',category:item.pluginCategory};
+    if(String(item.kind).startsWith('task.'))return {page:'schedules'};
+    if(String(item.kind).startsWith('dsh.update'))return {page:'updates'};
+    return {page:'settings',section:'tanuki-toolbox',component:item.kind==='launch.protected'?'startup-guard':'dynamic-island'};
   }
+  function locateComponent(component){
+    if(!['startup-guard','sidebar','home','composer','dynamic-island','plugin-center'].includes(component))return;
+    const selector='[data-shortcut-modal="settings"] [data-tanuki-setting="'+component+'"]';
+    let observer,timeout;
+    const cleanup=()=>{observer?.disconnect();clearTimeout(timeout);if(stopLocate===cleanup)stopLocate=null;};
+    const find=()=>{if(!active||disposed){cleanup();return;}const element=document.querySelector(selector);if(!element)return;element.scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});cleanup();};
+    stopLocate=cleanup;observer=new MutationObserver(find);observer.observe(document.body,{childList:true,subtree:true});timeout=setTimeout(cleanup,5000);find();
+  }
+  async function openNotification(item){
+    if(!active||disposed||navigating)return false;
+    const epoch=++navigationEpoch;navigating=true;stopLocate?.();
+    try{
+      const target=destination(item);window.focus();
+      window.dispatchEvent(new CustomEvent('tanuki:clear-handoff'));
+      if(target.page==='session'){
+        const id=target.sessionId||item.sessionId;if(typeof id!=='string'||!workspace)throw new Error('Conversation navigation unavailable');
+        closeSettings();await workspace.openSession(id);
+      }else if(target.page==='plugins'){
+        if(!layout)throw new Error('Plugin navigation unavailable');
+        closeSettings();
+        // Reuse the native page store: return from detail to its Installed list
+        // without switching away and briefly revealing the conversation.
+        const entry=ctx.slots.entries('main').find(row=>row.options?.key==='plugins');
+        const actions=entry?.store?.create?.().actions;
+        actions?.setView?.({kind:'list'});actions?.setTab?.('installed');
+        window.dispatchEvent(new CustomEvent('tanuki:locate-plugin',{detail:{list:true,packageName:item.kind==='plugin.removed'?undefined:item.packageName,category:target.category||item.pluginCategory}}));
+        layout.selectPanel('plugins');
+      }else if(target.page==='settings'||target.page==='updates'){
+        const entry=settingsShell(),actions=entry?.store.create().actions;
+        if(!actions?.openSection)throw new Error('Settings navigation unavailable');
+        if(target.page==='updates'){
+          const open=entry.inject?.()?.openDesktopUpdate;
+          if(typeof open==='function')open();else actions.openSection('general');
+        }else{
+          const section=typeof target.section==='string'&&ctx.slots.entries('settings.section').some(row=>row.options?.id===target.section)?target.section:'tanuki-toolbox';
+          actions.openSection(section);locateComponent(target.component);
+        }
+      }else{
+        if(!layout)throw new Error('Page navigation unavailable');
+        closeSettings();
+        const panel=target.page==='schedules'?'schedules':ctx.slots.entries('main').some(row=>row.options?.key==='tanuki-sidebar-home')?'tanuki-sidebar-home':'tanuki-home';
+        if(!ctx.slots.entries('main').some(row=>row.options?.key===panel))throw new Error('Page unavailable');
+        layout.selectPanel(panel);
+      }
+      return active&&!disposed&&epoch===navigationEpoch;
+    }catch(error){if(active&&!disposed)console.warn('[Tanuki] Could not open notification target',error);return false;}
+    finally{if(epoch===navigationEpoch)navigating=false;}
+  }
+  const activate=item=>{void openNotification(item).then(opened=>{if(opened&&active&&!disposed)dismiss(item.id);});};
+  function cancelNavigation(){++navigationEpoch;navigating=false;stopLocate?.();stopLocate=null;}
   const getPlayer=()=>player||(player=createAudioPreview({baseURI:document.baseURI}));
   async function refreshSettings(){
     if(!active||disposed)return;
@@ -65,7 +114,7 @@ document.currentScript.__tanukiRegister(function(require){
       systemNotifications.add(notification);if(item.sessionId)notificationSessions.set(notification,item.sessionId);
       notification.onclose=()=>{systemNotifications.delete(notification);notificationSessions.delete(notification);};
       notification.onerror=()=>{console.warn('[Tanuki] System notification could not be displayed',item.kind);closeNotification(notification);};
-      notification.onclick=()=>{openNotification(item);closeNotification(notification);};
+      notification.onclick=()=>{activate(item);closeNotification(notification);};
     }catch(error){console.warn('[Tanuki] System notification could not be created',error);} 
   }
   const save=()=>{try{sessionStorage.setItem(STORAGE,JSON.stringify({epoch:state.epoch,cursor:state.cursor,launch:state.launch}));}catch{}};
@@ -111,7 +160,7 @@ document.currentScript.__tanukiRegister(function(require){
   function sync(enabled){
     if(disposed)return;
     if(enabled===active)return;
-    active=enabled;state.enabled=enabled;
+    active=enabled;state.enabled=enabled;if(!enabled)cancelNavigation();
     clearInterval(timer);
     if(enabled){window.addEventListener('tanuki:notify',onMessage);void refreshSettings();window.addEventListener('tanuki:settings-changed',settingsChanged);window.addEventListener('tanuki:task-read',taskRead);window.addEventListener('focus',onFocus);window.addEventListener('pointerdown',unlockAudio,true);window.addEventListener('keydown',unlockAudio,true);state.queue=state.queue.filter(item=>Date.now()-item.at<120000);change();void poll();timer=setInterval(poll,1600);}
     else{window.removeEventListener('tanuki:notify',onMessage);window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;state.queue=[];change();}
@@ -145,12 +194,13 @@ document.currentScript.__tanukiRegister(function(require){
     const paths={error:'M12 8v5m0 3h.01M12 3 2 21h20L12 3Z',shield:'M12 3 4.5 6v5.5c0 4 3 7.3 7.5 9.5 4.5-2.2 7.5-5.5 7.5-9.5V6L12 3Zm-4 9 2.5 2.5L16 9',check:'m6 12 4 4 8-8',pause:'M9 6v12M15 6v12',remove:'M7 12h10'};
     return createPortal(h('div',{className:'tanuki-island-position','data-tanuki-island':'',onMouseEnter:()=>setPaused(true),onMouseLeave:()=>setPaused(false),onFocus:()=>setPaused(true),onBlur:event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false);}},
       h('div',{className:'tanuki-island',key:item.id},
-        h('span',{className:'tanuki-island-symbol','data-tone':glyph==='error'?'error':undefined,'aria-hidden':true},h('svg',{viewBox:'0 0 24 24',width:23,height:23,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:paths[glyph]}))),
-        h('div',{className:'tanuki-island-copy',role:'status','aria-live':'polite','aria-atomic':true},h('strong',null,title),detail?h('span',{title:detail},detail):null),
-        queue.length>1?h('span',{className:'tanuki-island-count',title:tr('islandQueued',{n:String(queue.length-1)})},'+'+(queue.length-1)):null,
+        h('button',{type:'button',className:'tanuki-island-open','aria-label':tr('openTarget')+' · '+title,title:tr('openTarget'),onClick:()=>activate(item)},
+          h('span',{className:'tanuki-island-symbol','data-tone':glyph==='error'?'error':undefined,'aria-hidden':true},h('svg',{viewBox:'0 0 24 24',width:23,height:23,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:paths[glyph]}))),
+          h('span',{className:'tanuki-island-copy',role:'status','aria-live':'polite','aria-atomic':true},h('strong',null,title),detail?h('span',{title:detail},detail):null),
+          queue.length>1?h('span',{className:'tanuki-island-count',title:tr('islandQueued',{n:String(queue.length-1)})},'+'+(queue.length-1)):null),
         h('button',{type:'button',className:'tanuki-island-close','aria-label':tr('dismiss'),title:tr('dismiss'),onClick:()=>dismiss(item.id)},'×'))),document.body);
   }
-  return {Island,sync,push,poll,dispose(){disposed=true;active=false;window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;clearInterval(timer);window.removeEventListener('tanuki:notify',onMessage);state.enabled=false;state.queue=[];state.seen=[];state.snapshot=[];state.listeners.clear();}};
+  return {Island,sync,push,poll,dispose(){disposed=true;active=false;cancelNavigation();window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;clearInterval(timer);window.removeEventListener('tanuki:notify',onMessage);state.enabled=false;state.queue=[];state.seen=[];state.snapshot=[];state.listeners.clear();}};
 };
   // Shared only inside this renderer: disable/re-enable or a fresh chunk must not
   // let an older bridge promise finish after the next owner's count.
@@ -165,45 +215,9 @@ document.currentScript.__tanukiRegister(function(require){
     })();
   }
   function apply(ctx,{load}={}){
-    ctx.effect(()=>ctx.locale.register(NS,{"zh":{"dismiss":"关闭提示","turnRunning":"进行中","turnCompleted":"已完成","islandGlobal":"全局消息","islandTask":"任务已完成","islandTaskDetail":"本次任务已完成，可以查看结果了。","islandEnabled":"插件已开启","islandDisabled":"插件已关闭","islandRemoved":"插件已卸载","islandInstalled":"插件安装成功","islandUpdated":"插件已更新","islandLaunchDetail":"启动前已检查 {n} 个第三方插件，停用 {disabled} 个不兼容插件。","islandQueued":"还有 {n} 条消息","launchProtected":"本次已通过保护启动"},"en":{"dismiss":"Dismiss","turnRunning":"In progress","turnCompleted":"Completed","islandGlobal":"Notification","islandTask":"Task completed","islandTaskDetail":"Your task is complete. The result is ready to view.","islandEnabled":"Plugin enabled","islandDisabled":"Plugin disabled","islandRemoved":"Plugin uninstalled","islandInstalled":"Plugin installed","islandUpdated":"Plugin updated","islandLaunchDetail":"Checked {n} third-party plugins before launch; disabled {disabled} incompatible plugins.","islandQueued":"{n} more notifications","launchProtected":"This session used Protected Launch"}}));const t=ctx.locale.bind(NS);
+    ctx.effect(()=>ctx.locale.register(NS,{"zh":{"dismiss":"关闭提示","islandGlobal":"全局消息","islandTask":"任务已完成","islandTaskDetail":"本次任务已完成，可以查看结果了。","islandEnabled":"插件已开启","islandDisabled":"插件已关闭","islandRemoved":"插件已卸载","islandInstalled":"插件安装成功","islandUpdated":"插件已更新","islandLaunchDetail":"启动前已检查 {n} 个第三方插件，停用 {disabled} 个不兼容插件。","islandQueued":"还有 {n} 条消息","launchProtected":"本次已通过保护启动","openTarget":"打开相关页面"},"en":{"dismiss":"Dismiss","islandGlobal":"Notification","islandTask":"Task completed","islandTaskDetail":"Your task is complete. The result is ready to view.","islandEnabled":"Plugin enabled","islandDisabled":"Plugin disabled","islandRemoved":"Plugin uninstalled","islandInstalled":"Plugin installed","islandUpdated":"Plugin updated","islandLaunchDetail":"Checked {n} third-party plugins before launch; disabled {disabled} incompatible plugins.","islandQueued":"{n} more notifications","launchProtected":"This session used Protected Launch","openTarget":"Open related page"}}));const t=ctx.locale.bind(NS);
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     const requests=new Set();let alive=true;
-    // Native session-scoped dock is beside ContextMeter, not the workspace row.
-    // useChat exposes durable turn/start and turn/end events (not mount times).
-    // Keep this inside Message Center, independent of its optional bubbles.
-    function TurnClock(props){
-      if(typeof props.useSession!=='function'||typeof props.useChat!=='function'||typeof props.useProjection!=='function')return null;
-      return React.createElement(TurnClockBody,props);
-    }
-    function TurnClockBody({sessionId,useSession,useChat,useProjection}){
-      const clockT=useLocale(),running=useSession(s=>s.running),removed=useSession(s=>s.removed);
-      const outline=useProjection('turnOutline');
-      const latest=Array.isArray(outline)?outline.at(-1)?.turn:undefined;
-      const turn=useChat(s=>{
-        const timeline=s.timeline,number=timeline?.turnOrder?.at(-1);
-        // Never show an older loaded turn as the current task while paging.
-        if(latest===undefined||number!==latest)return undefined;
-        return timeline.turns.get(number);
-      });
-      const start=turn?.start?.time,end=turn?.end?.time,reason=turn?.end?.data?.reason?.kind;
-      const validStart=Number.isFinite(start)&&start>=0;
-      const active=!removed&&running===true&&validStart&&turn?.status==='open'&&!turn.end;
-      // Positive success allow-list: cancelled, errors, repaired/interrupted logs,
-      // max-token limits and unknown future reasons must never become green.
-      const done=!removed&&running===false&&validStart&&Number.isFinite(end)&&end>=start&&reason==='completed';
-      const [now,setNow]=React.useState(Date.now);
-      React.useEffect(()=>{
-        if(!active)return;
-        setNow(Date.now());
-        const timer=setInterval(()=>{if(alive)setNow(Date.now());},1000);
-        return()=>clearInterval(timer);
-      },[sessionId,turn?.turn,start,active]);
-      if(!active&&!done)return null;
-      const seconds=Math.floor(Math.max(0,(done?end:now)-start)/1000);
-      const duration=[Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');
-      return React.createElement('span',{className:'tanuki-turn-clock','data-state':done?'done':'running','aria-live':'off'},clockT(done?'turnCompleted':'turnRunning')+' '+duration);
-    }
-    ctx.slots.inject('conversation.composer.dock',()=>ctx.slots.register({name:'conversation.composer.dock',id:'tanuki-turn-clock',locale:NS,order:100},TurnClock));
     async function read(path,ms,signal,binary=false){
       if(!alive)throw new Error('Component stopped');
       const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),ms);requests.add(controller);
@@ -434,7 +448,7 @@ document.currentScript.__tanukiRegister(function(require){
     const updates=window.dshDesktop?.updates;
     if(typeof updates?.subscribe==='function')offUpdates=updates.subscribe(updateState);
     if(typeof updates?.status==='function')Promise.resolve(updates.status()).then(updateState).catch(()=>{});
-    ctx.effect(()=>{const style=document.createElement('style');style.textContent="/* Native dock's slot anchor uses display:contents; order places only our label\n   after the context meter, without moving or replacing native React children. */\n[data-slot=\"conversation.composer.dock\"] .tanuki-turn-clock{order:1;flex:none;white-space:nowrap;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;color:#55A9E6;}\n[data-slot=\"conversation.composer.dock\"] .tanuki-turn-clock[data-state=\"done\"]{color:#14E878;}\n/* One shared surface, independent of the current DSH panel and theme. */\n.tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:max-content;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}\n.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);min-height:68px;padding:12px 12px 12px 18px;border:1px solid #ffffff1a;border-radius:30px;background:#111315;color:#f4f5f6;box-shadow:0 10px 32px #0005,0 2px 8px #0004;pointer-events:auto;font-family:inherit;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}\n.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:#9bd4b91a;color:#a5ddc0;}\n.tanuki-island-symbol[data-tone=\"error\"]{background:#e99a391a;color:#ffc078;}\n.tanuki-island-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}\n.tanuki-island-copy strong{font-size:14px;font-weight:600;line-height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}\n.tanuki-island-copy>span{color:#bcc1c5;font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}\n.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:#ffffff12;color:#bec6ca;font-variant-numeric:tabular-nums;}\n.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:#9ca4ab;font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}\n.tanuki-island-close:hover{background:#ffffff12;color:#fff;}\n.tanuki-island-close:focus-visible{outline:2px solid #a5ddc0;outline-offset:2px;}\n@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(-12px) scale(.92);}to{opacity:1;transform:translateY(0) scale(1);}}\n@media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close{transition:none}}\n";style.dataset.tanukiStyle='island';document.head.appendChild(style);return()=>style.remove();});
+    ctx.effect(()=>{const style=document.createElement('style');style.textContent="/* Native dock's slot anchor uses display:contents; order places only our label\n   after the context meter, without moving or replacing native React children. */\n/* One shared surface, independent of the current DSH panel and theme. */\n.tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:max-content;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}\n.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);min-height:68px;padding:12px 12px 12px 18px;border:1px solid #ffffff1a;border-radius:30px;background:#111315;color:#f4f5f6;box-shadow:0 10px 32px #0005,0 2px 8px #0004;pointer-events:auto;font-family:inherit;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}\n.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:#9bd4b91a;color:#a5ddc0;}\n.tanuki-island-symbol[data-tone=\"error\"]{background:#e99a391a;color:#ffc078;}\n.tanuki-island-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}\n.tanuki-island-open{display:flex;flex:1;min-width:0;align-items:center;gap:12px;margin:0;padding:0;border:0;border-radius:18px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .16s;}\n.tanuki-island-open:hover{background:#ffffff08;}\n.tanuki-island-open:focus-visible{outline:2px solid #a5ddc0;outline-offset:4px;}\n.tanuki-island-copy strong{font-size:14px;font-weight:600;line-height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}\n.tanuki-island-copy>span{color:#bcc1c5;font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}\n.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:#ffffff12;color:#bec6ca;font-variant-numeric:tabular-nums;}\n.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:#9ca4ab;font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}\n.tanuki-island-close:hover{background:#ffffff12;color:#fff;}\n.tanuki-island-close:focus-visible{outline:2px solid #a5ddc0;outline-offset:2px;}\n@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(-12px) scale(.92);}to{opacity:1;transform:translateY(0) scale(1);}}\n@media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close,.tanuki-island-open{transition:none}}\n";style.dataset.tanukiStyle='island';document.head.appendChild(style);return()=>style.remove();});
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-dynamic-island',locale:NS},island.Island));
     ctx.effect(()=>()=>{badgeClosed=true;writeBadge(0);confirmedTurns.clear();runningSince.clear();readThrough.clear();retiredEpochs.clear();bubbleEnabled=false;emitBubbles();alive=false;++bubbleEpoch;bubbleRequest?.abort();bubbleFiber?.dispose();offUpdates?.();window.removeEventListener('focus',reconcileBubbles);window.removeEventListener('blur',reconcileBubbles);document.removeEventListener('visibilitychange',reconcileBubbles);window.removeEventListener('tanuki:notification-delivered',delivered);completions.clear();acknowledged.clear();hostErrors.clear();interactionKeys.clear();sessionRows=null;hostPluginItems=[];bubbleItems=[];nativeStatus=null;window.removeEventListener('offline',reconcileBubbles);window.removeEventListener('online',reconcileBubbles);window.removeEventListener('tanuki:bubble-request',emitBubbles);for(const controller of requests)controller.abort();requests.clear();island.dispose();});
   }

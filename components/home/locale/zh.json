@@ -1,1 +1,6 @@
-{"meta":{"title":"起始页","description":"提供一个空白起始页，点击左上角 DeepSeek 图标即可返回，不会新建对话。"}}
+{
+  "meta": {
+    "title": "起始页",
+    "description": "增加一页起始页面，提供多种有效信息。"
+  }
+}
