@@ -1,6 +1,6 @@
 {
   "name": "tanuki-home",
-  "version": "0.5.24",
+  "version": "0.5.25",
   "type": "module",
   "description": "A quiet start page. Click the DeepSeek logo to return home without creating a conversation.",
   "icon": "./icon.svg"

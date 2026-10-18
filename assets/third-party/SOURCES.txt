@@ -1,0 +1,15 @@
+Third-party artwork compatibility assets
+
+These marks identify the original plugins; they are not Tanuki Toolbox branding.
+Prefer each installed package's own declared icon over these compatibility fallbacks.
+
+dshmarket.svg: unmodified assets/logo.svg from dsh-market/dsh-market
+Commit: ba73a3988bb3eee82295a695d59be59563637350
+https://github.com/dsh-market/dsh-market/blob/ba73a3988bb3eee82295a695d59be59563637350/assets/logo.svg
+License: dshmarket-LICENSE.txt (MIT).
+
+skills-manager.svg: SKILL_PATHS from MichengAI/dsh-skills-manager/src/settings-nav-icon.ts, wrapped in a standalone SVG. Displayed as a mask to retain the settings glyph's inherited color.
+Commit: 4fcbfe648a7abe3a21c1f78cd63406262eae9d6b
+https://github.com/MichengAI/dsh-skills-manager/blob/4fcbfe648a7abe3a21c1f78cd63406262eae9d6b/src/settings-nav-icon.ts
+License: skills-manager-LICENSE.txt (Apache-2.0).
+No author avatar or generic DeepSeek brand asset is used as a plugin icon.

@@ -17,6 +17,14 @@
 button:has(.tanuki-sidebar-icon){position:relative;}
 button:has(.tanuki-sidebar-icon):has(>span:nth-child(2)){padding-left:6px;padding-right:40px;gap:6px;}
 .tanuki-sidebar-icon{object-fit:contain;flex:none;}
+/* Own only the fallback layer; native React artwork is restored on cleanup. */
+[data-tanuki-artwork-ready]{position:relative;}
+[data-tanuki-artwork-ready]>:not([data-tanuki-plugin-artwork]){visibility:hidden;}
+.tanuki-plugin-artwork{position:absolute;inset:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:inherit;overflow:hidden;color:var(--dsw-alias-label-primary,#eee);}
+.tanuki-plugin-artwork>img{display:block;width:100%;height:100%;object-fit:contain;}
+.tanuki-plugin-artwork [hidden]{display:none!important;}
+.tanuki-plugin-initials{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;background:var(--dsw-alias-bg-layer-2,#303238);color:var(--dsw-alias-label-primary,#eee);font-size:15px;font-weight:600;letter-spacing:.03em;}
+.tanuki-plugin-artwork-mask::after{content:'';width:85%;height:85%;background:currentColor;mask:var(--tanuki-plugin-mask) center/contain no-repeat;-webkit-mask:var(--tanuki-plugin-mask) center/contain no-repeat;}
 .tanuki-side-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);}
 button:has(.tanuki-sidebar-icon):not(:has(>span:nth-child(2))) .tanuki-side-badge{right:0;top:0;transform:none;min-width:12px;height:12px;font-size:8px;padding:0 3px;}
 [data-tanuki-center=market]{overflow:hidden!important;padding-bottom:0!important;}

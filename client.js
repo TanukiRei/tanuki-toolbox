@@ -1,6 +1,6 @@
 window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
   'use strict';
-  const React=require('react'),h=React.createElement,VERSION="0.5.24";
+  const React=require('react'),h=React.createElement,VERSION="0.5.25";
   const SELF='dsh-local-plugin-center',NS='tanukiCore';
   function apply(ctx){
     let disposed=false,flight=null,again=false,timer;

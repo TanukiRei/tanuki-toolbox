@@ -1,4 +1,13 @@
-黎猫工具箱 / Tanuki Toolbox 0.5.24
+黎猫工具箱 / Tanuki Toolbox 0.5.25
+
+0.5.25 第三方插件图标 / Third-party plugin artwork
+- 修复未声明包图标的第三方插件在插件中心只显示宿主默认图案的问题；插件列表和包详情页使用同一套图标补全。
+- 优先保留宿主已正确显示的插件原图；补充读取已安装包声明的 icon、dsh.icon 和导出的 ./icon，不执行第三方插件代码。
+- 插件市场使用上游 assets/logo.svg 方块标志；技能管理器使用其设置页的清单星芒图标。兼容资源的来源、固定提交及许可证随包保留。
+- 当前 ModLens 和 Free Search 未提供独立图标，使用名称缩写兜底，不以作者头像或 DeepSeek 标志冒充插件图标。
+- 资源从本机读取，无运行时 GitHub 图标请求；仅启用插件中心并进入管理页时加载，离开或停用取消读取、清理挂载图层。复用现有 DOM 观察器，不增加轮询。
+- 仅必要构建、打包、GitHub 发布与本机更新；未运行功能测试或浏览器验收。
+Preserve working native artwork, resolve declared local package/exported icons, and use verified Market and Skills settings marks when the manifests omit them. Keep lists and package details consistent; use name initials when a plugin has no dedicated icon. Read artwork locally on demand, cancel on exit, and restore native DOM on cleanup. Sources and licenses are included. Built and packaged without functional or browser tests.
 
 0.5.24 GitHub 首次公开发布 / First public GitHub release
 - 仓库：https://github.com/TanukiRei/tanuki-toolbox。补齐包的仓库、作者、主页和问题反馈地址，使 Git 页面及 GitHub 更新来源可识别。

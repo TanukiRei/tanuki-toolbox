@@ -17,6 +17,7 @@ document.currentScript.__tanukiRegister(function(require) {
     const createDetailNavigation=__DETAIL_NAVIGATION_FUNCTION__;
     const createViewHandoff=__VIEW_HANDOFF_FUNCTION__;
     const createPluginAliases=__ALIASES_FUNCTION__;
+    const createPluginArtwork=__ARTWORK_FUNCTION__;
     const VIEW_KEY='tanuki-toolbox:center-view-v1';
     let savedView={tab:null,category:'installed',marketMode:null};
     try{const saved=JSON.parse(sessionStorage.getItem(VIEW_KEY)||'null');if(saved)savedView={tab:['market','manage'].includes(saved.tab)?saved.tab:null,category:saved.category==='official'?'official':'installed',marketMode:saved.marketMode==='installed'?'installed':null};}catch{}
@@ -219,10 +220,19 @@ document.currentScript.__tanukiRegister(function(require) {
       // Add only our portal hosts. Native uninstall/switch nodes keep their React ownership.
       function NativePluginEnhancements({page,category}){
         const [hosts,setHosts]=React.useState([]),[aliasHosts,setAliasHosts]=React.useState([]),[batchHost,setBatchHost]=React.useState(null);
+        const model=useModel(),[icons,setIcons]=React.useState({}),artworkRef=React.useRef(null),artworkData=React.useRef(null);
+        artworkData.current={bundles:model.bundles,icons};
+        React.useEffect(()=>{
+          const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),10000);
+          json('/tanuki-toolbox/plugin-artwork',abort.signal).then(result=>{if(!abort.signal.aborted&&alive&&result?.icons&&typeof result.icons==='object')setIcons(result.icons);}).catch(()=>{}).finally(()=>clearTimeout(timer));
+          return()=>{clearTimeout(timer);abort.abort();};
+        },[model.revision]);
+        React.useLayoutEffect(()=>{artworkRef.current?.sync(page,model.bundles,icons);},[page,model.bundles,icons]);
         React.useEffect(()=>{if(category==='installed')void aliases.load();},[category]);
         React.useLayoutEffect(()=>{
           setHosts([]);setAliasHosts([]);
           const entries=new Map(),names=new Map();let frame,pinned=null,observedBar=null,updateAllHost=null;
+          const artwork=createPluginArtwork({document});artworkRef.current=artwork;
           const removeName=entry=>{entry.host.remove();entry.heading.removeAttribute('data-tanuki-alias-heading');};
           const unpin=()=>{if(pinned){pinned.removeAttribute('data-tanuki-pinned-actions');pinned.style.removeProperty('--tanuki-actions-top');pinned.style.removeProperty('--tanuki-actions-right');pinned=null;}};
           const measure=()=>{
@@ -242,6 +252,7 @@ document.currentScript.__tanukiRegister(function(require) {
           };
           const resize=new ResizeObserver(measure);
           const scan=()=>{
+            artwork.sync(page,artworkData.current.bundles,artworkData.current.icons);
             const refreshButton=page.querySelector(':scope > header > div:last-child button[aria-busy]');
             const controls=refreshButton?.closest('header')?.lastElementChild;
             if(updateAllHost&&(!controls||updateAllHost.parentElement!==controls)){updateAllHost.remove();updateAllHost=null;setBatchHost(null);}
@@ -298,8 +309,8 @@ document.currentScript.__tanukiRegister(function(require) {
             const leaving=control.getAttribute('aria-checked')==='true'&&(isWholeToolbox||row==='tanuki-plugin-center');
             handoff.capture(page,generation,snapshot.revision||0,leaving);
           };
-          page.addEventListener('click',preserveToggle,true);page.addEventListener('scroll',measure,{passive:true});window.addEventListener('resize',measure);
-          return()=>{observer.disconnect();resize.disconnect();cancelAnimationFrame(frame);page.removeEventListener('click',preserveToggle,true);page.removeEventListener('scroll',measure);window.removeEventListener('resize',measure);unpin();updateAllHost?.remove();for(const entry of names.values())removeName(entry);names.clear();for(const entry of entries.values()){entry.host.remove();entry.owner.style.removeProperty('--tanuki-control-width');entry.owner.style.removeProperty('--tanuki-control-height');entry.owner.style.removeProperty('--tanuki-control-radius');}};
+          page.addEventListener('click',preserveToggle,true);page.addEventListener('scroll',measure,{passive:true});page.addEventListener('load',queue,true);page.addEventListener('error',queue,true);window.addEventListener('resize',measure);
+          return()=>{observer.disconnect();resize.disconnect();cancelAnimationFrame(frame);page.removeEventListener('click',preserveToggle,true);page.removeEventListener('scroll',measure);page.removeEventListener('load',queue,true);page.removeEventListener('error',queue,true);window.removeEventListener('resize',measure);artwork.dispose();if(artworkRef.current===artwork)artworkRef.current=null;unpin();updateAllHost?.remove();for(const entry of names.values())removeName(entry);names.clear();for(const entry of entries.values()){entry.host.remove();entry.owner.style.removeProperty('--tanuki-control-width');entry.owner.style.removeProperty('--tanuki-control-height');entry.owner.style.removeProperty('--tanuki-control-radius');}};
         },[page,category]);
         return h(React.Fragment,null,batchHost?createPortal(h(UpdateAllButton),batchHost):null,...hosts.map(({name,host,card})=>createPortal(h(React.Fragment,null,h(UpdateButton,{name}),card?h(GitButton,{name}):null,card&&category==='installed'?h(aliases.Alias,{name}):null),host)),...aliasHosts.map(({name,host,heading})=>createPortal(h(aliases.Title,{name,heading}),host,name)));
       }
