@@ -24,7 +24,7 @@ document.currentScript.__tanukiRegister(function(require){
       try{const response=await fetch(new URL(path.replace(/^\//,''),document.baseURI),{...options,credentials:'same-origin',cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('Notifications unavailable');return binary?await response.blob():await response.json();}
       finally{clearTimeout(timer);requests.delete(controller);signal?.removeEventListener('abort',abort);}
     }
-    let bubbleFiber=null,bubbleRequest=null,bubbleEpoch=0,bubbleEnabled=false,bubbleItems=[],offUpdates=null,nativeStatus=null,hostErrors=new Set(),hostPluginItems=[];
+    let bubbleFiber=null,bubbleRequest=null,bubbleEpoch=0,bubbleEnabled=false,bubbleCategories={plugins:true,tasks:true,updates:true},bubbleItems=[],offUpdates=null,nativeStatus=null,hostErrors=new Set(),hostPluginItems=[];
     const interactionKeys=new Map();let interactionSequence=0;
     // Native completionUnread ignores window focus and has no public mark-read action.
     // Keep only observed completions locally; never infer success from an idle baseline.
@@ -94,7 +94,7 @@ document.currentScript.__tanukiRegister(function(require){
       for(const [id,turn] of confirmedTurns)if(!next.has(id))turn.acknowledged=true;
       nativeStatus=next;acknowledgeCurrent();
     }
-    const emitBubbles=()=>{if(alive)window.dispatchEvent(new CustomEvent('tanuki:bubble-state',{detail:{source:'notifications',taskReadAware:bubbleEnabled&&nativeStatus instanceof Map,items:bubbleEnabled?bubbleItems:[]}}));};
+    const emitBubbles=()=>{if(alive)window.dispatchEvent(new CustomEvent('tanuki:bubble-state',{detail:{source:'notifications',categories:bubbleCategories,taskReadAware:bubbleEnabled&&nativeStatus instanceof Map,items:bubbleEnabled?bubbleItems:[]}}));};
     function reconcileBubbles(){
       if(!alive)return;
       acknowledgeCurrent();reconcileTaskbar();
@@ -106,16 +106,17 @@ document.currentScript.__tanukiRegister(function(require){
         else if(value.pendingInteraction)items.push({id:'task:action:'+sessionId,target:'workspace',sessionId,state:'action'});
         else if(!value.running&&completions.has(sessionId)&&!viewing(sessionId))items.push({id:'task:completion:'+sessionId,target:'workspace',sessionId,state:hostErrors.has(sessionId)?'error':'done'});
       }
-      if(window.navigator.onLine===false)items.push({id:'network:offline',target:'workspace',state:'error'});
+      if(window.navigator.onLine===false)items.push({id:'network:offline',category:'general',target:'workspace',state:'error'});
       bubbleItems=items;emitBubbles();
     }
     function syncBubbles(settings){
-      const enabled=settings.bubbles!==false;if(enabled===bubbleEnabled)return; bubbleEnabled=enabled;const epoch=++bubbleEpoch;
+      bubbleCategories={plugins:settings.categories?.plugins!==false,tasks:settings.categories?.tasks!==false,updates:settings.categories?.updates!==false};
+      const enabled=settings.bubbles!==false;if(enabled===bubbleEnabled){emitBubbles();return;} bubbleEnabled=enabled;const epoch=++bubbleEpoch;
       bubbleRequest?.abort();bubbleRequest=null;emitBubbles();
       if(!enabled){bubbleFiber?.dispose();bubbleFiber=null;return;}
       if(typeof load!=='function')return;
       const controller=new AbortController();bubbleRequest=controller;
-      void load('global-bubbles',controller.signal).then(module=>{if(!alive||!bubbleEnabled||epoch!==bubbleEpoch)return;bubbleFiber=ctx.plugin(module);emitBubbles();}).catch(error=>{if(alive&&epoch===bubbleEpoch&&!controller.signal.aborted)console.warn('[Tanuki] Global bubbles could not load',error);}).finally(()=>{if(bubbleRequest===controller)bubbleRequest=null;});
+      void load('global-bubbles',controller.signal).then(module=>{if(!alive||!bubbleEnabled||epoch!==bubbleEpoch)return;bubbleFiber=ctx.plugin(module,{categories:bubbleCategories});emitBubbles();}).catch(error=>{if(alive&&epoch===bubbleEpoch&&!controller.signal.aborted)console.warn('[Tanuki] Global bubbles could not load',error);}).finally(()=>{if(bubbleRequest===controller)bubbleRequest=null;});
     }
     const island=createNotificationIsland({React,createPortal,ctx,read,useLocale,activateDesktop:signal=>read('/tanuki-toolbox/notifications/activate',9000,signal,false,{method:'POST',headers:{'X-Tanuki-Notification-Click':'1'}}),notificationIcon:__DSH_NOTIFICATION_ICON__,createAudioPreview:__AUDIO_PREVIEW_FACTORY__,onSettings:syncBubbles,acceptTaskNotification:message=>{
       const id=message.sessionId;

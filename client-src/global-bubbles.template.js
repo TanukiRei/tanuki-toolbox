@@ -2,8 +2,8 @@ document.currentScript.__tanukiRegister(function(require){
   'use strict';
   const React=require('react'),{createPortal}=require('react-dom'),h=React.createElement;
   const createBubbleModel=__BUBBLES_FUNCTION__,css=__CSS__,dictionaries=__LOCALES__,NS='tanukiBubbles';
-  function apply(ctx){
-    const model=createBubbleModel();let alive=true;
+  function apply(ctx,{categories={}}={}){
+    const model=createBubbleModel(categories);let alive=true;
     const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,dictionaries),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.dataset.pluginCss='tanuki-global-bubbles';style.textContent=css;document.head.appendChild(style);return()=>style.remove();});
     function Bubble({target,sessionId,packageName,style}){
@@ -97,10 +97,13 @@ document.currentScript.__tanukiRegister(function(require){
         anchors.filter(a=>a.sessionId!==undefined).map(a=>createPortal(h(Bubble,{target:a.target,sessionId:a.sessionId,style:{position:'absolute',width:18,height:18,left:'50%',top:'50%',transform:'translate(-50%,-50%)'}}),a.element,a.sessionId)));
     }
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-global-bubbles',locale:NS},Overlay));
-    const receive=event=>{if(!alive)return;if(event.detail?.source==='notifications')document.documentElement.toggleAttribute('data-tanuki-task-read-aware',event.detail.taskReadAware===true);model.replace(event.detail);};
+    const receive=event=>{if(!alive)return;if(event.detail?.source==='notifications'){
+      document.documentElement.toggleAttribute('data-tanuki-task-read-aware',event.detail.taskReadAware===true);
+      document.documentElement.toggleAttribute('data-tanuki-task-bubbles-hidden',event.detail.categories?.tasks===false);
+    }model.replace(event.detail);};
     window.addEventListener('tanuki:bubble-state',receive);
     window.dispatchEvent(new CustomEvent('tanuki:bubble-request'));
-    ctx.effect(()=>()=>{alive=false;window.removeEventListener('tanuki:bubble-state',receive);document.documentElement.removeAttribute('data-tanuki-task-read-aware');model.dispose();});
+    ctx.effect(()=>()=>{alive=false;window.removeEventListener('tanuki:bubble-state',receive);document.documentElement.removeAttribute('data-tanuki-task-read-aware');document.documentElement.removeAttribute('data-tanuki-task-bubbles-hidden');model.dispose();});
   }
   return {apply};
 });

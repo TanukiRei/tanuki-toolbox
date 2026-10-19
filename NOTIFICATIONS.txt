@@ -2,8 +2,8 @@
 
 消息中心启用后，以灵动岛展示消息。关闭时不收集待显示通知，不启动提示音或全局气泡。消息为运行期记录，不写入聊天历史、不调用模型。
 
-0.6.20 设置补充：父组件“消息中心”与其子项“灵动岛”分开。island.inApp 默认 true，仅控制应用内顶部消息展示；false 时不追加/保留灵动岛队列，但仍处理允许类别的系统通知、提示音与既有消息状态。其他通道分别由 systemNotifications、bubbles、soundEnabled 控制，消息中心父组件关闭则全部停止。允许通知的插件/任务/更新按钮继续过滤提醒来源，气泡保持独立的持续状态/显示规则。提示音不依赖灵动岛 DOM 是否挂载；关闭期间的旧消息不补播。界面中文族语言使用中文，其他使用英文。
-通知类别：plugins（插件变化及已检测更新）、tasks（任务完成/失败/需输入）、updates（DSH本体更新）。分类勾选只过滤提醒，不过滤单独开启的全局气泡。
+0.6.20 设置补充：父组件“消息中心”与其子项“灵动岛”分开。island.inApp 默认 true，仅控制应用内顶部消息展示；false 时不追加/保留灵动岛队列，但仍处理允许类别的系统通知、提示音与既有消息状态。其他通道分别由 systemNotifications、bubbles、soundEnabled 控制，消息中心父组件关闭则全部停止。自 0.6.21 起，允许通知的插件/任务/更新按钮同时过滤提醒来源及对应类别的气泡；全局气泡总开关仍独立控制是否加载气泡显示。提示音不依赖灵动岛 DOM 是否挂载；关闭期间的旧消息不补播。界面中文族语言使用中文，其他使用英文。
+通知类别：plugins（插件变化及已检测更新）、tasks（任务完成/失败/需输入）、updates（DSH本体更新）。分类关闭时对应气泡不可见；重新开启按权威来源的最新状态恢复，不补播旧提醒、不复活已读或已清除的完成状态。
 窗口可见且拥有焦点时只显示灵动岛；否则在标准Notification API已授权时额外尝试系统通知。设置页面提供明确用户点击的授权入口；没有桌面通知私有桥接、服务工作线程或远程推送服务，不承诺iOS网页关闭后的推送。
 
 浏览器消息：
@@ -32,7 +32,7 @@ window.dispatchEvent(new CustomEvent('tanuki:bubble-state', {detail:{
   source:'plugin-center',
   items:[{id:'update:package-name',target:'plugins',packageName:'package-name',state:'action',count:1}]
 }}));
-- source当前仅notifications及plugin-center；每次items替换该source全部状态，空数组清除。
+- source当前仅notifications及plugin-center；每次items替换该source全部状态，空数组清除。notifications 同时携带 categories:{plugins,tasks,updates} 显示偏好；仅该权威源可更新分类过滤。插件目标（plugins/plugin-updates）归插件，workspace 会话归任务；notifications 的明确 category 可指定一般消息（如离线状态），避免误受任务分类控制。装饰层保留最新来源快照，仅过滤显示，分类重开恢复当前有效状态。
 - state:done绿、action黄、error红、running蓝。任务target:workspace并带sessionId；插件target:plugins并尽可能带packageName。
 - 发布方监听tanuki:bubble-request重播当前快照；不得把快照重播当成新的通知。
 - 同一项使用稳定id，不能每次刷新累计。任务已读及状态清除由权威状态源处理，装饰层不猜测任务状态。

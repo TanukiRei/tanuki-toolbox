@@ -1,8 +1,8 @@
 document.currentScript.__tanukiRegister(function(require){
   'use strict';
   const React=require('react'),{createPortal}=require('react-dom'),h=React.createElement;
-  const createBubbleModel=function createBubbleModel(){
-  const sources=new Map(),listeners=new Set();let snapshot=[];
+  const createBubbleModel=function createBubbleModel(initialCategories={}){
+  const sources=new Map(),listeners=new Set();let snapshot=[],categories=initialCategories;
   const states=['done','action','error','running'];
   const emit=()=>{
     const native=sources.get('notifications')||[],center=sources.get('plugin-center')||[];
@@ -12,15 +12,19 @@ document.currentScript.__tanukiRegister(function(require){
     const packages=new Map(),other=[];
     for(const item of center)if(item.target==='plugins'&&item.packageName)packages.set(item.packageName,item);else other.push(item);
     for(const item of native)if(item.target==='plugins'&&item.packageName){if(!packages.get(item.packageName)?.operation)packages.set(item.packageName,item);}else other.push(item);
-    snapshot=[...other,...packages.values()];for(const fn of [...listeners])fn();
+    // Keep authoritative source snapshots intact while hidden. Re-enabling a
+    // category projects its latest live state, never a cached notification queue.
+    snapshot=[...other,...packages.values()].filter(item=>categories[item.category]!==false);for(const fn of [...listeners])fn();
   };
   function replace(detail){
     if(!detail||!['notifications','plugin-center'].includes(detail.source)||!Array.isArray(detail.items))return;
+    if(detail.source==='notifications'&&detail.categories)categories={plugins:detail.categories.plugins!==false,tasks:detail.categories.tasks!==false,updates:detail.categories.updates!==false};
     const items=new Map();
     for(const value of detail.items.slice(0,1024)){
       if(!value||typeof value.id!=='string'||!value.id||value.id.length>512||!states.includes(value.state)||!['plugins','plugin-updates','workspace'].includes(value.target))continue;
       const count=value.count===undefined?1:value.count;if(!Number.isSafeInteger(count)||count<1||count>1000000)continue;
-      const item={id:value.id,state:value.state,target:value.target,count};
+      const category=detail.source==='notifications'&&['plugins','tasks','updates','general'].includes(value.category)?value.category:value.target==='workspace'?'tasks':'plugins';
+      const item={id:value.id,state:value.state,target:value.target,count,category};
       if(typeof value.sessionId==='string')item.sessionId=value.sessionId;
       if(typeof value.packageName==='string')item.packageName=value.packageName;
       if(detail.source==='plugin-center'&&value.operation===true)item.operation=true;
@@ -47,9 +51,9 @@ document.currentScript.__tanukiRegister(function(require){
     return {states:colors,total:[...units.values()].reduce((sum,count)=>sum+count,0)};
   }
   return {replace,aggregate,getSnapshot:()=>snapshot,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},dispose(){sources.clear();snapshot=[];listeners.clear();}};
-},css=".tanuki-global-bubble{box-sizing:border-box;display:inline-flex;position:relative;flex:none;width:22px;height:22px;align-items:center;justify-content:center;vertical-align:middle;pointer-events:none;color:#fff;font-family:inherit;font-variant-numeric:tabular-nums;background:transparent}.tanuki-global-bubble svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.tanuki-global-bubble [data-state=done]{stroke:#14e878}.tanuki-global-bubble [data-state=action]{stroke:#e6e63c}.tanuki-global-bubble [data-state=error]{stroke:#ed3030}.tanuki-global-bubble [data-state=running]{stroke:#55a9e6}.tanuki-bubble-blue-track{opacity:.24}.tanuki-bubble-blue-progress{stroke-dasharray:22 78;transform-origin:16px 16px;animation:tanuki-bubble-progress 1.5s cubic-bezier(.45,.05,.55,.95) infinite}.tanuki-global-bubble-count{position:relative;font-size:12px;line-height:1;font-weight:750;letter-spacing:-.6px}.tanuki-global-bubble-layer{position:fixed;inset:0;z-index:75;pointer-events:none;overflow:hidden}.tanuki-global-bubble-layer:empty{display:none}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble){position:relative;overflow:visible}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>svg[data-state],[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>span[data-state]{visibility:hidden}[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>svg[data-state=done],[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>span[data-state=done]{visibility:hidden}@keyframes tanuki-bubble-progress{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}@media(prefers-reduced-motion:reduce){.tanuki-bubble-blue-progress{animation:none;stroke-dasharray:none}.tanuki-bubble-blue-track{opacity:1}}\n",dictionaries={"zh":{"done":"已完成","action":"需要操作","error":"出错","running":"进行中"},"en":{"done":"Completed","action":"Action needed","error":"Error","running":"In progress"}},NS='tanukiBubbles';
-  function apply(ctx){
-    const model=createBubbleModel();let alive=true;
+},css=".tanuki-global-bubble{box-sizing:border-box;display:inline-flex;position:relative;flex:none;width:22px;height:22px;align-items:center;justify-content:center;vertical-align:middle;pointer-events:none;color:#fff;font-family:inherit;font-variant-numeric:tabular-nums;background:transparent}.tanuki-global-bubble svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.tanuki-global-bubble [data-state=done]{stroke:#14e878}.tanuki-global-bubble [data-state=action]{stroke:#e6e63c}.tanuki-global-bubble [data-state=error]{stroke:#ed3030}.tanuki-global-bubble [data-state=running]{stroke:#55a9e6}.tanuki-bubble-blue-track{opacity:.24}.tanuki-bubble-blue-progress{stroke-dasharray:22 78;transform-origin:16px 16px;animation:tanuki-bubble-progress 1.5s cubic-bezier(.45,.05,.55,.95) infinite}.tanuki-global-bubble-count{position:relative;font-size:12px;line-height:1;font-weight:750;letter-spacing:-.6px}.tanuki-global-bubble-layer{position:fixed;inset:0;z-index:75;pointer-events:none;overflow:hidden}.tanuki-global-bubble-layer:empty{display:none}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble){position:relative;overflow:visible}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>svg[data-state],[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>span[data-state]{visibility:hidden}[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>svg[data-state=done],[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>span[data-state=done]{visibility:hidden}@keyframes tanuki-bubble-progress{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}@media(prefers-reduced-motion:reduce){.tanuki-bubble-blue-progress{animation:none;stroke-dasharray:none}.tanuki-bubble-blue-track{opacity:1}}\n[data-tanuki-task-bubbles-hidden] [data-row-key^=\"session:\"]>span>svg[data-state],[data-tanuki-task-bubbles-hidden] [data-row-key^=\"session:\"]>span>span[data-state]{visibility:hidden}\n",dictionaries={"zh":{"done":"已完成","action":"需要操作","error":"出错","running":"进行中"},"en":{"done":"Completed","action":"Action needed","error":"Error","running":"In progress"}},NS='tanukiBubbles';
+  function apply(ctx,{categories={}}={}){
+    const model=createBubbleModel(categories);let alive=true;
     const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
   const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
   const text = value => {
@@ -173,10 +177,13 @@ document.currentScript.__tanukiRegister(function(require){
         anchors.filter(a=>a.sessionId!==undefined).map(a=>createPortal(h(Bubble,{target:a.target,sessionId:a.sessionId,style:{position:'absolute',width:18,height:18,left:'50%',top:'50%',transform:'translate(-50%,-50%)'}}),a.element,a.sessionId)));
     }
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-global-bubbles',locale:NS},Overlay));
-    const receive=event=>{if(!alive)return;if(event.detail?.source==='notifications')document.documentElement.toggleAttribute('data-tanuki-task-read-aware',event.detail.taskReadAware===true);model.replace(event.detail);};
+    const receive=event=>{if(!alive)return;if(event.detail?.source==='notifications'){
+      document.documentElement.toggleAttribute('data-tanuki-task-read-aware',event.detail.taskReadAware===true);
+      document.documentElement.toggleAttribute('data-tanuki-task-bubbles-hidden',event.detail.categories?.tasks===false);
+    }model.replace(event.detail);};
     window.addEventListener('tanuki:bubble-state',receive);
     window.dispatchEvent(new CustomEvent('tanuki:bubble-request'));
-    ctx.effect(()=>()=>{alive=false;window.removeEventListener('tanuki:bubble-state',receive);document.documentElement.removeAttribute('data-tanuki-task-read-aware');model.dispose();});
+    ctx.effect(()=>()=>{alive=false;window.removeEventListener('tanuki:bubble-state',receive);document.documentElement.removeAttribute('data-tanuki-task-read-aware');document.documentElement.removeAttribute('data-tanuki-task-bubbles-hidden');model.dispose();});
   }
   return {apply};
 });

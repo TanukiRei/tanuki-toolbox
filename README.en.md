@@ -64,7 +64,7 @@ Message presentation has separate switches:
 - **Global bubbles:** persistent status badges beside relevant items. These have their own display switch and do not install updates or run tasks.
 - **Notification sound:** sound accompanying notifications, with volume control and an optional MP3, WAV, or OGG file up to 5 MiB.
 
-The source buttons filter reminder messages. Persistent bubbles retain their separate status/display behavior. Protected-startup confirmation is a general message. Clicking it opens **Plugin Center → Installed → Third-party**. Task notifications open the associated conversation or task; plugin notifications open the appropriate installed plugin list. Clicking a notification does not automatically install anything or rerun a task.
+The source buttons control both reminder messages and matching persistent bubbles. Turning off Plugins hides plugin navigation/detail and update-all bubbles; turning off Tasks hides task bubbles. Re-enabling a source restores its current valid state, without replaying old messages or reviving cleared/read completions. The Global bubbles switch must also be enabled. Badge colors are unchanged. Protected-startup confirmation is a general message. Clicking it opens **Plugin Center → Installed → Third-party**. Task notifications open the associated conversation or task; plugin notifications open the appropriate installed plugin list. Clicking a notification does not automatically install anything or rerun a task.
 
 When a component is disabled, its expanded settings automatically collapse. If you reopen them for inspection, its controls are greyed out and cannot be edited. Saved choices are retained.
 

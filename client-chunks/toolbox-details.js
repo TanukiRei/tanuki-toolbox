@@ -153,7 +153,7 @@ document.currentScript.__tanukiRegister(function(require){
     }
     const off=ctx.remote.$on('plugin-manager/changed',()=>{clearTimeout(timer);timer=setTimeout(refresh,250);});void refresh();
     const {Recommendations}=createRecommendationComponents({React,ctx,useLocale,useModel,json,refresh,notifyInstalled(){}});
-    function Details(){const tr=useLocale();return h('div',{className:'tanuki-info'},h('img',{className:'tanuki-toolbox-hero',src:new URL('tanuki-toolbox/assets/toolbox.png?v=0.6.20',document.baseURI).href,width:160,height:160,alt:tr('toolbox')}),h(Recommendations));}
+    function Details(){const tr=useLocale();return h('div',{className:'tanuki-info'},h('img',{className:'tanuki-toolbox-hero',src:new URL('tanuki-toolbox/assets/toolbox.png?v=0.6.21',document.baseURI).href,width:160,height:160,alt:tr('toolbox')}),h(Recommendations));}
     ctx.effect(()=>{
       const style=document.createElement('style');
       // Use the same assets as Settings even when the host cached older metadata.
