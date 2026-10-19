@@ -14,10 +14,12 @@ const {createBubbleModel}=require(path.join(root,'lib/global-bubbles-client.cjs'
 const {createPluginAliases}=require(path.join(root,'lib/plugin-aliases-client.cjs'));
 const {createPluginArtwork}=require(path.join(root,'lib/plugin-artwork-client.cjs'));
 const {createWorkspaceSplitter}=require(path.join(root,'lib/workspace-splitter-client.cjs'));
+const {createToolboxLocale}=require(path.join(root,'lib/locale-client.cjs'));
 async function main(){
   const data=file=>'data:image/'+(file.endsWith('.svg')?'svg+xml':'png')+';base64,'+fs.readFileSync(path.join(root,file)).toString('base64');
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
   const substitutions={
+    __LOCALE_FACTORY__:createToolboxLocale.toString(),
     __VERSION__:JSON.stringify(version),__VERSION_TEXT__:version,__WORKSPACE_SPLITTER_FUNCTION__:createWorkspaceSplitter.toString(),
     __CENTER_ICON__:JSON.stringify(data('components/plugin-center/icon.svg')),
     __DSH_NOTIFICATION_ICON__:JSON.stringify(data('assets/dsh-notification.png')),
@@ -34,9 +36,15 @@ async function main(){
   }
   const clientBytes=compile(fs.readFileSync(path.join(root,'client.template.js'),'utf8'),substitutions,'client.js');
   fs.mkdirSync(path.join(root,'client-chunks'),{recursive:true});const chunks={};
-  for(const name of ['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','global-bubbles','composer','composer-clock','composer-model','composer-files']){
+  for(const name of ['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files']){
     const source=path.join(root,'client-src',name),css=fs.existsSync(source+'.css')?fs.readFileSync(source+'.css','utf8'):'';
     const locales=JSON.parse(fs.readFileSync(source+'.locale.json','utf8'));
+    // Build-time translation audit only; does not start components or run functional tests.
+    for(const key of new Set([...Object.keys(locales.zh||{}),...Object.keys(locales.en||{})])){
+      if(typeof locales.zh?.[key]!=='string'||typeof locales.en?.[key]!=='string')throw new Error('Missing zh/en translation: '+name+'.'+key);
+      const params=value=>[...value.matchAll(/\{(\w+)\}/g)].map(match=>match[1]).sort().join(',');
+      if(params(locales.zh[key])!==params(locales.en[key]))throw new Error('Translation placeholder mismatch: '+name+'.'+key);
+    }
     chunks[name]=compile(fs.readFileSync(source+'.template.js','utf8'),{...substitutions,__LOCALES__:JSON.stringify(locales),__CSS__:JSON.stringify(css)},'client-chunks/'+name+'.js');
   }
   console.log(JSON.stringify({version,clientBytes,chunks,toolboxBytes:fs.statSync(path.join(root,'assets/toolbox.png')).size,centerBytes:fs.statSync(path.join(root,'components/plugin-center/icon.svg')).size}));

@@ -1,0 +1,28 @@
+{
+  "zh": {
+    "title": "模型启用",
+    "hint": "关闭的模型不能用于新的调用。已有对话选中该模型时保留灰色占位并禁止发送，切换其他模型后从列表移除；重新开启后恢复。",
+    "refresh": "刷新",
+    "loading": "正在读取模型…",
+    "error": "无法读取或保存模型开关，请重试。设置未成功保存时不会改变原有开关。",
+    "search": "搜索模型或提供方",
+    "toggle": "启用模型",
+    "missing": "提供方当前未提供此模型；保留已保存的开关。",
+    "partial": "以下提供方的模型暂时无法读取：",
+    "empty": "当前没有可管理的模型。请先配置模型提供方。",
+    "noMatch": "没有匹配的模型。"
+  },
+  "en": {
+    "title": "Enabled models",
+    "hint": "Disabled models cannot be called. A disabled model already selected in a conversation remains as a grey placeholder and blocks sending. Choosing another model removes the placeholder. Enable it again to restore access.",
+    "refresh": "Refresh",
+    "loading": "Loading models…",
+    "error": "Could not read or save model switches. Please retry. Failed saves leave your previous switches unchanged.",
+    "search": "Search models or providers",
+    "toggle": "Enable model",
+    "missing": "Not currently advertised by its provider; the saved switch is retained.",
+    "partial": "Models are temporarily unavailable for:",
+    "empty": "No models to manage. Configure a provider first.",
+    "noMatch": "No matching models."
+  }
+}

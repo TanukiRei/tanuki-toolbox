@@ -2,7 +2,37 @@ document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,{createPortal}=require('react-dom'),NS='tanukiComposerFiles';
   function apply(ctx){
     let alive=true,snapshot=null,operation=null;const listeners=new Set(),downloads=new Map();
-    ctx.effect(()=>ctx.locale.register(NS,{"zh":{"title":"文件操作","preview":"预览","open":"打开","save":"另存为…","reveal":"打开所在文件夹","more":"打开方式…","copyPath":"复制文件路径","copyName":"复制文件名"},"en":{"title":"File actions","preview":"Preview","open":"Open","save":"Save as…","reveal":"Show in folder","more":"Open with…","copyPath":"Copy file path","copyName":"Copy file name"}}));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
+  const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
+  const text = value => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+    const result = language() === 'zh' ? value.zh ?? value['zh-CN'] ?? value['zh-cn'] ?? value['zh-TW'] ?? value['zh-tw'] ?? value.en : value.en;
+    return typeof result === 'string' ? result : '';
+  };
+  const t = (key, params) => {
+    const template = dictionaries[language()]?.[key] ?? dictionaries.en?.[key] ?? key;
+    return params ? template.replace(/\{(\w+)\}/g, (match, name) => Object.hasOwn(params, name) ? String(params[name]) : match) : template;
+  };
+  ctx.effect(() => {
+    const known = new Set(), disposers = [];
+    function registerLanguages() {
+      const entries = { en: dictionaries.en || {}, zh: dictionaries.zh || {} };
+      for (const locale of ctx.locale.getSnapshot()?.locales || []) {
+        const id = typeof locale === 'string' ? locale : locale.id;
+        if (typeof id === 'string') entries[id] = /^zh(?:[-_]|$)/i.test(id) ? dictionaries.zh || dictionaries.en : dictionaries.en;
+      }
+      const pending = Object.fromEntries(Object.entries(entries).filter(([id]) => !known.has(id.toLowerCase())));
+      if (!Object.keys(pending).length) return;
+      for (const id of Object.keys(pending)) known.add(id.toLowerCase());
+      disposers.push(ctx.locale.register(namespace, pending));
+    }
+    registerLanguages();
+    const off = ctx.locale.subscribe(registerLanguages);
+    return () => { off(); for (const dispose of disposers.reverse()) dispose(); };
+  });
+  return { t, text, language };
+})(ctx,NS,{"zh":{"title":"文件操作","preview":"预览","open":"打开","save":"另存为…","reveal":"打开所在文件夹","more":"打开方式…","copyPath":"复制文件路径","copyName":"复制文件名"},"en":{"title":"File actions","preview":"Preview","open":"Open","save":"Save as…","reveal":"Show in folder","more":"Open with…","copyPath":"Copy file path","copyName":"Copy file name"}}),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=".tanuki-file-menu{position:fixed;z-index:13000;box-sizing:border-box;width:210px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;padding:6px;border:1px solid var(--dsw-alias-border-l2,#ffffff24);border-radius:10px;background:var(--dsw-alias-bg-layer-2,#292929);color:var(--dsw-alias-label-primary,#eee);box-shadow:0 8px 26px #0005;font-family:inherit;-webkit-app-region:no-drag;}\n.tanuki-file-menu-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 9px 8px;margin-bottom:4px;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff18);font-size:11px;color:var(--dsw-alias-label-secondary,#aaa);}\n.tanuki-file-menu button{display:block;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:6px;padding:8px 9px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;}\n.tanuki-file-menu button:hover:not(:disabled),.tanuki-file-menu button:focus-visible{outline:none;background:var(--dsw-alias-interactive-bg-hover,#ffffff16);}\n.tanuki-file-menu button:disabled{opacity:.4;cursor:default;}\n";document.head.appendChild(style);return()=>style.remove();});
     function publish(value){if(!alive)return;snapshot=value;for(const fn of listeners)fn();}
     const close=()=>publish(null);

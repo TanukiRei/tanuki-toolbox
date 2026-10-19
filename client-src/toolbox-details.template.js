@@ -6,7 +6,7 @@ document.currentScript.__tanukiRegister(function(require){
     let alive=true,flight=null,again=false,timer;const requests=new Set(),listeners=new Set();
     let snapshot={bundles:[],update:{busy:false}};
     const publish=value=>{if(!alive)return;snapshot={...snapshot,...value};for(const fn of [...listeners])fn();};
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     function useModel(){return React.useSyncExternalStore(fn=>{listeners.add(fn);return()=>listeners.delete(fn);},()=>snapshot);}
     async function json(path,signal){

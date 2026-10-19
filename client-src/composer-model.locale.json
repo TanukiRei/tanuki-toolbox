@@ -22,7 +22,8 @@
     "effort_low": "低",
     "reset": "恢复 DSH 默认模型、默认推理等级、标准速度及默认输出详略",
     "effort": "推理等级",
-    "effort_medium": "中"
+    "effort_medium": "中",
+    "modelDisabled": "该模型已禁用"
   },
   "en": {
     "detail_low": "Concise",
@@ -47,6 +48,7 @@
     "effort_low": "Low",
     "reset": "Restore the DSH default model, default effort, standard speed, and default output detail",
     "effort": "Reasoning effort",
-    "effort_medium": "Medium"
+    "effort_medium": "Medium",
+    "modelDisabled": "This model is disabled"
   }
 }

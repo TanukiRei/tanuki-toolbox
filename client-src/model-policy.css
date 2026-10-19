@@ -1,0 +1,5 @@
+.tanuki-disabled-model-notice{display:block;position:absolute;right:12px;bottom:7px;max-width:calc(100% - 24px);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);pointer-events:none}
+[data-composer-card]:has([data-tanuki-disabled-model]) [data-slot="conversation.input.model"] button{color:var(--dsw-alias-label-tertiary)}
+.tanuki-model-trigger[data-tanuki-model-disabled=true],.tanuki-model-main[data-tanuki-model-disabled=true]{color:var(--dsw-alias-label-tertiary)!important}
+.tanuki-model-options button[data-tanuki-model-disabled=true]{color:var(--dsw-alias-label-tertiary);cursor:not-allowed;opacity:.6}
+.tanuki-model-options button[data-tanuki-model-disabled=true] small{margin-left:8px;font-size:11px}

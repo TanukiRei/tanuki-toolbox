@@ -1,0 +1,16 @@
+.tanuki-model-settings{border-top:1px solid var(--dsw-alias-border-l1);padding-top:20px;margin-top:20px;color:var(--dsw-alias-label-primary)}
+.tanuki-model-settings>header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tanuki-model-settings h3{font-size:16px;margin:0;font-weight:600}
+.tanuki-model-settings h4{font-size:14px;font-weight:500;margin:18px 0 6px;color:var(--dsw-alias-label-secondary)}
+.tanuki-model-settings>header button{font:inherit;font-size:13px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);padding:5px 10px;cursor:pointer}
+.tanuki-model-settings>header button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
+.tanuki-model-settings>header button:disabled{opacity:.5;cursor:default}
+.tanuki-model-policy-hint{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-tertiary);margin:8px 0 12px}
+.tanuki-model-policy-error{font-size:13px;color:var(--dsw-alias-state-error-primary)}
+.tanuki-model-policy-search{box-sizing:border-box;width:100%;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);padding:8px 10px;font:inherit;font-size:13px}
+.tanuki-model-policy-search::placeholder{color:var(--dsw-alias-label-caption)}
+.tanuki-model-policy-row{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:48px;padding:8px 0;border-bottom:1px solid var(--dsw-alias-border-l1)}
+.tanuki-model-policy-identity{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:14px;overflow-wrap:anywhere}
+.tanuki-model-policy-identity small{font-size:12px;color:var(--dsw-alias-label-tertiary)}
+.tanuki-model-policy-row[data-disabled=true] .tanuki-model-policy-identity{color:var(--dsw-alias-label-tertiary)}
+.tanuki-model-settings :is(input,button):focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}

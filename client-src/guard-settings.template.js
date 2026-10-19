@@ -1,7 +1,7 @@
 document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,NS='tanukiGuardSettings';
   function apply(ctx,{ready}){
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     function Settings(){
       React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());

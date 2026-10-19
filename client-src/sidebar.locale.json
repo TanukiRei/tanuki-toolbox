@@ -40,7 +40,10 @@
     "expandWorkspace": "展开工作区侧栏",
     "paneSaveFailed": "无法保存侧栏收起状态；本次选择在当前页面有效。",
     "resizeWorkspace": "拖动调整工作区宽度（方向键微调，Esc 取消）",
-    "widthSaveFailed": "工作区宽度暂时无法保存；本次调整在当前页面有效。"
+    "widthSaveFailed": "工作区宽度暂时无法保存；本次调整在当前页面有效。",
+    "menu_skills": "技能",
+    "skillsUnavailable": "请先安装并启用 Skills Manager，准备好技能设置页面后可显示。",
+    "signOut": "退出登录"
   },
   "en": {
     "toolbox": "Toolbox settings",
@@ -83,6 +86,9 @@
     "expandWorkspace": "Expand workspace sidebar",
     "paneSaveFailed": "Could not save the sidebar state. Your selection still applies to this page.",
     "resizeWorkspace": "Resize workspace (arrow keys to adjust, Esc to cancel)",
-    "widthSaveFailed": "Could not save workspace width. This adjustment still applies to this page."
+    "widthSaveFailed": "Could not save workspace width. This adjustment still applies to this page.",
+    "menu_skills": "Skills",
+    "skillsUnavailable": "Install and enable Skills Manager to make its settings page available.",
+    "signOut": "Sign out"
   }
 }

@@ -5,11 +5,11 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
   function apply(ctx){
     let disposed=false,flight=null,again=false,timer;
     const entries=new Map(),loads=new Set();
-    ctx.effect(()=>ctx.locale.register(NS,{
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,{
       zh:{loading:'正在加载…',failed:'加载失败，请重试',retry:'重试',startFailed:'组件未能启动',description:'集成了各种小组件，让DeepSeek Harness更好用。持续扩展中。',guardSummary:'开启时接管 DSH 快捷方式，关闭时还原。'},
       en:{loading:'Loading…',failed:'Could not load. Please retry.',retry:'Retry',startFailed:'Component could not start',description:'A growing collection of small components that make DeepSeek Harness easier to use.',guardSummary:'Enabling protects DSH shortcuts; disabling restores them.'}
-    }));
-    const t=ctx.locale.bind(NS);
+    });
+    const t=toolboxLocale.t;
     // Global switch palette only: preserve native geometry, motion and disabled/focus states.
     ctx.effect(()=>{
       const style=document.createElement('style');style.dataset.tanukiSwitchPalette='ios';
@@ -77,6 +77,8 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       return flight;
     }
     function schedule(){clearTimeout(timer);if(!disposed)timer=setTimeout(()=>void refresh(),100);}
+    // Always-on default model policy; independent of all optional components.
+    start('model-policy');
     const off=ctx.remote.$on('plugin-manager/changed',schedule),offReset=ctx.on('connection/reset',schedule);
     // A foreground check recovers missed connection events without an idle polling loop.
     const focus=()=>{if(document.visibilityState==='visible'){for(const [key,entry] of entries)if(!entry.fiber&&entry.attempt>=3)stop(key);schedule();}};
@@ -102,7 +104,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 11.5l8 2a4 4 0 0 0 2 0l8-2M10 12.5v3h4v-3"/><rect x="3" y="7" width="18" height="13" rx="2"/></svg>';
       const style=document.createElement('style');style.textContent='[data-tanuki-settings-icon]>svg{background:currentColor;mask:url("data:image/svg+xml,'+encodeURIComponent(svg)+'") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,'+encodeURIComponent(svg)+'") center/contain no-repeat}[data-tanuki-settings-icon]>svg>*{visibility:hidden}';document.head.appendChild(style);
       const marked=new Set();let frame,observedModal;
-      const scan=()=>{frame=undefined;if(disposed)return;const label=ctx.locale.getSnapshot()?.active?.startsWith('en')?'Tanuki Toolbox':'黎猫工具箱';const keep=new Set();
+      const scan=()=>{frame=undefined;if(disposed)return;const label=toolboxLocale.language()==='zh'?'黎猫工具箱':'Tanuki Toolbox';const keep=new Set();
         const modal=document.querySelector('[data-shortcut-modal="settings"][role="dialog"]');if(modal!==observedModal){modalObserver.disconnect();observedModal=modal;if(modal)modalObserver.observe(modal,{childList:true,subtree:true,characterData:true});}
         if(modal)for(const button of modal.querySelectorAll(':scope > nav > div > button')){
           const text=button.querySelector(':scope > span'),icon=button.querySelector(':scope > svg');if(text?.textContent?.trim()===label&&icon){keep.add(button);if(!marked.has(button)){button.setAttribute('data-tanuki-settings-icon','');marked.add(button);}}
@@ -113,7 +115,9 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       const modalObserver=new MutationObserver(schedule),observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true});const off=ctx.locale.subscribe(schedule);schedule();
       return()=>{observer.disconnect();modalObserver.disconnect();off();if(frame!==undefined)cancelAnimationFrame(frame);for(const button of marked)button.removeAttribute('data-tanuki-settings-icon');marked.clear();style.remove();};
     });
-    ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'tanuki-toolbox',order:80,label:()=>ctx.locale.getSnapshot()?.active?.startsWith('en')?'Tanuki Toolbox':'黎猫工具箱',locale:NS},()=>h(LazyView,{moduleName:'toolbox-settings'})));
+    ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'tanuki-toolbox',order:80,label:()=>toolboxLocale.language()==='zh'?'黎猫工具箱':'Tanuki Toolbox',locale:NS},()=>h(LazyView,{moduleName:'toolbox-settings'})));
+    // Default toolbox behavior, not a component. UI loads only inside native Models settings.
+    ctx.slots.inject('settings.models.footer',()=>ctx.slots.register({name:'settings.models.footer',id:'tanuki-model-switches',order:50,locale:NS},()=>h(LazyView,{moduleName:'model-settings'})));
     ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key:SELF,locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-details'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-startup-guard',locale:NS},props=>h(LazyView,{...props,moduleName:'guard-settings'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-composer',locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-settings',view:'composer'})));

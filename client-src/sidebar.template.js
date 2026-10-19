@@ -1,11 +1,11 @@
 document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,{createPortal}=require('react-dom');
-  const {FishLogo}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSidebar',HOME='tanuki-sidebar-home';
+  const {FishLogo,IconSkillOutlineRegular}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSidebar',HOME='tanuki-sidebar-home';
   const createWorkspaceSplitter=__WORKSPACE_SPLITTER_FUNCTION__;
   function apply(ctx,{lifecycle}){
     let alive=true,current=null,frameRequest=null,settingsCleanup=null,toolboxCleanup=null,accountMount=null,accountCleanup=null,menuCleanup=null;
-    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['workspace','automations','toolbox','plugins','restart'];
-    const orderKey='tanuki.sidebar.order.v2',legacyOrderKey='tanuki.sidebar.order.v1',defaultOrder={top:['home','newSession','workspace','more'],bottom:['automations','toolbox','plugins','settings','restart']};
+    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['workspace','automations','skills','toolbox','plugins','restart'];
+    const orderKey='tanuki.sidebar.order.v2',legacyOrderKey='tanuki.sidebar.order.v1',defaultOrder={top:['home','newSession','workspace','more'],bottom:['automations','skills','toolbox','plugins','settings','restart']};
     const allItems=[...defaultOrder.top,...defaultOrder.bottom];
     // Both groups use visual top-to-bottom order; the bottom group stays bottom-aligned.
     function normalizeOrder(saved){
@@ -13,7 +13,7 @@ document.currentScript.__tanukiRegister(function(require){
       for(const group of ['top','bottom'])for(const key of Array.isArray(saved?.[group])?saved[group]:[]){
         if(allItems.includes(key)&&!seen.has(key)){order[group].push(key);seen.add(key);}
       }
-      for(const group of ['top','bottom'])for(const key of defaultOrder[group])if(!seen.has(key)){order[group].push(key);seen.add(key);}
+      for(const group of ['top','bottom'])for(const key of defaultOrder[group])if(!seen.has(key)){const target=key==='skills'?['top','bottom'].find(g=>order[g].includes('toolbox')):undefined;if(target)order[target].splice(order[target].indexOf('toolbox'),0,key);else order[group].push(key);seen.add(key);}
       return order;
     }
     function readOrder(){
@@ -44,11 +44,12 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function saveWidth(width){previewWidth=null;preferredWidth=Math.round(width);updateLayout();try{localStorage.setItem(widthKey,String(preferredWidth));}catch{notify('widthSaveFailed');}}
     const hasAutomations=()=>ctx.slots.entriesOfSlot('main').some(entry=>entry.options?.key==='schedules');
+    const hasSkills=()=>ctx.slots.entriesOfSlot('settings.section').some(entry=>entry.options?.id==='skills-manager');
     function readVisibility(){try{const saved=JSON.parse(localStorage.getItem(visibilityKey)||'{}');return Object.fromEntries(optionalItems.map(key=>[key,saved?.[key]!==false]));}catch{return Object.fromEntries(optionalItems.map(key=>[key,true]));}}
-    const listeners=new Set(),requests=new Set();let focusWorkspaceToggle=null,state={target:null,workspaceTarget:null,conversationTarget:null,accountTarget:null,accountBusy:false,workspaceCollapsed:readCollapsed(),pane:ctx.layout.panelInfo.getSnapshot().activePanelId===null&&!readCollapsed(),automationsAvailable:hasAutomations(),restarting:false,settingsOpen:false,toolboxOpen:false,visibility:readVisibility(),order:readOrder()};
+    const listeners=new Set(),requests=new Set();let focusWorkspaceToggle=null,state={target:null,workspaceTarget:null,conversationTarget:null,accountTarget:null,accountBusy:false,workspaceCollapsed:readCollapsed(),pane:ctx.layout.panelInfo.getSnapshot().activePanelId===null&&!readCollapsed(),automationsAvailable:hasAutomations(),skillsAvailable:hasSkills(),skillsOpen:false,restarting:false,settingsOpen:false,toolboxOpen:false,visibility:readVisibility(),order:readOrder()};
     const publish=next=>{if(!alive)return;state={...state,...next};for(const fn of listeners)fn();};
     const subscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn);};
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     const notify=(key,code)=>{const suffix=typeof code==='string'&&/^[A-Z_]{1,80}$/.test(code)?' ['+code+']':'';window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{kind:'error',destination:{page:'settings',section:'tanuki-toolbox',component:'sidebar'},title:{zh:'侧边栏',en:'Sidebar'},message:{zh:__LOCALES__.zh[key]+suffix,en:__LOCALES__.en[key]+suffix}}}));};
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     function updateLayout(){
@@ -180,13 +181,14 @@ document.currentScript.__tanukiRegister(function(require){
     function AccountSignOut(){
       const model=React.useSyncExternalStore(subscribe,()=>state);useLocale();
       if(!model.accountTarget)return null;
-      return createPortal(h('button',{type:'button',className:'_8RVnMG_linkButton',disabled:model.accountBusy,onClick:requestAccountSignOut},ctx.locale.bind('settings.account')('signOut')),model.accountTarget);
+      return createPortal(h('button',{type:'button',className:'_8RVnMG_linkButton',disabled:model.accountBusy,onClick:requestAccountSignOut},t('signOut')),model.accountTarget);
     }
     function attach(){
       if(!alive)return;attachAccount();
       const modal=document.querySelector('[data-shortcut-modal="settings"]'),settingsOpen=!!modal;
       const toolboxOpen=!!modal?.querySelector('[data-tanuki-settings-icon][aria-current="true"],.tanuki-base-settings');
-      if(state.settingsOpen!==settingsOpen||state.toolboxOpen!==toolboxOpen)publish({settingsOpen,toolboxOpen});
+      const skillsOpen=!!modal?.querySelector('.dssm-section');
+      if(state.settingsOpen!==settingsOpen||state.toolboxOpen!==toolboxOpen||state.skillsOpen!==skillsOpen)publish({settingsOpen,toolboxOpen,skillsOpen});
       // Slot names are public anchors; CSS-module suffixes are native implementation dependencies.
       // Match complete class tokens, not arbitrary descendants whose names merely contain "root".
       const hasPart=(node,part)=>node&&[...node.classList].some(name=>name.endsWith('_'+part));
@@ -215,6 +217,7 @@ document.currentScript.__tanukiRegister(function(require){
       if(!trigger){notify('unavailable');return;}
       // Keep the official account component mounted, including its sign-in event subscriptions.
       const existing=new Set(document.querySelectorAll('[role="menu"]')),wasOpen=trigger.getAttribute('aria-expanded')==='true';
+      const accountText=ctx.locale.bind('settings.account'),settingsLabels=new Set(['设置','Settings',accountText('settings')]),feedbackLabels=new Set(['意见反馈','Feedback',accountText('contactUs')]);
       root.setAttribute('data-tanuki-settings-anchor','');
       let done=false,menu=null,timeout;
       const cleanup=()=>{if(done)return;done=true;watch.disconnect();clearTimeout(timeout);root.removeAttribute('data-tanuki-settings-anchor');document.removeEventListener('keydown',cancel,true);document.removeEventListener('pointerdown',outside,true);if(settingsCleanup===cleanup)settingsCleanup=null;};
@@ -224,9 +227,9 @@ document.currentScript.__tanukiRegister(function(require){
         if(!alive){cleanup();return;}
         if(menu&&!menu.isConnected){cleanup();return;}
         const candidates=[...document.querySelectorAll('[role="menu"]')].filter(value=>wasOpen||!existing.has(value)).map(value=>{
-          const items=[...value.querySelectorAll('button[role="menuitem"]')],label=node=>[...node.querySelectorAll('span')].map(span=>span.textContent.trim()).find(text=>['设置','Settings','意见反馈','Feedback'].includes(text));
-          const settings=items.filter(item=>['设置','Settings'].includes(label(item)));
-          return settings.length===1&&items.some(item=>['意见反馈','Feedback'].includes(label(item)))?{menu:value,button:settings[0]}:null;
+          const items=[...value.querySelectorAll('button[role="menuitem"]')],label=node=>[...node.querySelectorAll('span')].map(span=>span.textContent.trim()).find(text=>settingsLabels.has(text)||feedbackLabels.has(text));
+          const settings=items.filter(item=>settingsLabels.has(label(item)));
+          return settings.length===1&&items.some(item=>feedbackLabels.has(label(item)))?{menu:value,button:settings[0]}:null;
         }).filter(Boolean);
         if(candidates.length!==1)return;
         menu=candidates[0].menu;
@@ -242,6 +245,11 @@ document.currentScript.__tanukiRegister(function(require){
     const clearHandoff=()=>window.dispatchEvent(new Event('tanuki:clear-handoff'));
     function navigate(panel){clearHandoff();ctx.layout.selectPanel(panel);}
     function openAutomations(){if(hasAutomations())navigate('schedules');else notify('automationsUnavailable');}
+    function openSkills(){
+      if(!hasSkills())return;
+      const shell=ctx.slots.entriesOfSlot('sidebar.settings').find(entry=>typeof entry.store?.create==='function');
+      if(shell?.store.create().actions.openSection)shell.store.create().actions.openSection('skills-manager');else notify('unavailable');
+    }
     function openToolboxSettings(){
       if(!alive)return;toolboxCleanup?.();
       // The toolbox core marks its own registered native settings navigation entry.
@@ -282,6 +290,7 @@ document.currentScript.__tanukiRegister(function(require){
     function Icon({name,selected=false}){
       const cutoutId=React.useId();
       const svg={viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true};
+      if(name==='skills')return IconSkillOutlineRegular?h(IconSkillOutlineRegular,{size:24}):h('svg',svg,h('path',{d:'M14 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h6M8 7h8M8 12h5M18 13l1.5 3.5L23 18l-3.5 1.5L18 23l-1.5-3.5L13 18l3.5-1.5z'}));
       if(name==='eyeOpen')return h('svg',svg,h('path',{d:'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'}),h('circle',{cx:12,cy:12,r:3}));
       if(name==='eyeClosed')return h('svg',svg,h('path',{d:'M3 9c4 6 14 6 18 0M5 12l-2 3M9 14l-1 3M15 14l1 3M19 12l2 3'}));
       if(name==='home')return h('span',{className:'tanuki-rail-home-mark','aria-hidden':true},h(FishLogo,{size:24}),selected?h('svg',{...svg,className:'tanuki-rail-home-spout',strokeWidth:1.5},h('path',{d:'M7 8V4M7 4C7 2.4 5.8 1.5 4.3 1.5M7 4C7 2.4 8.2 1.5 9.7 1.5'})):null);
@@ -336,7 +345,7 @@ document.currentScript.__tanukiRegister(function(require){
         onKeyUp:event=>{if(event.key!==' '&&event.key!=='Enter')return;event.preventDefault();if(r.source==='k'+event.key)stop();},onBlur:()=>stop(true)
       },h(Icon,{name:'restart'}),h('svg',{className:'tanuki-restart-ring',viewBox:'0 0 40 40','aria-hidden':true,style:{opacity:progress>0?1:0}},h('circle',{cx:20,cy:20,r:18,pathLength:100,fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeDasharray:100,strokeDashoffset:100*(1-progress),transform:'rotate(-90 20 20)'})));
     }
-    function VisibilityMenu({visibility,order}){
+    function VisibilityMenu({visibility,order,skillsAvailable}){
       const tr=useLocale(),[open,setOpen]=React.useState(false),[position,setPosition]=React.useState({left:52,top:0}),[preview,setPreview]=React.useState(null);
       const anchor=React.useRef(null),menu=React.useRef(null),drag=React.useRef(null),pendingFocus=React.useRef(null),menuId=React.useId();
       function finish(commit=false,focus=true){
@@ -438,15 +447,15 @@ document.currentScript.__tanukiRegister(function(require){
       const section=group=>h('div',{key:group,role:'group','aria-label':tr('order_'+group),'data-sort-group':group,className:'tanuki-rail-menu-group'},
         h('div',{className:'tanuki-rail-sort-list','data-drop-end':preview?.target?.group===group&&!preview.target.before?'true':undefined},
           ...order[group].map(key=>{
-            const required=!optionalItems.includes(key),visible=required||visibility[key];
+            const required=!optionalItems.includes(key),unavailable=key==='skills'&&!skillsAvailable,visible=!unavailable&&(required||visibility[key]);
             return h('div',{key,role:'none','data-sort-key':key,'data-dragging':preview?.key===key?'true':undefined,'data-drop-before':preview?.target?.group===group&&preview.target.before===key?'true':undefined,className:'tanuki-rail-menu-row'},
               h('button',{type:'button',role:'menuitem',tabIndex:-1,className:'tanuki-rail-sort-handle',title:tr('reorderHint'),'aria-label':tr('reorder')+' '+tr('menu_'+key),'aria-description':tr('reorderHint'),
                 onPointerDown:event=>begin(event,key),onPointerMove:pointerMove,
                 onPointerUp:event=>{if(drag.current?.id===event.pointerId){if(drag.current.started){drag.current.x=event.clientX;drag.current.y=event.clientY;locate(drag.current);}finish(true);}},
                 onPointerCancel:event=>{if(drag.current?.id===event.pointerId)finish(false);},onLostPointerCapture:event=>{if(drag.current?.id===event.pointerId)finish(false);},
                 onKeyDown:event=>reorderWithKeyboard(event,key),onClick:event=>{event.preventDefault();event.stopPropagation();}},h(Icon,{name:'reorder'})),
-              h('button',{type:'button',role:'menuitemcheckbox','aria-checked':visible,'aria-disabled':required||undefined,title:tr(required?'alwaysVisible':visible?'visibilityShown':'visibilityHidden'),tabIndex:-1,className:'tanuki-rail-menu-item',onClick:()=>{if(!required)setVisible(key);}},
-                h(Icon,{name:key}),h('span',{className:'tanuki-rail-menu-label'},tr('menu_'+key)),h('span',{className:'tanuki-rail-menu-status','data-locked':required?'true':undefined,'aria-hidden':true},h(Icon,{name:visible?'eyeOpen':'eyeClosed'}))));
+              h('button',{type:'button',role:'menuitemcheckbox','aria-checked':visible,'aria-disabled':required||unavailable||undefined,'data-unavailable':unavailable||undefined,title:tr(unavailable?'skillsUnavailable':required?'alwaysVisible':visible?'visibilityShown':'visibilityHidden'),tabIndex:-1,className:'tanuki-rail-menu-item',onClick:()=>{if(!required&&!unavailable)setVisible(key);}},
+                h(Icon,{name:key}),h('span',{className:'tanuki-rail-menu-label'},tr('menu_'+key)),h('span',{className:'tanuki-rail-menu-status','data-locked':required||unavailable?'true':undefined,'aria-hidden':true},h(Icon,{name:visible?'eyeOpen':'eyeClosed'}))));
           }),order[group].length?null:h('div',{className:'tanuki-rail-drop-empty'},tr('dropHere'))));
       return h(React.Fragment,null,h('button',{ref:anchor,type:'button',className:'tanuki-rail-button',title:tr('more'),'aria-label':tr('more'),'aria-haspopup':'menu','aria-expanded':open,'aria-controls':open?menuId:undefined,onClick:()=>{if(open)close();else setOpen(true);},onKeyDown:event=>{if(event.key==='ArrowDown'){event.preventDefault();setOpen(true);}}},h(Icon,{name:'more'})),
         open?createPortal(h('div',{id:menuId,ref:menu,role:'menu','aria-label':tr('more'),className:'tanuki-rail-menu',style:position,onKeyDown:keydown},section('top'),h('hr',{role:'separator',className:'tanuki-rail-menu-divider'}),section('bottom')),document.body):null);
@@ -464,10 +473,11 @@ document.currentScript.__tanukiRegister(function(require){
       const item=key=>{
         if(optionalItems.includes(key)&&!model.visibility[key])return null;
         switch(key){
-          case 'home':return button(key,()=>navigate(HOME),panel===HOME||panel==='tanuki-home');
+          case 'home':return button(key,()=>navigate(ctx.slots.entries('main').some(entry=>entry.options?.key==='tanuki-home')?'tanuki-home':HOME),panel===HOME||panel==='tanuki-home');
           case 'newSession':return button(key,newSession,false);
           case 'workspace':return button(key,openWorkspace,panel===null,{'aria-expanded':model.pane});
-          case 'more':return h(VisibilityMenu,{key,visibility:model.visibility,order:model.order});
+          case 'more':return h(VisibilityMenu,{key,visibility:model.visibility,order:model.order,skillsAvailable:model.skillsAvailable});
+          case 'skills':return model.skillsAvailable?button(key,openSkills,model.skillsOpen,{'aria-haspopup':'dialog','aria-expanded':model.skillsOpen}):null;
           case 'automations':return button(key,openAutomations,panel==='schedules',{disabled:!model.automationsAvailable,title:tr(model.automationsAvailable?'menu_automations':'automationsUnavailable')});
           case 'toolbox':return button(key,openToolboxSettings,model.toolboxOpen,{'aria-haspopup':'dialog','aria-expanded':model.toolboxOpen});
           case 'plugins':return button(key,()=>navigate('plugins'),panel==='plugins');
@@ -488,8 +498,9 @@ document.currentScript.__tanukiRegister(function(require){
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-sidebar-account-signout',locale:NS},AccountSignOut));
     const offPanel=ctx.layout.panelInfo.subscribe(syncPane);
     const offMain=ctx.slots.subscribe('main',()=>{const available=hasAutomations();if(state.automationsAvailable!==available)publish({automationsAvailable:available});});
+    const offSkills=ctx.slots.subscribe('settings.section',()=>{const available=hasSkills();if(state.skillsAvailable!==available)publish({skillsAvailable:available});});
     syncPane();attach();
-    ctx.effect(()=>()=>{alive=false;offPanel();offMain();observer.disconnect();cancelAnimationFrame(frameRequest);for(const request of requests)request.abort();requests.clear();
+    ctx.effect(()=>()=>{alive=false;offPanel();offMain();offSkills();observer.disconnect();cancelAnimationFrame(frameRequest);for(const request of requests)request.abort();requests.clear();
       window.removeEventListener('storage',storageChanged);window.removeEventListener('resize',schedule);offLocale();menuCleanup?.();toolboxCleanup?.();settingsCleanup?.();detachAccount();detach();listeners.clear();
       if(lifecycle.disabled&&ctx.layout.panelInfo.getSnapshot().activePanelId===HOME)ctx.layout.selectPanel(null);
     });

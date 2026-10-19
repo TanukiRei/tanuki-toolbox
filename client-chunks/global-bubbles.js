@@ -50,7 +50,37 @@ document.currentScript.__tanukiRegister(function(require){
 },css=".tanuki-global-bubble{box-sizing:border-box;display:inline-flex;position:relative;flex:none;width:22px;height:22px;align-items:center;justify-content:center;vertical-align:middle;pointer-events:none;color:#fff;font-family:inherit;font-variant-numeric:tabular-nums;background:transparent}.tanuki-global-bubble svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.tanuki-global-bubble [data-state=done]{stroke:#14e878}.tanuki-global-bubble [data-state=action]{stroke:#e6e63c}.tanuki-global-bubble [data-state=error]{stroke:#ed3030}.tanuki-global-bubble [data-state=running]{stroke:#55a9e6}.tanuki-bubble-blue-track{opacity:.24}.tanuki-bubble-blue-progress{stroke-dasharray:22 78;transform-origin:16px 16px;animation:tanuki-bubble-progress 1.5s cubic-bezier(.45,.05,.55,.95) infinite}.tanuki-global-bubble-count{position:relative;font-size:12px;line-height:1;font-weight:750;letter-spacing:-.6px}.tanuki-global-bubble-layer{position:fixed;inset:0;z-index:75;pointer-events:none;overflow:hidden}.tanuki-global-bubble-layer:empty{display:none}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble){position:relative;overflow:visible}[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>svg[data-state],[data-row-key^=\"session:\"]>span:has(>.tanuki-global-bubble)>span[data-state]{visibility:hidden}[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>svg[data-state=done],[data-tanuki-task-read-aware] [data-row-key^=\"session:\"]>span>span[data-state=done]{visibility:hidden}@keyframes tanuki-bubble-progress{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}@media(prefers-reduced-motion:reduce){.tanuki-bubble-blue-progress{animation:none;stroke-dasharray:none}.tanuki-bubble-blue-track{opacity:1}}\n",dictionaries={"zh":{"done":"已完成","action":"需要操作","error":"出错","running":"进行中"},"en":{"done":"Completed","action":"Action needed","error":"Error","running":"In progress"}},NS='tanukiBubbles';
   function apply(ctx){
     const model=createBubbleModel();let alive=true;
-    ctx.effect(()=>ctx.locale.register(NS,dictionaries));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
+  const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
+  const text = value => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+    const result = language() === 'zh' ? value.zh ?? value['zh-CN'] ?? value['zh-cn'] ?? value['zh-TW'] ?? value['zh-tw'] ?? value.en : value.en;
+    return typeof result === 'string' ? result : '';
+  };
+  const t = (key, params) => {
+    const template = dictionaries[language()]?.[key] ?? dictionaries.en?.[key] ?? key;
+    return params ? template.replace(/\{(\w+)\}/g, (match, name) => Object.hasOwn(params, name) ? String(params[name]) : match) : template;
+  };
+  ctx.effect(() => {
+    const known = new Set(), disposers = [];
+    function registerLanguages() {
+      const entries = { en: dictionaries.en || {}, zh: dictionaries.zh || {} };
+      for (const locale of ctx.locale.getSnapshot()?.locales || []) {
+        const id = typeof locale === 'string' ? locale : locale.id;
+        if (typeof id === 'string') entries[id] = /^zh(?:[-_]|$)/i.test(id) ? dictionaries.zh || dictionaries.en : dictionaries.en;
+      }
+      const pending = Object.fromEntries(Object.entries(entries).filter(([id]) => !known.has(id.toLowerCase())));
+      if (!Object.keys(pending).length) return;
+      for (const id of Object.keys(pending)) known.add(id.toLowerCase());
+      disposers.push(ctx.locale.register(namespace, pending));
+    }
+    registerLanguages();
+    const off = ctx.locale.subscribe(registerLanguages);
+    return () => { off(); for (const dispose of disposers.reverse()) dispose(); };
+  });
+  return { t, text, language };
+})(ctx,NS,dictionaries),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.dataset.pluginCss='tanuki-global-bubbles';style.textContent=css;document.head.appendChild(style);return()=>style.remove();});
     function Bubble({target,sessionId,packageName,style}){
       const snapshot=React.useSyncExternalStore(model.subscribe,model.getSnapshot);

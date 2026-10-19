@@ -4,7 +4,7 @@ document.currentScript.__tanukiRegister(function(require){
   const createBubbleModel=__BUBBLES_FUNCTION__,css=__CSS__,dictionaries=__LOCALES__,NS='tanukiBubbles';
   function apply(ctx){
     const model=createBubbleModel();let alive=true;
-    ctx.effect(()=>ctx.locale.register(NS,dictionaries));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,dictionaries),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.dataset.pluginCss='tanuki-global-bubbles';style.textContent=css;document.head.appendChild(style);return()=>style.remove();});
     function Bubble({target,sessionId,packageName,style}){
       const snapshot=React.useSyncExternalStore(model.subscribe,model.getSnapshot);

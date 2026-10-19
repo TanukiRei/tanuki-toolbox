@@ -2,14 +2,25 @@
 .tanuki-base-settings .tanuki-settings-title{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:9px;row-gap:3px;}
 .tanuki-base-settings .tanuki-settings-version{font-size:12px;line-height:18px;font-weight:400;white-space:nowrap;color:var(--dsw-alias-label-secondary,#aaa);font-variant-numeric:tabular-nums;}
 .tanuki-settings-header-actions{display:flex;align-items:center;gap:10px;flex:none;}
-.tanuki-base-settings button.tanuki-settings-expand{display:flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;padding:5px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary,#aaa);}
-.tanuki-base-settings button.tanuki-settings-expand:hover,.tanuki-base-settings button.tanuki-settings-collapse:hover{background:var(--dsw-alias-interactive-bg-hover,#ffffff12);color:var(--dsw-alias-label-primary,#eee);}
+.tanuki-base-settings .tanuki-settings-header h3{flex:1;}
+.tanuki-base-settings button.tanuki-settings-expand{display:flex;align-items:center;gap:10px;flex:1;width:100%;min-width:0;min-height:30px;padding:3px 5px 3px 0;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-weight:inherit;text-align:left;}
+.tanuki-settings-header-label{flex:1;min-width:0;overflow-wrap:anywhere;}
+.tanuki-settings-expand>svg{flex:none;}
 .tanuki-settings-expand svg{transition:transform .24s ease;}
 .tanuki-settings-expand[aria-expanded=true] svg{transform:rotate(180deg);}
 .tanuki-base-settings .tanuki-settings-card>.tanuki-settings-description{margin-bottom:0;}
 .tanuki-settings-fold{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .26s ease,opacity .18s ease;}
 .tanuki-settings-fold[data-expanded=true]{grid-template-rows:1fr;opacity:1;}
 .tanuki-settings-fold-inner{min-height:0;overflow:hidden;}
-.tanuki-base-settings button.tanuki-settings-collapse{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:16px;padding:8px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary,#aaa);font-size:12px;}
+.tanuki-base-settings button.tanuki-settings-collapse{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:calc(max(1lh,16px) + 16px);margin-top:16px;padding:8px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary,#aaa);font-size:12px;}
 .tanuki-settings-collapse svg{transform:rotate(180deg);}
 @media(prefers-reduced-motion:reduce){.tanuki-settings-fold,.tanuki-settings-expand svg{transition:none;}}
+.tanuki-component-options{border:0;margin:0;padding:0;min-width:0;color:inherit;transition:opacity .18s ease}
+.tanuki-component-options[data-disabled=true]{opacity:.45;filter:grayscale(1)}
+.tanuki-notification-categories{gap:8px;margin:18px 0}
+.tanuki-notification-categories legend{margin-bottom:10px}
+.tanuki-base-settings button.tanuki-category-button{min-width:66px;min-height:32px;border:1px solid #58585b;background:#58585b;color:#fff;border-radius:8px;padding:6px 15px;font-size:13px;transition:background-color .15s,border-color .15s,filter .15s}
+.tanuki-base-settings button.tanuki-category-button[aria-pressed=true]{background:#34c759;border-color:#34c759}
+.tanuki-base-settings button.tanuki-category-button:hover:not(:disabled){filter:brightness(1.08)}
+.tanuki-system-permission>.tanuki-bubble-setting{margin-bottom:0}
+@media(prefers-reduced-motion:reduce){.tanuki-component-options,.tanuki-base-settings button.tanuki-category-button{transition:none}}

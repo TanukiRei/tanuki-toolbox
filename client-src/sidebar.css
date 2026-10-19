@@ -110,5 +110,14 @@ html[data-platform="darwin"] [data-tanuki-sidebar-col] :is(button,a,input,select
 
 /* Keep selected fills and idle outlines at the same visual ink strength.
    Apply ink opacity to the glyph, leaving selection backgrounds and bubbles intact. */
-.tanuki-rail-button>svg,.tanuki-rail-button>.tanuki-rail-home-mark{opacity:.72;}
-.tanuki-rail-home>.tanuki-rail-home-mark{opacity:1;}
+.tanuki-rail-button>svg,.tanuki-rail-button>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
+.tanuki-rail-home>.tanuki-rail-home-mark{color:var(--dsw-alias-brand-primary);opacity:1;}
+/* Use the rail's neutral ink for the daytime home glyph. The logo primitive
+   uses currentColor; leave its actual paths and eye cutouts intact. */
+body:not([data-ds-dark-theme]) .tanuki-rail-home{color:inherit;}
+body:not([data-ds-dark-theme]) .tanuki-rail-home>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
+body:not([data-ds-dark-theme]) .tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
+.tanuki-rail-menu-item{color:var(--dsw-alias-label-primary);}
+.tanuki-rail-menu-item .tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
+.tanuki-rail-menu-item>svg,.tanuki-rail-menu-item>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
+.tanuki-rail-menu-item[data-unavailable=true]>.tanuki-rail-menu-label,.tanuki-rail-menu-item[data-unavailable=true]>svg{opacity:.4;}

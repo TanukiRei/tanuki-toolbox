@@ -48,18 +48,6 @@
     }
   },
   {
-    "repository": "https://github.com/WSL043/dsh-codex-subscription",
-    "packageName": "dsh-codex-subscription",
-    "title": {
-      "zh": "Codex 订阅",
-      "en": "Codex Subscription"
-    },
-    "description": {
-      "zh": "在 DSH 中使用 ChatGPT / Codex 订阅。登录即可选模型、查额度、搜索和生图，无需 API Key。还能用 ChatGPT 手机 App 远程控制 DSH（Beta）。",
-      "en": "Use your ChatGPT / Codex subscription in DSH. Sign in to access models, track quota, search the web and generate images. No API key required. Beta: control DSH from the ChatGPT mobile app."
-    }
-  },
-  {
     "repository": "https://github.com/DDDMUC/dsh-free-search",
     "packageName": "dsh-free-search",
     "title": {

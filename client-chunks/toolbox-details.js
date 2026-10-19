@@ -6,7 +6,7 @@ document.currentScript.__tanukiRegister(function(require){
   const listeners=new Set();
   const publish=patch=>{if(!alive)return;state={...state,...patch};for(const fn of listeners)fn();};
   const subscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn);};
-  function localized(value,locale){if(typeof value==='string')return value;return value?.[locale]||value?.[String(locale).split('-')[0]]||value?.en||value?.zh||'';}
+  function localized(value,locale){if(typeof value==='string')return value;return /^zh(?:[-_]|$)/i.test(locale)?value?.zh||value?.['zh-CN']||value?.['zh-TW']||value?.en||'':value?.en||'';}
   function GitButton({name}){
     const model=useModel(),tr=useLocale(),pkg=model.bundles.find(p=>p.name===name),url=model.repositories?.[name];
     if(!pkg?.installed||pkg.removable===false)return null;
@@ -107,7 +107,37 @@ document.currentScript.__tanukiRegister(function(require){
     let alive=true,flight=null,again=false,timer;const requests=new Set(),listeners=new Set();
     let snapshot={bundles:[],update:{busy:false}};
     const publish=value=>{if(!alive)return;snapshot={...snapshot,...value};for(const fn of [...listeners])fn();};
-    ctx.effect(()=>ctx.locale.register(NS,{"zh":{"toolbox":"黎猫工具箱","description":"集成了各种小组件，让DeepSeek Harness更好用。持续扩展中。","checkProgress":"重新检查进度","recommendations":"推荐插件","recommendLoading":"正在从 GitHub 读取最新插件…","recommendLive":"展开时获取 GitHub 最新发布信息","recommendUnavailable":"暂时无法读取 GitHub，请稍后刷新。","recommendLimit":"GitHub 请求暂时受限，请稍后刷新。","recommendRefresh":"刷新","recommendInstall":"安装","recommendInstalledButton":"已安装","recommendInstallingButton":"安装中…","recommendInstalling":"正在安装推荐插件…","recommendInstalled":"安装完成，已启用。","recommendRestart":"安装完成，重启 DSH 后生效。","recommendInstallFailed":"安装未完成，请在 DSH 的添加插件中查看详情或重试。","recommendAlreadyInstalled":"此插件已安装，请在「已安装」中管理。","recommendBuild":"此插件需要构建授权，请在 DSH 的添加插件中完成安装。","recommendIncompatible":"此版本与当前 DSH 不兼容，请选择适配的版本。","recommendUnknown":"暂时无法确认安装结果，请先重新检查进度。","recommendEmpty":"还没有推荐插件。","gitOpen":"在浏览器中打开 GitHub 仓库","gitMissing":"此插件尚未提供 GitHub 地址","gitLoading":"正在读取仓库信息","gitUnavailable":"暂时无法读取仓库信息，请稍后刷新。"},"en":{"toolbox":"Tanuki Toolbox","description":"A growing collection of small components that make DeepSeek Harness easier to use.","checkProgress":"Check progress again","recommendations":"Recommended plugins","recommendLoading":"Loading the latest plugins from GitHub…","recommendLive":"Latest GitHub release details are fetched when expanded","recommendUnavailable":"GitHub is unavailable. Please refresh later.","recommendLimit":"GitHub requests are temporarily limited. Please refresh later.","recommendRefresh":"Refresh","recommendInstall":"Install","recommendInstalledButton":"Installed","recommendInstallingButton":"Installing…","recommendInstalling":"Installing the recommended plugin…","recommendInstalled":"Installed and enabled.","recommendRestart":"Installed. Restart DSH to apply it.","recommendInstallFailed":"Installation did not finish. View details or retry in DSH’s Add plugin dialog.","recommendAlreadyInstalled":"This plugin is already installed. Manage it in Installed.","recommendBuild":"This plugin needs build approval. Complete installation in DSH’s Add plugin dialog.","recommendIncompatible":"This version is incompatible with your DSH. Choose a compatible version.","recommendUnknown":"The installation result is uncertain. Check its progress before retrying.","recommendEmpty":"No recommended plugins yet.","gitOpen":"Open the GitHub repository in your browser","gitMissing":"This plugin has not provided a GitHub repository","gitLoading":"Loading repository details","gitUnavailable":"Repository details are temporarily unavailable. Please refresh later."}}));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
+  const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
+  const text = value => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+    const result = language() === 'zh' ? value.zh ?? value['zh-CN'] ?? value['zh-cn'] ?? value['zh-TW'] ?? value['zh-tw'] ?? value.en : value.en;
+    return typeof result === 'string' ? result : '';
+  };
+  const t = (key, params) => {
+    const template = dictionaries[language()]?.[key] ?? dictionaries.en?.[key] ?? key;
+    return params ? template.replace(/\{(\w+)\}/g, (match, name) => Object.hasOwn(params, name) ? String(params[name]) : match) : template;
+  };
+  ctx.effect(() => {
+    const known = new Set(), disposers = [];
+    function registerLanguages() {
+      const entries = { en: dictionaries.en || {}, zh: dictionaries.zh || {} };
+      for (const locale of ctx.locale.getSnapshot()?.locales || []) {
+        const id = typeof locale === 'string' ? locale : locale.id;
+        if (typeof id === 'string') entries[id] = /^zh(?:[-_]|$)/i.test(id) ? dictionaries.zh || dictionaries.en : dictionaries.en;
+      }
+      const pending = Object.fromEntries(Object.entries(entries).filter(([id]) => !known.has(id.toLowerCase())));
+      if (!Object.keys(pending).length) return;
+      for (const id of Object.keys(pending)) known.add(id.toLowerCase());
+      disposers.push(ctx.locale.register(namespace, pending));
+    }
+    registerLanguages();
+    const off = ctx.locale.subscribe(registerLanguages);
+    return () => { off(); for (const dispose of disposers.reverse()) dispose(); };
+  });
+  return { t, text, language };
+})(ctx,NS,{"zh":{"toolbox":"黎猫工具箱","description":"集成了各种小组件，让DeepSeek Harness更好用。持续扩展中。","checkProgress":"重新检查进度","recommendations":"推荐插件","recommendLoading":"正在从 GitHub 读取最新插件…","recommendLive":"展开时获取 GitHub 最新发布信息","recommendUnavailable":"暂时无法读取 GitHub，请稍后刷新。","recommendLimit":"GitHub 请求暂时受限，请稍后刷新。","recommendRefresh":"刷新","recommendInstall":"安装","recommendInstalledButton":"已安装","recommendInstallingButton":"安装中…","recommendInstalling":"正在安装推荐插件…","recommendInstalled":"安装完成，已启用。","recommendRestart":"安装完成，重启 DSH 后生效。","recommendInstallFailed":"安装未完成，请在 DSH 的添加插件中查看详情或重试。","recommendAlreadyInstalled":"此插件已安装，请在「已安装」中管理。","recommendBuild":"此插件需要构建授权，请在 DSH 的添加插件中完成安装。","recommendIncompatible":"此版本与当前 DSH 不兼容，请选择适配的版本。","recommendUnknown":"暂时无法确认安装结果，请先重新检查进度。","recommendEmpty":"还没有推荐插件。","gitOpen":"在浏览器中打开 GitHub 仓库","gitMissing":"此插件尚未提供 GitHub 地址","gitLoading":"正在读取仓库信息","gitUnavailable":"暂时无法读取仓库信息，请稍后刷新。"},"en":{"toolbox":"Tanuki Toolbox","description":"A growing collection of small components that make DeepSeek Harness easier to use.","checkProgress":"Check progress again","recommendations":"Recommended plugins","recommendLoading":"Loading the latest plugins from GitHub…","recommendLive":"Latest GitHub release details are fetched when expanded","recommendUnavailable":"GitHub is unavailable. Please refresh later.","recommendLimit":"GitHub requests are temporarily limited. Please refresh later.","recommendRefresh":"Refresh","recommendInstall":"Install","recommendInstalledButton":"Installed","recommendInstallingButton":"Installing…","recommendInstalling":"Installing the recommended plugin…","recommendInstalled":"Installed and enabled.","recommendRestart":"Installed. Restart DSH to apply it.","recommendInstallFailed":"Installation did not finish. View details or retry in DSH’s Add plugin dialog.","recommendAlreadyInstalled":"This plugin is already installed. Manage it in Installed.","recommendBuild":"This plugin needs build approval. Complete installation in DSH’s Add plugin dialog.","recommendIncompatible":"This version is incompatible with your DSH. Choose a compatible version.","recommendUnknown":"The installation result is uncertain. Check its progress before retrying.","recommendEmpty":"No recommended plugins yet.","gitOpen":"Open the GitHub repository in your browser","gitMissing":"This plugin has not provided a GitHub repository","gitLoading":"Loading repository details","gitUnavailable":"Repository details are temporarily unavailable. Please refresh later."}}),t=toolboxLocale.t;
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     function useModel(){return React.useSyncExternalStore(fn=>{listeners.add(fn);return()=>listeners.delete(fn);},()=>snapshot);}
     async function json(path,signal){
@@ -123,7 +153,7 @@ document.currentScript.__tanukiRegister(function(require){
     }
     const off=ctx.remote.$on('plugin-manager/changed',()=>{clearTimeout(timer);timer=setTimeout(refresh,250);});void refresh();
     const {Recommendations}=createRecommendationComponents({React,ctx,useLocale,useModel,json,refresh,notifyInstalled(){}});
-    function Details(){const tr=useLocale();return h('div',{className:'tanuki-info'},h('img',{className:'tanuki-toolbox-hero',src:new URL('tanuki-toolbox/assets/toolbox.png?v=0.6.11',document.baseURI).href,width:160,height:160,alt:tr('toolbox')}),h(Recommendations));}
+    function Details(){const tr=useLocale();return h('div',{className:'tanuki-info'},h('img',{className:'tanuki-toolbox-hero',src:new URL('tanuki-toolbox/assets/toolbox.png?v=0.6.20',document.baseURI).href,width:160,height:160,alt:tr('toolbox')}),h(Recommendations));}
     ctx.effect(()=>{
       const style=document.createElement('style');
       // Use the same assets as Settings even when the host cached older metadata.

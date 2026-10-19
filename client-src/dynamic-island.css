@@ -1,19 +1,17 @@
 /* Native dock's slot anchor uses display:contents; order places only our label
    after the context meter, without moving or replacing native React children. */
-/* One shared surface, independent of the current DSH panel and theme. */
+/* One global surface, with native light/dark neutral colors. */
 .tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:max-content;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}
-.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);min-height:68px;padding:12px 12px 12px 18px;border:1px solid #ffffff1a;border-radius:30px;background:#111315;color:#f4f5f6;box-shadow:0 10px 32px #0005,0 2px 8px #0004;pointer-events:auto;font-family:inherit;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}
-.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:#9bd4b91a;color:#a5ddc0;}
-.tanuki-island-symbol[data-tone="error"]{background:#e99a391a;color:#ffc078;}
+.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);min-height:68px;padding:12px 12px 12px 18px;border:1px solid var(--dsw-alias-border-l2);border-radius:30px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);box-shadow:0 10px 32px #0003,0 2px 8px #0002;pointer-events:auto;font-family:inherit;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}
+.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);color:var(--dsw-alias-state-success-primary);}
+.tanuki-island-symbol[data-tone="error"]{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);color:var(--dsw-alias-state-error-primary);}
 .tanuki-island-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}
 .tanuki-island-open{display:flex;flex:1;min-width:0;align-items:center;gap:12px;margin:0;padding:0;border:0;border-radius:18px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .16s;}
-.tanuki-island-open:hover{background:#ffffff08;}
-.tanuki-island-open:focus-visible{outline:2px solid #a5ddc0;outline-offset:4px;}
+.tanuki-island-open:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:4px;}
 .tanuki-island-copy strong{font-size:14px;font-weight:600;line-height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-.tanuki-island-copy>span{color:#bcc1c5;font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}
-.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:#ffffff12;color:#bec6ca;font-variant-numeric:tabular-nums;}
-.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:#9ca4ab;font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}
-.tanuki-island-close:hover{background:#ffffff12;color:#fff;}
-.tanuki-island-close:focus-visible{outline:2px solid #a5ddc0;outline-offset:2px;}
+.tanuki-island-copy>span{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}
+.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;}
+.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}
+.tanuki-island-close:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px;}
 @keyframes tanuki-island-enter{from{opacity:0;transform:translateY(-12px) scale(.92);}to{opacity:1;transform:translateY(0) scale(1);}}
 @media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close,.tanuki-island-open{transition:none}}

@@ -4,14 +4,16 @@ document.currentScript.__tanukiRegister(function(require){
   function Icon({name}){return h('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:{bolt:'M13 2 4 14h7l-1 8 10-13h-7l1-7z',detail:'M5 6h14M5 12h10M5 18h14',reset:'M4 4v6h6M4 10a8 8 0 1 1 0 6',chevron:'m9 5 7 7-7 7'}[name]}));}
   function apply(ctx){
     let alive=true;
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     const notify=()=>{if(alive)window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{kind:'error',destination:{page:'settings',section:'tanuki-toolbox',component:'composer'},title:{zh:'模型选择',en:'Model selection'},message:{zh:'设置未能完成，请稍后重试。',en:'Could not apply the selection. Please retry.'}}}));};
-    ctx.inject(['modelDirectories','sessions'],scope=>{
-      const models=scope.get('modelDirectories'),sessions=scope.get('sessions');
+    ctx.inject(['modelDirectories','sessions','tanukiModels'],scope=>{
+      const models=scope.get('modelDirectories'),sessions=scope.get('sessions'),policy=scope.get('tanukiModels');
       function ModelControl({sessionId,directory,available,locked}){
         React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());
+        React.useSyncExternalStore(policy.subscribe,policy.getSnapshot);
         const state=React.useSyncExternalStore(fn=>directory.store.subscribe(fn),()=>directory.store.getSnapshot());
+        React.useLayoutEffect(()=>policy.retain(directory),[directory]);
         const catalogStore=models.catalog?.store||emptyStore;
         const catalog=React.useSyncExternalStore(fn=>catalogStore.subscribe(fn),()=>catalogStore.getSnapshot());
         const entries=React.useSyncExternalStore(fn=>scope.slots.subscribe(SEAT,fn),()=>scope.slots.entries(SEAT));
@@ -24,8 +26,8 @@ document.currentScript.__tanukiRegister(function(require){
         const preferenceStore=preference||emptyStore,prefs=React.useSyncExternalStore(fn=>preferenceStore.subscribe(fn),()=>preferenceStore.getSnapshot());
         const [open,setOpen]=React.useState(false),[pane,setPane]=React.useState(null),[query,setQuery]=React.useState(''),[draft,setDraft]=React.useState(null),[busy,setBusy]=React.useState(false),[position,setPosition]=React.useState({left:0,top:0}),[optionPosition,setOptionPosition]=React.useState({left:0,top:0});
         const controls=React.useRef(null),trigger=React.useRef(null),popup=React.useRef(null),options=React.useRef(null),mounted=React.useRef(false),operation=React.useRef(false),gesture=React.useRef(null),id=React.useId();
-        const groups=state.groups||[],current=state.current,choice=groups.find(group=>group.id===current?.provider)?.models.find(model=>model.id===current?.model);
-        const visibleGroups=React.useMemo(()=>groups.map(group=>group.id==='openai-codex'?{...group,models:group.models.filter(model=>!prefs.disabledModels?.includes(model.id))}:group),[groups,prefs.disabledModels]);
+        const groups=state.groups||[],current=state.current,choice=groups.find(group=>group.id===current?.provider)?.models.find(model=>model.id===current?.model),modelBlocked=policy.isDisabled(current);
+        const visibleGroups=React.useMemo(()=>groups.map(group=>group.id==='openai-codex'?{...group,models:group.models.filter(model=>model.tanukiDisabled||!prefs.disabledModels?.includes(model.id))}:group),[groups,prefs.disabledModels]);
         const modelLabel=choice?.name||current?.model||t('chooseModel');
         const reasoning=choice?.reasoning,efforts=reasoning&&Array.isArray(reasoning.efforts)?[...(reasoning.defaultEffort===undefined?[{id:undefined,name:t('default')}]:[]),...reasoning.efforts]:[];
         const effortName=level=>!level?t('default'):['none','minimal','low','medium','high','xhigh','max','ultra'].includes(level.id)?t('effort_'+level.id):level.name;
@@ -36,9 +38,9 @@ document.currentScript.__tanukiRegister(function(require){
         const ultraSupported=codex&&prefs.ultrafastModels?.includes(current?.model),speedSupported=!!preference&&(fastSupported||ultraSupported),fast=speedSupported&&['fast','ultrafast'].includes(prefs.speedMode);
         const detailSupported=!!preference&&codex&&prefs.verbosityModels?.includes(current?.model);
         const detailChoices=['default','low','medium','high'],detailValue=detailChoices.includes(prefs.outputVerbosity)?prefs.outputVerbosity:'default';
-        const disabled=!!locked||!available||busy||state.status==='selecting',preferenceDisabled=disabled||prefs.status!=='ready'||prefs.writable!==true;
+        const disabled=!!locked||!available||busy||state.status==='selecting',preferenceDisabled=disabled||modelBlocked||prefs.status!=='ready'||prefs.writable!==true;
         const defaultSelection=catalog.value?.default;
-        const resetAvailable=defaultSelection&&groups.some(group=>group.id===defaultSelection.provider&&group.models.some(model=>model.id===defaultSelection.model));
+        const resetAvailable=defaultSelection&&groups.some(group=>group.id===defaultSelection.provider&&group.models.some(model=>model.id===defaultSelection.model&&!model.tanukiDisabled));
         React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;operation.current=false;};},[]);
         React.useEffect(()=>{if(available)void directory.load().catch(()=>{});},[directory,available]);
         React.useEffect(()=>{gesture.current=null;setDraft(null);},[current?.provider,current?.model,effective]);
@@ -89,9 +91,9 @@ document.currentScript.__tanukiRegister(function(require){
           if(Object.entries(patch).every(([key,value])=>preference.getSnapshot()[key]===value))return;
           await preference.set(patch);if(preference.getSnapshot().error)throw new Error('Preferences rejected');
         }
-        function chooseModel(provider,model){void run(()=>select({provider,model:model.id,...(model.reasoning?.defaultEffort===undefined?{}:{reasoningEffort:model.reasoning.defaultEffort})}));}
+        function chooseModel(provider,model){if(model.tanukiDisabled)return;void run(()=>select({provider,model:model.id,...(model.reasoning?.defaultEffort===undefined?{}:{reasoningEffort:model.reasoning.defaultEffort})}));}
         function commitEffort(value){
-          const level=efforts[Number(value)];if(!level||!current||index===Number(value)||disabled){setDraft(null);return;}
+          const level=efforts[Number(value)];if(!level||!current||index===Number(value)||disabled||modelBlocked){setDraft(null);return;}
           void run(()=>select({provider:current.provider,model:current.model,...(level.id===undefined?{}:{reasoningEffort:level.id})}));
         }
         function reset(){void run(async()=>{
@@ -116,19 +118,19 @@ document.currentScript.__tanukiRegister(function(require){
         const buttonProps={type:'button',disabled,className:'tanuki-model-hit'};
         return h(React.Fragment,null,
           h('span',{ref:controls,className:'tanuki-model-controls','aria-busy':busy||state.status==='selecting'},
-          h('button',{ref:trigger,type:'button',className:'tanuki-model-trigger',disabled:!!locked,'aria-haspopup':'dialog','aria-expanded':open,'aria-controls':open?id:undefined,onClick:()=>{if(open)close();else{setOpen(true);void directory.load().catch(notify);}}},h('span',null,modelLabel),effortLabel?h('span',{className:'tanuki-model-trigger-effort'},effortLabel):null,h(Icon,{name:'chevron'})),
+          h('button',{ref:trigger,type:'button',className:'tanuki-model-trigger','data-tanuki-model-disabled':modelBlocked,title:modelBlocked?t('modelDisabled'):undefined,disabled:!!locked,'aria-haspopup':'dialog','aria-expanded':open,'aria-controls':open?id:undefined,onClick:()=>{if(open)close();else{setOpen(true);void directory.load().catch(notify);}}},h('span',null,modelLabel),effortLabel?h('span',{className:'tanuki-model-trigger-effort'},effortLabel):null,h(Icon,{name:'chevron'})),
           h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-reset',disabled:disabled||!resetAvailable||(!!preference&&(prefs.status!=='ready'||prefs.writable!==true)),title:t('reset'),'aria-label':t('reset'),onClick:reset},h(Icon,{name:'reset'}))),
           open?createPortal(h('div',{ref:popup,id,role:'dialog','aria-label':t('title'),'aria-busy':busy||state.status==='selecting',className:'tanuki-model-popup',style:position,onKeyDown:keydown},
             h('div',{className:'tanuki-model-card'},
               h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-speed','data-fast':fast,style:{visibility:speedSupported?'visible':'hidden'},disabled:preferenceDisabled||!speedSupported,title:t(fast?'fastHint':'standardHint'),'aria-label':t('speed'),'aria-pressed':fast,onClick:()=>void run(()=>setPreferences({speedMode:fast?'standard':fastSupported?'fast':'ultrafast'}))},h(Icon,{name:'bolt'})),
-              h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-main','aria-haspopup':'menu','aria-expanded':pane==='models',onClick:()=>{setQuery('');setPane(value=>value==='models'?null:'models');}},h('span',{className:'tanuki-model-name'},h('span',null,modelLabel),h(Icon,{name:'chevron'})),h('span',{className:'tanuki-model-effort',style:{visibility:efforts.length?'visible':'hidden'}},effortLabel||t('default'))),
+              h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-main','data-tanuki-model-disabled':modelBlocked,title:modelBlocked?t('modelDisabled'):undefined,'aria-haspopup':'menu','aria-expanded':pane==='models',onClick:()=>{setQuery('');setPane(value=>value==='models'?null:'models');}},h('span',{className:'tanuki-model-name'},h('span',null,modelLabel),h(Icon,{name:'chevron'})),h('span',{className:'tanuki-model-effort',style:{visibility:efforts.length?'visible':'hidden'}},effortLabel||t('default'))),
               h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-detail',style:{visibility:detailSupported?'visible':'hidden'},disabled:preferenceDisabled||!detailSupported,title:t('detail')+' · '+t('detail_'+detailValue),'aria-label':t('detail')+' · '+t('detail_'+detailValue),'aria-haspopup':'menu','aria-expanded':pane==='detail',onClick:()=>setPane(value=>value==='detail'?null:'detail')},h(Icon,{name:'detail'})),
               h('div',{className:'tanuki-model-slider',style:{visibility:efforts.length?'visible':'hidden','--tanuki-progress':(efforts.length>1?displayIndex/(efforts.length-1)*100:0)+'%'}},
                 h('div',{className:'tanuki-model-ticks','aria-hidden':true},...efforts.map((level,i)=>h('i',{key:level.id??'default',style:{left:(efforts.length>1?i/(efforts.length-1)*100:0)+'%'}}))),
-                h('input',{type:'range',min:0,max:Math.max(0,efforts.length-1),step:1,value:displayIndex,disabled:disabled||efforts.length<2,'aria-label':t('effort'),'aria-valuetext':effortName(efforts[displayIndex]),title:effortName(efforts[displayIndex]),onChange:event=>setDraft(Number(event.target.value)),onPointerDown:event=>{if(event.button===0){gesture.current=JSON.stringify([current?.provider,current?.model,effective]);event.currentTarget.setPointerCapture(event.pointerId);}},onPointerUp:event=>{const valid=gesture.current===JSON.stringify([current?.provider,current?.model,effective]);gesture.current=null;if(valid)commitEffort(event.currentTarget.value);else setDraft(null);},onPointerCancel:()=>{gesture.current=null;setDraft(null);},onLostPointerCapture:()=>{if(gesture.current!==null){gesture.current=null;setDraft(null);}},onKeyUp:event=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(event.key))commitEffort(event.currentTarget.value);},onBlur:()=>{gesture.current=null;if(!operation.current)setDraft(null);}}))),
+                h('input',{type:'range',min:0,max:Math.max(0,efforts.length-1),step:1,value:displayIndex,disabled:disabled||modelBlocked||efforts.length<2,'aria-label':t('effort'),'aria-valuetext':effortName(efforts[displayIndex]),title:effortName(efforts[displayIndex]),onChange:event=>setDraft(Number(event.target.value)),onPointerDown:event=>{if(event.button===0){gesture.current=JSON.stringify([current?.provider,current?.model,effective]);event.currentTarget.setPointerCapture(event.pointerId);}},onPointerUp:event=>{const valid=gesture.current===JSON.stringify([current?.provider,current?.model,effective]);gesture.current=null;if(valid)commitEffort(event.currentTarget.value);else setDraft(null);},onPointerCancel:()=>{gesture.current=null;setDraft(null);},onLostPointerCapture:()=>{if(gesture.current!==null){gesture.current=null;setDraft(null);}},onKeyUp:event=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(event.key))commitEffort(event.currentTarget.value);},onBlur:()=>{gesture.current=null;if(!operation.current)setDraft(null);}}))),
             pane?h('div',{ref:options,role:'menu','aria-label':t(pane==='models'?'chooseModel':'detail'),className:'tanuki-model-options',style:optionPosition},
               pane==='models'?h(React.Fragment,null,h('input',{type:'search',value:query,placeholder:t('search'),'aria-label':t('search'),onChange:event=>setQuery(event.target.value)}),
-                ...visibleGroups.map(group=>{const matches=group.models.filter(model=>(model.name+' '+model.id).toLowerCase().includes(query.toLowerCase()));return matches.length?h('div',{key:group.id,role:'group','aria-label':group.name},h('div',{className:'tanuki-model-group'},group.name),...matches.map(model=>h('button',{key:model.id,type:'button',role:'menuitemradio','aria-checked':current?.provider===group.id&&current?.model===model.id,disabled,onClick:()=>chooseModel(group.id,model)},h('span',null,model.name),current?.provider===group.id&&current?.model===model.id?'✓':null))):null;}),
+                ...visibleGroups.map(group=>{const matches=group.models.filter(model=>(model.name+' '+model.id).toLowerCase().includes(query.toLowerCase()));return matches.length?h('div',{key:group.id,role:'group','aria-label':group.name},h('div',{className:'tanuki-model-group'},group.name),...matches.map(model=>h('button',{key:model.id,type:'button',role:'menuitemradio','aria-checked':current?.provider===group.id&&current?.model===model.id,'data-tanuki-model-disabled':!!model.tanukiDisabled,title:model.tanukiDisabled?t('modelDisabled'):undefined,disabled:disabled||!!model.tanukiDisabled,onClick:()=>chooseModel(group.id,model)},h('span',null,model.name,model.tanukiDisabled?h('small',null,t('modelDisabled')):null),current?.provider===group.id&&current?.model===model.id?'✓':null))):null;}),
                 !visibleGroups.some(group=>group.models.some(model=>(model.name+' '+model.id).toLowerCase().includes(query.toLowerCase())))?h('p',null,t('noModels')):null):
               detailChoices.map(value=>h('button',{key:value,type:'button',role:'menuitemradio','aria-checked':detailValue===value,disabled:preferenceDisabled,onClick:()=>{void run(()=>setPreferences({outputVerbosity:value}));}},h('span',null,t('detail_'+value)),detailValue===value?'✓':null))):null),document.body):null);
       }

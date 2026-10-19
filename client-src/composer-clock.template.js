@@ -2,7 +2,7 @@ document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),NS='tanukiComposerClock';
   function apply(ctx){
     let alive=true;
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     // Native session-scoped dock is beside ContextMeter, not the workspace row.

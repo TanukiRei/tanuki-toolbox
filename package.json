@@ -1,6 +1,6 @@
 {
   "name": "dsh-local-plugin-center",
-  "version": "0.6.11",
+  "version": "0.6.20",
   "private": true,
   "type": "module",
   "description": "A growing collection of small components that make DeepSeek Harness easier to use.",
@@ -69,7 +69,8 @@
     "LIFECYCLE.txt",
     "README.md",
     "LICENSE",
-    "scripts"
+    "scripts",
+    "README.en.md"
   ],
   "tanuki": {
     "versionScheme": 1

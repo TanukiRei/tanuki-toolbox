@@ -1,6 +1,8 @@
 消息中心 / Message Center — 全局消息与状态接口（0.5.4）
 
 消息中心启用后，以灵动岛展示消息。关闭时不收集待显示通知，不启动提示音或全局气泡。消息为运行期记录，不写入聊天历史、不调用模型。
+
+0.6.20 设置补充：父组件“消息中心”与其子项“灵动岛”分开。island.inApp 默认 true，仅控制应用内顶部消息展示；false 时不追加/保留灵动岛队列，但仍处理允许类别的系统通知、提示音与既有消息状态。其他通道分别由 systemNotifications、bubbles、soundEnabled 控制，消息中心父组件关闭则全部停止。允许通知的插件/任务/更新按钮继续过滤提醒来源，气泡保持独立的持续状态/显示规则。提示音不依赖灵动岛 DOM 是否挂载；关闭期间的旧消息不补播。界面中文族语言使用中文，其他使用英文。
 通知类别：plugins（插件变化及已检测更新）、tasks（任务完成/失败/需输入）、updates（DSH本体更新）。分类勾选只过滤提醒，不过滤单独开启的全局气泡。
 窗口可见且拥有焦点时只显示灵动岛；否则在标准Notification API已授权时额外尝试系统通知。设置页面提供明确用户点击的授权入口；没有桌面通知私有桥接、服务工作线程或远程推送服务，不承诺iOS网页关闭后的推送。
 
@@ -45,10 +47,13 @@ window.dispatchEvent(new CustomEvent('tanuki:bubble-state', {detail:{
 0.5.17: plugin-center 源新增 plugin-updates 目标，供更新全部按钮使用。按可执行更新去重计数，复用全局气泡开关、状态颜色、优先级与数字规则；不计入 plugins 目标，避免侧栏重复计数。
 
 0.6.9 消息跳转 / Navigation
-灵动岛主体及系统通知使用同一规则，关闭按钮仅关闭提示。任务按 sessionId 打开对话；插件按 packageName / pluginCategory 打开已安装列表，pluginCategory 为 official 或 installed（第三方），卸载通知保留卸载前的分类。启动保护进入工具箱的启动保护设置；dsh.update 消息打开原生更新窗口。
+灵动岛主体及系统通知使用同一规则，关闭按钮仅关闭提示。任务按 sessionId 打开对话；插件按 packageName / pluginCategory 打开已安装列表，pluginCategory 为 official 或 installed（第三方），卸载通知保留卸载前的分类。安全/保护启动消息 launch.protected 自 0.6.19 起固定进入插件中心 → 已安装 → 第三方（内部 category:installed），从详情返回列表，不打开启动保护设置；dsh.update 消息打开原生更新窗口。
 可选 destination 为纯数据：
 {page:'session',sessionId:'actual-session-id'}
 {page:'plugins',category:'installed'}
 {page:'settings',section:'tanuki-toolbox',component:'composer'}
 {page:'schedules'} / {page:'home'} / {page:'updates'}
 page 仅允许上列值。settings section 必须已在原生设置中注册；component 只定位本工具箱六个组件。Host 仅传递这些受限字段，不接受任意 URL、HTML 或回调。未声明目标的一般消息进入消息中心设置。消息点击不会下载、安装更新或重新执行任务。
+0.6.12 点击系统通知唤起桌面
+灵动岛点击已在 0.6.9 实现，本版系统通知点击补充桌面唤起。仅主应用 dsh-app://app 在明确通知点击后发出经过连接授权的 POST /tanuki-toolbox/notifications/activate（X-Tanuki-Notification-Click: 1），调用当前桌面 Host 的固定 DSH 外壳；利用单实例锁恢复/显示/聚焦已有窗口。无任意 URL、路径、PID 或命令参数输入，不修改宿主。普通网页只尝试 window.focus；系统限制或宿主形态不匹配时仍保留页面导航，但不保证前台抢占成功。
+可选 destination 进一步接受 scheduleId、packageName、entryId（均为长度不超过 250 的字符串），以及消息顶层 scheduleId/entryId。任务优先 sessionId 对话；destination.page=schedules 且 scheduleId 指定真实任务时才在原生自动化列表选中该任务；不按显示标题猜测。插件仍按官方/第三方分类定位卡片，插件中心关闭可定位原生卡片。目标已删除时保留所属页面；关闭通知只关闭，点击不会执行任务或更新插件。

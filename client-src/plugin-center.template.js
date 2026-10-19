@@ -26,8 +26,7 @@ document.currentScript.__tanukiRegister(function(require) {
     const css=__CSS__;
     function apply(ctx,{lifecycle}) {
       const generation=Math.random().toString(36).slice(2),handoff=createViewHandoff({window,document,css});
-      ctx.effect(()=>ctx.locale.register(NS,dictionaries));
-      const t=ctx.locale.bind(NS);
+      const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,dictionaries),t=toolboxLocale.t;
       let alive=true, inflight=null, refreshAgain=false, updateAt=0, nativeRefreshPending=false, marketEpoch=0, summaryAbort=null;
       let updateFlight=null,updateAgain=false,repoFlight=null,repoAgain=false,repoAt=0,localRepoAt=0,catalog=null,marketInstalled=null,localRepositories={};
       let snapshot={ready:false,market:null,marketEnabled:false,bundles:[],rows:[],repositories:{},repositoryLoading:false,repositoryError:false,counts:null,summary:null,caps:null,checking:false,update:{busy:false,phase:'idle'},notice:null};
@@ -176,7 +175,7 @@ document.currentScript.__tanukiRegister(function(require) {
       const schedule=()=>{clearTimeout(refreshTimer);if(alive)refreshTimer=setTimeout(()=>refresh(true),1000);};
       const offChange=ctx.get('remote').$on('plugin-manager/changed',schedule);
       const clearHandoff=()=>handoff.clear();window.addEventListener('tanuki:clear-handoff',clearHandoff);
-      const locatePlugin=event=>{const value=event.detail||{},name=value.packageName,category=['official','installed'].includes(value.category)?value.category:undefined;if(!alive||(!value.list&&(typeof name!=='string'||!name))||(name!==undefined&&(typeof name!=='string'||name.length>250)))return;rememberView({tab:'manage',...(category?{category}:{} )});publish({notificationTarget:{name,category,token:Date.now()+Math.random()}});};
+      const locatePlugin=event=>{const value=event.detail||{},name=value.packageName,entryId=value.entryId,category=['official','installed'].includes(value.category)?value.category:undefined;if(!alive||(!value.list&&!name&&!entryId)||[name,entryId].some(id=>id!==undefined&&(typeof id!=='string'||id.length>250)))return;rememberView({tab:'manage',...(category?{category}:{} )});publish({notificationTarget:{name,entryId,category,token:Date.now()+Math.random()}});};
       window.addEventListener('tanuki:locate-plugin',locatePlugin);
       const offReset=ctx.on('connection/reset',schedule);
       const interval=setInterval(()=>{if(document.visibilityState==='visible')void refresh();},300000);
@@ -213,7 +212,7 @@ document.currentScript.__tanukiRegister(function(require) {
       }
       function UpdateNotice(){
         const s=useModel(),tr=useLocale(),n=s.notice;if(!n)return null;
-        const pkg=s.bundles.find(p=>p.name===n.name),name=n.name===SELF?tr('toolbox'):pkg?.meta?.title?.[ctx.locale.getSnapshot()?.active]||n.name;
+        const pkg=s.bundles.find(p=>p.name===n.name),name=n.name===SELF?tr('toolbox'):toolboxLocale.text(pkg?.meta?.title)||n.name;
         const key=n.phase==='succeeded'?(n.restartRequired?'updateRestart':n.refreshRequired?'updateReload':'updateDone'):n.phase==='unknown'?'updateUnknown':['RELEASE_TOO_FRESH','VERSION_UNCHANGED'].includes(n.code)?'updateFresh':n.code==='OPERATION_BUSY'?'updateBusy':'updateFailed';
         return h('div',{className:'tanuki-update-notice',role:n.phase==='succeeded'?'status':'alert'},h('span',null,tr(key,{name})),n.phase==='unknown'&&n.operationId?h('button',{type:'button',className:'tanuki-link',onClick:()=>void updater.resume()},tr('checkProgress')):null,h('button',{type:'button',className:'tanuki-quiet','aria-label':tr('dismiss'),onClick:()=>publish({notice:null})},'×'));
       }
@@ -363,12 +362,12 @@ document.currentScript.__tanukiRegister(function(require) {
           React.useEffect(()=>{
             const target=s.notificationTarget;
             if(!active||!targets||!target||tab!=='manage')return;
-            if(!target.name){publish({notificationTarget:null});return;}
+            if(!target.name&&!target.entryId){publish({notificationTarget:null});return;}
             let disposed=false,frame=null;
             const find=()=>{if(disposed||targets.page.querySelector(DETAIL_SELECTOR))return;
-              const card=[...targets.page.querySelectorAll('[data-plugin-package]')].find(node=>node.getAttribute('data-plugin-package')===target.name&&node.getClientRects().length);
+              const card=[...targets.page.querySelectorAll('[data-plugin-package],[data-plugin-item]')].find(node=>(node.getAttribute('data-plugin-package')===target.name||!!target.entryId&&node.getAttribute('data-plugin-item')===target.entryId)&&node.getClientRects().length);
               if(!card)return;
-              card.scrollIntoView({block:'center',behavior:'smooth'});
+              card.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
               card.animate?.([{outline:'2px solid #e6e63c',outlineOffset:'2px'},{outline:'2px solid transparent',outlineOffset:'2px'}],{duration:2200});
               publish({notificationTarget:null});
             };

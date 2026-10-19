@@ -1,5 +1,7 @@
 # 黎猫工具箱 · Tanuki Toolbox
 
+**简体中文** · [English](README.en.md)
+
 <img src="assets/toolbox.png" width="144" alt="Tanuki Toolbox">
 
 集成了各种小组件，让 DeepSeek Harness 更好用。持续扩展中。
@@ -24,6 +26,10 @@ The package name remains `dsh-local-plugin-center` for in-place upgrades. Instal
 
 ## 组件 / Components
 
+工具箱默认提供模型屏蔽功能：在 **设置 → 模型 → 模型启用** 中按提供方管理每个模型。关闭后从 DSH 模型目录和选择列表隐藏，并在宿主请求准备及实际派发前拦截。已有对话仍选中该模型时，仅为该对话保留灰色、不可再选择的占位项，禁止发送并显示“该模型已禁用”；切换其他模型后移除占位并恢复发送。不会自动切换其他模型或改写默认配置，已在发送中的请求不强制中断，草稿保留。设置保存在当前 profile，重新开启即可恢复；此功能不属于任何组件，关闭六个组件仍然生效，关闭工具箱本体后不再拦截。
+
+Model blocking is default Toolbox behavior, independent of its components. **Settings → Models → Enabled models** controls exact provider/model pairs. Disabled models are removed from DSH model catalogs and blocked before request dispatch. A conversation already using one retains a grey, non-selectable placeholder and shows “This model is disabled” with sending blocked. Choosing another model removes the placeholder and restores sending; drafts are preserved. Defaults are not rewritten and requests already dispatched are not forcibly cancelled. Switches persist in the current profile. Disabling Toolbox itself removes its enforcement.
+
 | 组件 | 功能 |
 | --- | --- |
 | 启动保护 · Startup Guard | 启动前检测并停用会导致闪退的第三方插件。 |
@@ -33,9 +39,17 @@ The package name remains `dsh-local-plugin-center` for in-place upgrades. Instal
 | 消息中心 · Message Center | 增加消息推送功能。 |
 | 插件中心 · Plugin Center | 重新排列插件页面，优化显示方式，兼容「插件市场」。 |
 
-组件按需加载；关闭组件不会在冷启动时预载该组件的功能代码。已加载模块可能仍保留在引擎缓存中，详见 [生命周期说明](LIFECYCLE.txt)。界面随 DSH 切换中文和英文。
+组件按需加载；关闭组件不会在冷启动时预载该组件的功能代码。已加载模块可能仍保留在引擎缓存中，详见 [生命周期说明](LIFECYCLE.txt)。工具箱自有界面跟随 DSH 的语言：简体、繁体及其他 `zh` 中文变体统一使用中文，其他语言统一使用英文；不改写 DSH 的语言设置。第三方插件与用户内容保留原始文本。
 
 Features load on demand, and disabled features are not preloaded on a cold start. Previously loaded modules can remain in the engine cache. The interface follows DSH's Chinese/English language setting.
+
+消息中心的“允许通知”使用插件、任务、更新三个按钮，点亮为绿色，悬停可查看说明；更新专指 DSH 本体更新。灵动岛、系统通知、全局气泡与提示音分别开关。关闭灵动岛只隐藏应用内顶部消息，不影响其余通道，重新开启不补播旧消息。通知来源按钮过滤提醒消息，全局气泡保留独立的状态与显示控制。安全启动确认属于一般消息，点击进入“插件中心 → 已安装 → 第三方”。
+
+组件关闭后自动收起细分设置；重新展开查看时，下属选项变灰且不可修改，已保存的子项选择保留。
+
+主页提供日期、对话/任务概览、昨日已记录 Token、近七天活动、最近对话与当前任务。已启用且登录 Codex 订阅插件时可读取其额度；统计范围与缺失值说明见页面及变更记录。
+
+Home includes a calendar, conversation/task overview, recorded token use, seven-day activity, recent conversations and current tasks. Codex allowance is available through an enabled, signed-in Codex Subscription plugin.
 
 ## 更新 / Updates
 

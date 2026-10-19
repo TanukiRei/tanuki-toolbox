@@ -14,14 +14,14 @@ document.currentScript.__tanukiRegister(function(require){
     })();
   }
   function apply(ctx,{load}={}){
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     const requests=new Set();let alive=true;
-    async function read(path,ms,signal,binary=false){
+    async function read(path,ms,signal,binary=false,options={}){
       if(!alive)throw new Error('Component stopped');
       const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),ms);requests.add(controller);
       const abort=()=>controller.abort();signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();
-      try{const response=await fetch(new URL(path.replace(/^\//,''),document.baseURI),{credentials:'same-origin',cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('Notifications unavailable');return binary?await response.blob():await response.json();}
+      try{const response=await fetch(new URL(path.replace(/^\//,''),document.baseURI),{...options,credentials:'same-origin',cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('Notifications unavailable');return binary?await response.blob():await response.json();}
       finally{clearTimeout(timer);requests.delete(controller);signal?.removeEventListener('abort',abort);}
     }
     let bubbleFiber=null,bubbleRequest=null,bubbleEpoch=0,bubbleEnabled=false,bubbleItems=[],offUpdates=null,nativeStatus=null,hostErrors=new Set(),hostPluginItems=[];
@@ -117,7 +117,7 @@ document.currentScript.__tanukiRegister(function(require){
       const controller=new AbortController();bubbleRequest=controller;
       void load('global-bubbles',controller.signal).then(module=>{if(!alive||!bubbleEnabled||epoch!==bubbleEpoch)return;bubbleFiber=ctx.plugin(module);emitBubbles();}).catch(error=>{if(alive&&epoch===bubbleEpoch&&!controller.signal.aborted)console.warn('[Tanuki] Global bubbles could not load',error);}).finally(()=>{if(bubbleRequest===controller)bubbleRequest=null;});
     }
-    const island=createNotificationIsland({React,createPortal,ctx,read,useLocale,notificationIcon:__DSH_NOTIFICATION_ICON__,createAudioPreview:__AUDIO_PREVIEW_FACTORY__,onSettings:syncBubbles,acceptTaskNotification:message=>{
+    const island=createNotificationIsland({React,createPortal,ctx,read,useLocale,activateDesktop:signal=>read('/tanuki-toolbox/notifications/activate',9000,signal,false,{method:'POST',headers:{'X-Tanuki-Notification-Click':'1'}}),notificationIcon:__DSH_NOTIFICATION_ICON__,createAudioPreview:__AUDIO_PREVIEW_FACTORY__,onSettings:syncBubbles,acceptTaskNotification:message=>{
       const id=message.sessionId;
       observeConfirmed(id,message.taskEvidence,message.kind==='task.completed'?'done':'error');
       if(!terminalCurrent(id,message.taskEvidence)){reconcileTaskbar();return false;}

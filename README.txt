@@ -1,4 +1,76 @@
-黎猫工具箱 / Tanuki Toolbox 0.6.11
+黎猫工具箱 / Tanuki Toolbox 0.6.20
+
+0.6.20 消息中心设置与英文页面 / Message Center settings and English documentation
+- “通知分类”改成“允许通知”；插件/任务/更新改为绿色启用、灰色关闭的按钮，悬停显示说明。更新指 DSH 本体更新，通知来源按钮保留原有提醒过滤范围，全局气泡独立控制。
+- 新增“灵动岛”子开关和说明，仅控制应用内顶部消息。系统通知、全局气泡、提示音增加灰色小字说明；关闭灵动岛不会影响其他独立启用的通道，不补播旧消息。
+- 所有组件关闭时自动收起细分设置。重新展开查看时选项为灰色且不可修改；保留已保存的子项选择。提示音关闭时音量与文件选项同样禁用。
+- 全部工具箱自有界面统一为中文族（简体/繁体/地区变体）中文、其他语言英文，动态跟随 DSH，不改写宿主语言。补齐自有账号退出按钮与通知/主页/推荐信息的映射；第三方及用户内容保留原文。构建时核对 310 个中英文文案键和插值变量。
+- 新增完整 README.en.md 英文页面与顶部语言切换链接，英文页面包含安装、六组件、默认模型屏蔽、通知设置、性能及兼容说明。按本次明确指令发布 GitHub；一键安装器不变。
+- 完成必要构建与静态核对，未运行功能测试、浏览器验收或性能测试。
+Allow notifications now uses green/grey source buttons with hover descriptions. Add an independent Dynamic Island switch and explanatory text for system notifications, global bubbles and sound. Disabling a component collapses its settings and makes child controls read-only without changing their saved values. Toolbox-owned UI follows DSH with Chinese for all zh variants and English otherwise; building validates all 310 bilingual keys and parameters. Add a complete linked English README. Publish this authorized release to GitHub; no installer update or functional/browser/performance tests.
+
+
+0.6.19 安全启动消息目标 / Protected launch notification target
+- 点击安全/保护启动消息固定进入插件中心 → 已安装 → 第三方列表。复用既有插件导航、返回列表和分类切换，灵动岛及系统通知保持一致；不再进入启动保护设置。
+- 本机插件市场通过官方终端安装入口从 1.66.40 更新至 npm latest 1.66.42；保留升级前备份。一键安装器及其中第三方备用包不变。
+- 工具箱仅必要构建、打包和本机更新；未运行功能测试，未上传 GitHub。
+Protected launch notifications now open Plugin Center → Installed → Third-party, consistently from the island or system notifications. Reuse existing list/category navigation. Local marketplace updated separately through the official CLI to npm latest 1.66.42, with a backup. No functional tests, GitHub publishing or installer changes.
+
+
+0.6.18 禁用模型占位与发送限制 / Disabled model selection and composer blocking
+- 已有对话选中禁用模型时，模型名显示灰色，并为该对话保留一个不可选择的占位；其他禁用模型仍隐藏。切换可用模型后占位自动移除并解除限制，重新启用也可恢复。
+- 使用原生 conversation.blocks 禁止发送按钮和回车发送，保留草稿、模型切换入口及其他插件的阻止状态，显示“该模型已禁用”；宿主仍拒绝禁用模型派发。不强制中断已发送请求。
+- 属于默认功能，不增加组件或组件子项。默认状态脚本独立加载，仅挂载的输入框借用目录投影；读取小型本地开关、无后台扫描或轮询。适配原生与工具箱模型选择、中英文、日夜主题。
+- 仅必要构建、语法检查、独立打包与本机更新，未运行功能测试，未上传 GitHub，未更新一键安装器。
+Retain a grey, non-selectable placeholder for a disabled model already selected in a conversation; block sending using native composer blocks and show “This model is disabled”. Preserve drafts and model switching. Choosing another model removes the placeholder, and re-enabling restores access. Default Toolbox behavior without a new component, with scoped subscriptions and no polling. Local delivery only; no functional tests, publishing or installer update.
+
+
+0.6.17 默认模型屏蔽 / Default model blocking
+- 原生设置 → 模型底部增加每个提供方模型的启用开关；工具箱默认能力，不增加独立组件或组件子项。全部组件关闭时仍运行，工具箱本体关闭后停止。
+- 按精确 provider/model 保存，关闭后从 DSH 模型目录和选择列表隐藏；宿主在请求准备、统一流入口及最后派发前拦截旧选择、默认选择与其他通过 DSH LLM 服务的调用。不自动改选模型，不删除提供方/模型配置，不强制中断已发出的流。
+- 开关原子保存至当前 profile；管理页读取未过滤元数据，关闭的模型仍可重新启用。目录变化使用既有推送，无重组刷新或后台扫描；中英文及日夜配色适配原生设置。
+- 仅构建、语法检查、独立打包和本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Default Toolbox behavior adds persistent provider/model switches inside native Settings → Models. Disabled models are hidden and refused at host request/dispatch boundaries, including stale selections; no automatic fallback or forced cancellation of in-flight calls. The management view retains disabled models for re-enabling. UI loads on demand; no polling or composition rewrite. Local delivery only, without functional tests, publishing or installer updates.
+
+
+0.6.16 灵动岛悬停样式 / Notification island hover
+- 去掉灵动岛消息主体与关闭按钮的悬停背景高亮和变色，保留手形光标、点击跳转、悬停暂停消失及键盘焦点提示。日夜主题和状态气泡颜色规则不变。
+- 完成构建、独立打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Remove hover highlighting from notification island content and dismiss controls. Preserve pointer cursors, navigation, hover-to-pause and keyboard focus indication. Local build/package/install only; no functional tests, publishing or installer updates.
+
+0.6.15 登录自启动与技能入口 / Login startup and Skills shortcut
+- 启动保护增加独立小项“开机自动启动DeepSeek Harness”，默认关闭，当前支持 Windows 当前用户登录后启动。明确开启时才在当前用户 Startup 文件夹创建指向现有稳定 ProtectedLauncher.exe 的快捷方式，须先启用并完成保护入口配置；未启用时不写自启动、不启动检查任务。
+- 关闭小项删除工具箱自己的自启动快捷方式；显式关闭启动保护也清理该入口，普通退出、热更新不误删除。不替换或删除其他软件/用户创建的启动项；使用独占创建、文件摘要与所有权记录，手动改过的同名入口保留并报告。该开关表示工具箱入口状态，系统启动项禁用策略仍可阻止自动运行。没有管理员提权，不保证 macOS 登录自启动。
+- 快捷栏新增可隐藏、可排序的“技能”，默认放在工具箱上方，保留已有顺序偏好。只订阅原生设置注册表：Skills Manager 注册了技能设置时显示，点击直接打开 skills-manager；未安装或停用时隐藏快捷图标，管理菜单保留灰色不可显示项。复用设置中的原生 IconSkillOutlineRegular，同一主题图标颜色规则。
+- 文件小项改名“文件右键”，说明改为“任务中的文件增加右键操作。”，同步英文。
+- 底部收拢设置只显示居中的上箭头，悬停不高亮或变色，保留整行可点、原文字行高度对应的点击范围、手形光标、键盘标签与焦点和收放动画。
+- 完成构建、独立打包和本机更新；未运行功能或开机登录测试，未上传 GitHub 或更新一键安装器。
+Add an opt-in Windows login-startup setting under Startup Guard, using the existing protected launcher. Own only the created Startup shortcut; preserve manual edits and remove the owned entry on explicit disable, never on normal shutdown/hot reload. Add an optional sortable Skills shortcut, using the native settings icon and live Skills Manager settings registration. Rename File right-click and simplify the full-width collapse action to an arrow without hover highlighting. Local build/package/install only; no functional/login-startup tests, GitHub publishing or installer updates.
+
+0.6.14 组件标题悬停样式 / Settings heading hover
+- 移除工具箱设置中可展开组件标题整行的悬停背景高亮与变色，保留点击展开/收起、手形光标、箭头动效和键盘焦点提示。启用开关和底部收拢按钮保持原有行为。
+- 完成构建、独立打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Remove hover highlighting from expandable component headings. Preserve the clickable row, pointer cursor, disclosure animation and keyboard focus indication. Local build/package/install only; no functional tests, publishing or installer updates.
+
+0.6.13 主页信息看板 / Home dashboard
+- 起始页改为可适应窄窗口和日夜主题的卡片看板：日期与本周日历、总对话（任务）、昨日任务、昨日 Token 消耗、今日任务、最近七天活动、我的额度、最近对话、进行中与待处理任务、常用入口。主页鲸鱼入口直接打开该页；不复制原生会话树或额外启动模型。
+- 使用 DSH 当前 sessionQuery 的公开会话列表和可释放观察接口读取本机记录，统计有任务记录的普通对话（含归档，不含子智能体）；昨日任务按本机时区自然日内发起过 turn 的独立对话数计。最近对话可点击继续，正在运行或等待处理的任务复用原生实时状态并可点击进入。
+- Token 按已记录请求的报告归属日期汇总，包含输入、输出、缓存输入及子智能体，排除分支继承事件的重复计算；不把 reasoning 再加到 output 之外。优先校验 totalTokens，缺失时仅在缓存读写等桶完整时求和。缺失或损坏数据明确显示 —、部分读取或 ≥ 下限，不将未知计为已确认零。
+- 额度使用已启用 Codex Subscription 的现有受保护 RPC 与当前账号，不读取凭据、不切换账号、不另行调用 OpenAI。不提供该接口或未登录时显示不可用说明，不能据此推断其他提供方额度为零。
+- 首次打开时才统计历史，最多并行读取两个会话并定期让出事件循环，每次完成释放观察句柄；宿主只短时缓存精简汇总，45 秒内重复访问可复用，明确刷新绕过缓存。离开主页/隐藏或停用取消未完成读取；没有后台历史扫描或额度轮询。只在可见主页恢复焦点、明确刷新或跨日时更新。
+- 三个点管理菜单的功能图标与外侧快捷栏使用同一混色后的主题颜色，移除因不同底色叠加透明度造成的深浅差异。菜单文字和锁定眼睛的灰色状态独立保留；状态气泡不变。
+- 完成构建、独立打包和本机更新；本次未运行功能测试，未上传 GitHub 或更新一键安装器。
+Replace the existing Home page with a responsive themed dashboard: calendar, conversation/task totals, yesterday/today activity, recorded token use, seven-day activity, available Codex allowance, recent conversations, live tasks and shortcuts. Use cancellable public DSH history observations and the installed provider’s existing quota RPC, never credentials or fabricated numbers. Exclude inherited fork events and distinguish missing/partial usage. Read only while Home is open; bound concurrency, release observations and cache only a compact summary briefly, with no background history scan or quota polling. Match menu glyph colors exactly to the outer rail. Local build/package/install only; no functional tests, GitHub publishing or installer update.
+
+0.6.12 通知唤起与主题适配 / Notification activation and theme support
+- 灵动岛背景、边框、文字、数量、关闭与悬停状态改为 DSH 主题变量；全局状态气泡的固定颜色不变。
+- 灵动岛主体点击跳转延续 0.6.9 的实现。系统通知改为先请求桌面宿主唤起已有 DSH 窗口，再复用同一导航；不再只依赖网页 window.focus。宿主仅从当前已识别的 DSH 桌面 Host 启动同一个安装位置的外壳，利用 DSH 自带单实例锁恢复、显示并聚焦已有窗口，不重启后端、不改写 DSH 安装文件，也不接受自定义程序、参数或 URL。
+- 任务按 sessionId 打开对应对话，插件切到已安装及相应官方/第三方分类，并定位具体卡片；插件中心关闭时仍可在原生列表定位。可选 scheduleId 用于自动化任务页选中条目，无目标或已删除的条目仅进入所属页面。插件行变更补充 entryId，卸载通知不试图打开已不存在的插件。
+- 桌面唤起仅在点击系统通知时发生；新增接口复用 DSH 连接授权并要求非简单 POST。只在消息中心开启时注册，点击串行去重，无额外后台扫描。支持已核实的 Windows/macOS 桌面 Host 形态，普通浏览器使用浏览器聚焦；操作系统前台策略仍可能限制抢占焦点。
+- 有细分设置的组件，标题、图标、留白直到箭头组成同一个可键盘操作的展开按钮，开关独立。保留收放动画和底部收拢。
+- 日间模式主页图标与其他快捷栏图标同色同浓度；三个点管理菜单的图标使用主题文字色，保留不可隐藏项的灰色眼睛。夜间主页原有配色不变。
+- 完成构建、独立打包和本机更新；未运行功能测试或实机通知点击验收，未上传 GitHub 或更新一键安装器。
+Theme the notification island while keeping global bubble colors. Clicking an OS notification requests the existing desktop window through DSH's verified single-instance shell, then routes to the conversation, plugin/category, task or settings destination. Only fixed local shell activation is allowed, from the recognized desktop Host and an authorized POST; browser-only clients retain browser focus behavior. No installation patch or background activation work. Make expandable settings headers one accessible button, separate from enable switches, and normalize daytime home/menu artwork ink. Built, packaged and installed locally; no functional/OS-click tests, GitHub publishing or installer updates.
 
 0.6.11 日间配色适配 / Theme-aware controls
 - 侧边栏展开与收起按钮共用主题背景与悬停色，取消展开按钮写死的深色背景；保留尺寸、位置和收放动效。

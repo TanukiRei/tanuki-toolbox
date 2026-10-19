@@ -2,7 +2,7 @@ document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,{createPortal}=require('react-dom'),NS='tanukiComposerFiles';
   function apply(ctx){
     let alive=true,snapshot=null,operation=null;const listeners=new Set(),downloads=new Map();
-    ctx.effect(()=>ctx.locale.register(NS,__LOCALES__));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     function publish(value){if(!alive)return;snapshot=value;for(const fn of listeners)fn();}
     const close=()=>publish(null);

@@ -2,7 +2,37 @@ document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),NS='tanukiComposerClock';
   function apply(ctx){
     let alive=true;
-    ctx.effect(()=>ctx.locale.register(NS,{"zh":{"turnRunning":"进行中","turnCompleted":"已完成"},"en":{"turnRunning":"In progress","turnCompleted":"Completed"}}));const t=ctx.locale.bind(NS);
+    const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
+  const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
+  const text = value => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+    const result = language() === 'zh' ? value.zh ?? value['zh-CN'] ?? value['zh-cn'] ?? value['zh-TW'] ?? value['zh-tw'] ?? value.en : value.en;
+    return typeof result === 'string' ? result : '';
+  };
+  const t = (key, params) => {
+    const template = dictionaries[language()]?.[key] ?? dictionaries.en?.[key] ?? key;
+    return params ? template.replace(/\{(\w+)\}/g, (match, name) => Object.hasOwn(params, name) ? String(params[name]) : match) : template;
+  };
+  ctx.effect(() => {
+    const known = new Set(), disposers = [];
+    function registerLanguages() {
+      const entries = { en: dictionaries.en || {}, zh: dictionaries.zh || {} };
+      for (const locale of ctx.locale.getSnapshot()?.locales || []) {
+        const id = typeof locale === 'string' ? locale : locale.id;
+        if (typeof id === 'string') entries[id] = /^zh(?:[-_]|$)/i.test(id) ? dictionaries.zh || dictionaries.en : dictionaries.en;
+      }
+      const pending = Object.fromEntries(Object.entries(entries).filter(([id]) => !known.has(id.toLowerCase())));
+      if (!Object.keys(pending).length) return;
+      for (const id of Object.keys(pending)) known.add(id.toLowerCase());
+      disposers.push(ctx.locale.register(namespace, pending));
+    }
+    registerLanguages();
+    const off = ctx.locale.subscribe(registerLanguages);
+    return () => { off(); for (const dispose of disposers.reverse()) dispose(); };
+  });
+  return { t, text, language };
+})(ctx,NS,{"zh":{"turnRunning":"进行中","turnCompleted":"已完成"},"en":{"turnRunning":"In progress","turnCompleted":"Completed"}}),t=toolboxLocale.t;
     function useLocale(){React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());return t;}
     ctx.effect(()=>{const style=document.createElement('style');style.textContent="[data-slot=\"conversation.composer.dock\"] .tanuki-turn-clock{order:1;flex:none;white-space:nowrap;font-size:12px;line-height:20px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-state-business-primary);}\n[data-slot=\"conversation.composer.dock\"] .tanuki-turn-clock[data-state=\"done\"]{color:var(--dsw-alias-state-success-primary);}\n";document.head.appendChild(style);return()=>style.remove();});
     // Native session-scoped dock is beside ContextMeter, not the workspace row.

@@ -5,6 +5,8 @@ export function apply(ctx) {
   const pending=import('../../lib/notifications.cjs').then(async({default:notifications})=>{
     if(stopped)return;
     dispose=notifications.watch(ctx,profile);
+    const {default:activation}=await import('../../lib/notification-activate.cjs');
+    if(!stopped)activation.register(ctx);
     const {default:routes}=await import('../../lib/read-routes.cjs');
     if(!stopped)routes.register(ctx,{notifications:()=>notifications.read(profile)});
   });

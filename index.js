@@ -3,6 +3,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import routes from './lib/read-routes.cjs';
 import settings from './lib/toolbox-settings.cjs';
+import modelPolicy from './lib/model-policy.cjs';
 export const name = 'tanuki-toolbox';
 export function apply(ctx) {
   const profile=ctx.get('profileContext'),root=dirname(fileURLToPath(import.meta.url));
@@ -19,7 +20,8 @@ export function apply(ctx) {
     repositories:async signal=>{signal.throwIfAborted();return (await import('./lib/recommendations.cjs')).default.readRepositories(profile,signal);}
   });
   settings.register(ctx,profile);
-  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','global-bubbles','composer','composer-clock','composer-model','composer-files'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
+  modelPolicy.register(ctx,profile);
+  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
   assets['toolbox.png']={file:join(root,'assets/toolbox.png'),type:'image/png'};
   ctx.inject(['webServer', 'connection'], host => {
     for(const [name,asset] of Object.entries(assets))host.effect(() => host.webServer.register({
