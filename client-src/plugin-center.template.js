@@ -62,7 +62,6 @@ document.currentScript.__tanukiRegister(function(require) {
         if(!alive)return;
         const items=new Map();
         for(const name of snapshot.counts?.names||[])items.set(name,{id:'package:'+name,target:'plugins',packageName:name,state:'action'});
-        if(snapshot.checking)items.set('@check',{id:'update-check',target:'plugins',state:'running'});
         if(snapshot.lastError||snapshot.updateCheckError)items.set('@error',{id:'update-check-error',target:'plugins',state:'error'});
         const update=snapshot.update.busy?snapshot.update:snapshot.notice;
         if(update?.name){
@@ -121,6 +120,7 @@ document.currentScript.__tanukiRegister(function(require) {
         if(!alive||!snapshot.marketEnabled)return;
         if(updateFlight){updateAgain=updateAgain||force;return updateFlight;}
         if(!force&&Date.now()-updateAt<300000)return;
+        window.dispatchEvent(new CustomEvent('tanuki:component-maintenance'));
         const epoch=marketEpoch,abort=new AbortController();summaryAbort=abort;aborters.add(abort);updateAt=Date.now();
         const timeout=setTimeout(()=>abort.abort(),90000);
         publish({checking:true,updateCheckError:false});
@@ -217,7 +217,7 @@ document.currentScript.__tanukiRegister(function(require) {
         return h('div',{className:'tanuki-update-notice',role:n.phase==='succeeded'?'status':'alert'},h('span',null,tr(key,{name})),n.phase==='unknown'&&n.operationId?h('button',{type:'button',className:'tanuki-link',onClick:()=>void updater.resume()},tr('checkProgress')):null,h('button',{type:'button',className:'tanuki-quiet','aria-label':tr('dismiss'),onClick:()=>publish({notice:null})},'×'));
       }
       // Add only our portal hosts. Native uninstall/switch nodes keep their React ownership.
-      function NativePluginEnhancements({page,category}){
+      function NativePluginEnhancements({page,category,query}){
         const [hosts,setHosts]=React.useState([]),[aliasHosts,setAliasHosts]=React.useState([]),[batchHost,setBatchHost]=React.useState(null);
         const model=useModel(),[icons,setIcons]=React.useState({}),artworkRef=React.useRef(null),artworkData=React.useRef(null);
         artworkData.current={bundles:model.bundles,icons};
@@ -228,6 +228,38 @@ document.currentScript.__tanukiRegister(function(require) {
         },[model.revision]);
         React.useLayoutEffect(()=>{artworkRef.current?.sync(page,model.bundles,icons);},[page,model.bundles,icons]);
         React.useEffect(()=>{if(category==='installed')void aliases.load();},[category]);
+        const aliasState=React.useSyncExternalStore(aliases.subscribe,aliases.getSnapshot),tr=useLocale();
+        React.useLayoutEffect(()=>{
+          let frame,grid=null;const marked=new Set();
+          const normalize=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().trim();
+          const needle=normalize(query);
+          const clearGrid=()=>{if(grid){for(const key of ['data-tanuki-official-grid','data-tanuki-stable-label','data-tanuki-experimental-label','data-tanuki-has-stable','data-tanuki-has-experimental'])grid.removeAttribute(key);grid=null;}};
+          const scan=()=>{
+            if(!alive)return;
+            const groups=[...page.querySelectorAll(OFFICIAL_GROUP_SELECTOR)],parent=groups[0]?.parentElement;
+            const next=category==='official'&&!page.querySelector(DETAIL_SELECTOR)&&parent&&groups.every(group=>group.parentElement===parent)?parent:null;
+            if(grid!==next){clearGrid();grid=next;}
+            let stable=false,experimental=false;
+            const current=new Set();
+            for(const card of page.querySelectorAll('[data-plugin-group] [data-plugin-package],[data-plugin-group] [data-plugin-item]')){
+              current.add(card);marked.add(card);
+              const name=card.getAttribute('data-plugin-package')||card.getAttribute('data-plugin-item'),pkg=model.bundles.find(item=>item.name===name);
+              const heading=card.querySelector(':scope > div:first-child > div:nth-child(2) > div:first-child');
+              const label=toolboxLocale.text(pkg?.meta?.title);
+              const matches=!needle||[name,label,aliasState.values[name],heading?.textContent].some(value=>normalize(value).includes(needle));
+              card.toggleAttribute('data-tanuki-search-hidden',!matches);
+              const beta=!!card.closest(OFFICIAL_GROUP_SELECTOR)&&String(name).startsWith('@deepseek-ai/dsh-experimental-');
+              card.toggleAttribute('data-tanuki-experimental',beta);
+              if(grid&&card.closest(OFFICIAL_GROUP_SELECTOR)&&matches){if(beta)experimental=true;else stable=true;}
+            }
+            for(const card of marked)if(!current.has(card)){card.removeAttribute('data-tanuki-search-hidden');card.removeAttribute('data-tanuki-experimental');marked.delete(card);}
+            if(grid){grid.setAttribute('data-tanuki-official-grid','');grid.setAttribute('data-tanuki-stable-label',tr('stable'));grid.setAttribute('data-tanuki-experimental-label',tr('experimental'));grid.toggleAttribute('data-tanuki-has-stable',stable);grid.toggleAttribute('data-tanuki-has-experimental',experimental);}
+          };
+          const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(scan);};
+          scan();const observer=new MutationObserver(schedule);observer.observe(page,{childList:true,subtree:true,characterData:true});
+          return()=>{observer.disconnect();cancelAnimationFrame(frame);clearGrid();for(const card of marked){card.removeAttribute('data-tanuki-search-hidden');card.removeAttribute('data-tanuki-experimental');}marked.clear();};
+        },[page,category,query,model.bundles,aliasState,tr('stable'),tr('experimental')]);
+
         React.useLayoutEffect(()=>{
           setHosts([]);setAliasHosts([]);
           const entries=new Map(),names=new Map();let frame,pinned=null,observedBar=null,updateAllHost=null;
@@ -326,7 +358,7 @@ document.currentScript.__tanukiRegister(function(require) {
       const CenterPlugin={name:'tanuki-center-surface',apply(scoped){
         function CenterBridge(props){
           const active=props.useCenterPanel(s=>s.activePanelId)==='plugins';
-          const s=useModel(),tr=useLocale();
+          const s=useModel(),tr=useLocale(),[query,setQuery]=React.useState('');
           const market=s.marketEnabled?s.market:null;
           const [selectedTab,setSelectedTab]=React.useState(()=>savedView.tab||(market?'market':'manage')),[category,setSelectedCategory]=React.useState(()=>savedView.category);
           const setTab=value=>{rememberView({tab:value});setSelectedTab(value);};
@@ -406,9 +438,11 @@ document.currentScript.__tanukiRegister(function(require) {
             h('div',{className:'tanuki-heading'},h('h1',null,tr('title')),h('div',{className:'tanuki-actions'},market&&s.counts?.total>0?h('button',{type:'button',className:'tanuki-link',onClick:()=>{setMarketMode('installed');setTab('market');}},tr('viewUpdates')):null)),
             h('nav',{className:'tanuki-tabs','aria-label':tr('pages')},market?button('market',tab==='market',()=>setTab('market')):null,button('manage',tab==='manage',()=>setTab('manage'),s.counts?.total)),
             h(UpdateNotice),
+            s.checking?h('span',{className:'tanuki-update-checking',role:'status'},tr('checking')):null,
             tab==='manage'?h('nav',{className:'tanuki-subtabs','aria-label':tr('groups')},button('official',category==='official',()=>selectCategory('official'),s.counts?.official),button('installed',category==='installed',()=>selectCategory('installed'),s.counts?.installed),!detail?h('span',{className:'tanuki-list-action-anchor','aria-hidden':true}):null):null,
+            tab==='manage'&&!detail?h('div',{className:'tanuki-plugin-search'},h('input',{type:'search',value:query,'aria-label':tr('search'),placeholder:tr('search'),onChange:event=>setQuery(event.target.value)})):null,
             tab==='manage'&&detail?h('div',{className:'tanuki-backbar'},h('button',{type:'button',className:'tanuki-back',onClick:returnToList},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.6,'aria-hidden':true},h('path',{d:'M14 6l-6 6 6 6'})),tr('pluginList')),h('span',{className:'tanuki-action-anchor','aria-hidden':true})):null);
-          return h(React.Fragment,null,createPortal(toolbar,targets.toolbar),market?createPortal(h(Boundary,{t:tr},marketElement),targets.content):null,tab==='manage'?h(NativePluginEnhancements,{page:targets.page,category}):null);
+          return h(React.Fragment,null,createPortal(toolbar,targets.toolbar),market?createPortal(h(Boundary,{t:tr},marketElement),targets.content):null,tab==='manage'?h(NativePluginEnhancements,{page:targets.page,category,query}):null);
         }
         scoped.slots.inject('sidebar.panellist',()=>scoped.slots.register({name:'sidebar.panellist',id:'plugins',priority:-20,order:0,label:()=>t('title'),locale:NS},SidebarIcon));
         scoped.slots.inject('shell.overlay',()=>scoped.slots.register({name:'shell.overlay',id:'tanuki-plugin-center',locale:NS,inject:()=>({hooks:{centerPanel:scoped.layout.panelInfo}})},CenterBridge));

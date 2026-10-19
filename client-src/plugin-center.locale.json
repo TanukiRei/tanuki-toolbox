@@ -12,7 +12,7 @@
     "groups": "插件分类",
     "updates": "{n} 个已启用插件可更新",
     "check": "检查更新",
-    "checking": "正在检查更新…",
+    "checking": "正在检查插件更新…",
     "unknown": "暂时无法检查更新",
     "latest": "未发现已启用插件的可用更新",
     "viewUpdates": "去市场更新",
@@ -51,7 +51,10 @@
     "aliasRename": "命名",
     "updateAll": "更新全部",
     "updateAllCount": "更新全部 {n} 个插件",
-    "updateAllProgress": "正在更新 {current} / {total}"
+    "updateAllProgress": "正在更新 {current} / {total}",
+    "search": "搜索插件昵称或原名",
+    "stable": "正式版",
+    "experimental": "实验性插件"
   },
   "en": {
     "title": "Plugin Center",
@@ -66,7 +69,7 @@
     "groups": "Plugin categories",
     "updates": "{n} enabled plugins have updates",
     "check": "Check for updates",
-    "checking": "Checking for updates…",
+    "checking": "Checking for plugin updates…",
     "unknown": "Updates could not be checked",
     "latest": "No updates found for enabled plugins",
     "viewUpdates": "Update in Marketplace",
@@ -105,6 +108,9 @@
     "aliasRename": "Name",
     "updateAll": "Update all",
     "updateAllCount": "Update all {n} plugins",
-    "updateAllProgress": "Updating {current} / {total}"
+    "updateAllProgress": "Updating {current} / {total}",
+    "search": "Search by custom or original plugin name",
+    "stable": "Stable",
+    "experimental": "Experimental plugins"
   }
 }

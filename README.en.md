@@ -33,6 +33,8 @@ To update an existing installation, install over it. Keep the package name `dsh-
 | **Message Center** | Provides top-of-app Dynamic Island banners, system notifications, persistent status bubbles, and notification sounds. |
 | **Plugin Center** | Combines plugin management with optional [Plugin Market](https://github.com/dsh-market/dsh-market) integration, update indicators, custom names, repository links, and recommendations. |
 
+Plugin Center includes a search field for custom and original plugin names. Official cards have consistent sizes, with stable plugins above a divider and experimental plugins below. Update checks display text inside Plugin Center rather than a blue progress bubble; actual update/install operations retain their progress indicators.
+
 Plugin Center works without Plugin Market. Install and enable `dshmarket` to add its market tab and supported online update features.
 
 The Start Page reports recorded data, rather than estimating unrecorded usage. Missing or partial history is identified in the UI. Account allowance is available through a supported enabled provider integration, such as a signed-in Codex Subscription plugin.
@@ -57,6 +59,8 @@ Open **Settings → Models → Enabled models** to enable or disable each provid
 | **Tasks** | Tasks in progress, completed, awaiting input, failed, and related task activity. |
 | **Updates** | Updates to the DeepSeek Harness application itself. |
 
+Dynamic Island banners enter from above the application and remain for eight seconds each, without hover/focus pauses. The newest banner pushes the previous one down. At most two live banners are retained; a third pushes out the oldest with a short downward fade, without a hidden backlog.
+
 Message presentation has separate switches:
 
 - **Dynamic Island:** banners at the top of the application. Turning this off hides in-app banners and discards their queue; it does not replay old messages when turned back on.
@@ -80,6 +84,8 @@ This does not change DSH's language preference. Third-party plugin names, descri
 ## Loading and performance
 
 Disabled optional components do not preload their feature code or start background work on a fresh launch. Enabling loads their code on demand. Disabling releases listeners, timers, cancellable requests, UI nodes, and feature state.
+
+Each actual plugin-update check also asks the existing coordinator to recheck component switches and dispose any lingering disabled instances, without adding another periodic timer or clearing shared engine caches. Re-enabling requests the feature script again.
 
 The default model policy and lightweight settings/coordinator remain active while the toolbox is enabled. JavaScript engines may cache code that was previously loaded; immediate zero memory usage is not guaranteed. See [LIFECYCLE.txt](LIFECYCLE.txt) for implementation details.
 

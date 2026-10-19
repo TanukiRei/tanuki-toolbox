@@ -6,6 +6,7 @@ document.currentScript.__tanukiRegister(function(require){
   if(!state.restored){state.restored=true;try{const saved=JSON.parse(sessionStorage.getItem(STORAGE)||'null');if(saved){state.epoch=saved.epoch;state.cursor=Number(saved.cursor)||0;state.launch=saved.launch;}}catch{}}
   let active=false,disposed=false,timer,flight=null,navigating=false,navigationEpoch=0,stopLocate=null,navigationRequest=null;
   let player=null,lastSoundId=null,preferences={volume:100,audio:null,categories:{plugins:true,tasks:true,updates:true},bubbles:true,inApp:true,systemNotifications:false,soundEnabled:true},settingsReady=false,settingsEpoch=0,settingsRequest=null,pollRequest=null;
+  const islandTimers=new Map(),DISPLAY_MS=8000,EXIT_MS=320;
   const pending=[];const systemNotifications=new Set(),notificationSessions=new Map();
   let workspace=null,layout=null;
   ctx.inject(['uiWorkspace','layout'],host=>{workspace=host.uiWorkspace;layout=host.layout;host.effect(()=>()=>{workspace=null;layout=null;});});
@@ -150,7 +151,17 @@ document.currentScript.__tanukiRegister(function(require){
     }catch(error){console.warn('[Tanuki] System notification could not be created',error);} 
   }
   const save=()=>{try{sessionStorage.setItem(STORAGE,JSON.stringify({epoch:state.epoch,cursor:state.cursor,launch:state.launch}));}catch{}};
-  const change=()=>{state.snapshot=[...state.queue];for(const fn of [...state.listeners])fn();};
+  function clearIslandTimers(){for(const timer of islandTimers.values())clearTimeout(timer);islandTimers.clear();}
+  function change(){
+    const now=Date.now();state.queue=state.queue.filter(item=>now<(item.leavingAt===undefined?item.at+DISPLAY_MS:item.leavingAt+EXIT_MS));
+    const keep=new Set(state.queue.map(item=>item.id));
+    for(const [id,timer] of islandTimers)if(!keep.has(id)){clearTimeout(timer);islandTimers.delete(id);}
+    for(const item of state.queue)if(!islandTimers.has(item.id)){
+      const deadline=item.leavingAt===undefined?item.at+DISPLAY_MS:item.leavingAt+EXIT_MS;
+      islandTimers.set(item.id,setTimeout(()=>{islandTimers.delete(item.id);if(!active||disposed)return;if(item.leavingAt===undefined)dismiss(item.id);else{state.queue=state.queue.filter(value=>value.id!==item.id);change();}},Math.max(0,deadline-now)));
+    }
+    state.snapshot=[...state.queue];for(const fn of [...state.listeners])fn();
+  }
   const subscribe=fn=>{state.listeners.add(fn);return()=>state.listeners.delete(fn);};
   const clip=value=>typeof value==='string'?value.slice(0,500):value;
   function push(value){
@@ -162,14 +173,21 @@ document.currentScript.__tanukiRegister(function(require){
     // Consult the live turn/read fence before sound, OS notification or queue insertion.
     if(['task.completed','task.failed'].includes(value.kind)&&acceptTaskNotification?.(value)===false)return false;
     if(!allowed(value))return false;
-    const message={...value,id,category:category(value),at:Date.now(),title:clip(value.title),message:typeof value.message==='string'?value.message.slice(0,8000):value.message};
+    const message={...value,id,category:category(value),at:Date.now(),leavingAt:undefined,title:clip(value.title),message:typeof value.message==='string'?value.message.slice(0,8000):value.message};
     systemNotify(message);
     window.dispatchEvent(new CustomEvent('tanuki:notification-delivered',{detail:{...message,bubbles:preferences.bubbles,foreground:foreground()}}));
     if(!preferences.inApp){soundFor(message.id);return true;}
-    if(state.queue.length>=40)state.queue.shift();
-    state.queue.push(message);change();return true;
+    const visible=state.queue.filter(item=>item.leavingAt===undefined&&Date.now()<item.at+DISPLAY_MS);
+    const retiring=visible.length>1?{...visible[1],leavingAt:Date.now()}:null;
+    state.queue=[message,...visible.slice(0,1),...(retiring?[retiring]:[])];
+    if(retiring){clearTimeout(islandTimers.get(retiring.id));islandTimers.delete(retiring.id);}
+    soundFor(message.id);change();return true;
   }
-  const dismiss=id=>{state.queue=state.queue.filter(item=>item.id!==id);change();};
+  const dismiss=id=>{const item=state.queue.find(item=>item.id===id);if(!item||item.leavingAt!==undefined)return;
+    // At most one exiting card; new arrivals never wait in a hidden backlog.
+    state.queue=state.queue.filter(value=>value.leavingAt===undefined).map(value=>value.id===id?{...value,leavingAt:Date.now()}:value);
+    clearTimeout(islandTimers.get(id));islandTimers.delete(id);change();
+  };
   async function poll(){
     if(!active||disposed||flight)return;
     flight=(async()=>{
@@ -195,11 +213,11 @@ document.currentScript.__tanukiRegister(function(require){
     if(enabled===active)return;
     active=enabled;state.enabled=enabled;if(!enabled)cancelNavigation();
     clearInterval(timer);
-    if(enabled){window.addEventListener('tanuki:notify',onMessage);void refreshSettings();window.addEventListener('tanuki:settings-changed',settingsChanged);window.addEventListener('tanuki:task-read',taskRead);window.addEventListener('focus',onFocus);window.addEventListener('pointerdown',unlockAudio,true);window.addEventListener('keydown',unlockAudio,true);state.queue=state.queue.filter(item=>Date.now()-item.at<120000);change();void poll();timer=setInterval(poll,1600);}
-    else{window.removeEventListener('tanuki:notify',onMessage);window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;state.queue=[];change();}
+    if(enabled){window.addEventListener('tanuki:notify',onMessage);void refreshSettings();window.addEventListener('tanuki:settings-changed',settingsChanged);window.addEventListener('tanuki:task-read',taskRead);window.addEventListener('focus',onFocus);window.addEventListener('pointerdown',unlockAudio,true);window.addEventListener('keydown',unlockAudio,true);state.queue=state.queue.filter(item=>Date.now()-item.at<DISPLAY_MS);change();void poll();timer=setInterval(poll,1600);}
+    else{window.removeEventListener('tanuki:notify',onMessage);window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;clearIslandTimers();state.queue=[];change();}
   }
   const onMessage=event=>push(event.detail);
-  const onFocus=()=>{void refreshSettings();};
+  const onFocus=()=>{change();void refreshSettings();};
   function resolveText(value){
     if(typeof value==='string')return value;
     const locale=/^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active||'')?'zh':'en';
@@ -216,24 +234,24 @@ document.currentScript.__tanukiRegister(function(require){
     if(item.kind==='launch.protected')detail=tr('islandLaunchDetail',{n:String(item.checked),disabled:String(item.disabled)});
     return {title,detail};
   }
-  function Island(){
-    const tr=useLocale(),queue=React.useSyncExternalStore(subscribe,()=>state.snapshot),item=queue[0];
-    const [paused,setPaused]=React.useState(false);
-    React.useEffect(()=>{if(item)soundFor(item.id);},[item?.id]);
-    React.useEffect(()=>{if(!item||paused)return;const clock=setTimeout(()=>dismiss(item.id),6500);return()=>clearTimeout(clock);},[item?.id,paused]);
-    if(!preferences.inApp||!item)return null;
-    const {title,detail}=format(item,tr);
+  function IslandCard({item,index}){
+    const tr=useLocale(),{title,detail}=format(item,tr);
     const glyph=(item.kind==='error'||item.kind==='task.failed')?'error':item.kind==='launch.protected'?'shield':item.kind==='task.completed'?'check':item.kind==='plugin.disabled'?'pause':item.kind==='plugin.removed'?'remove':'check';
     const paths={error:'M12 8v5m0 3h.01M12 3 2 21h20L12 3Z',shield:'M12 3 4.5 6v5.5c0 4 3 7.3 7.5 9.5 4.5-2.2 7.5-5.5 7.5-9.5V6L12 3Zm-4 9 2.5 2.5L16 9',check:'m6 12 4 4 8-8',pause:'M9 6v12M15 6v12',remove:'M7 12h10'};
-    return createPortal(h('div',{className:'tanuki-island-position','data-tanuki-island':'',onMouseEnter:()=>setPaused(true),onMouseLeave:()=>setPaused(false),onFocus:()=>setPaused(true),onBlur:event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false);}},
-      h('div',{className:'tanuki-island',key:item.id},
-        h('button',{type:'button',className:'tanuki-island-open','aria-label':tr('openTarget')+' · '+title,title:tr('openTarget'),onClick:()=>activate(item)},
+    return h('div',{className:'tanuki-island-row','data-leaving':item.leavingAt!==undefined||undefined,style:{top:(item.leavingAt!==undefined?2:index)*100+'px'}},
+      h('div',{className:'tanuki-island'},
+        h('button',{type:'button',className:'tanuki-island-open',disabled:item.leavingAt!==undefined,'aria-label':tr('openTarget')+' · '+title,title:tr('openTarget'),onClick:()=>activate(item)},
           h('span',{className:'tanuki-island-symbol','data-tone':glyph==='error'?'error':undefined,'aria-hidden':true},h('svg',{viewBox:'0 0 24 24',width:23,height:23,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:paths[glyph]}))),
-          h('span',{className:'tanuki-island-copy',role:'status','aria-live':'polite','aria-atomic':true},h('strong',null,title),detail?h('span',{title:detail},detail):null),
-          queue.length>1?h('span',{className:'tanuki-island-count',title:tr('islandQueued',{n:String(queue.length-1)})},'+'+(queue.length-1)):null),
-        h('button',{type:'button',className:'tanuki-island-close','aria-label':tr('dismiss'),title:tr('dismiss'),onClick:()=>dismiss(item.id)},'×'))),document.body);
+          h('span',{className:'tanuki-island-copy',role:'status','aria-live':'polite','aria-atomic':true},h('strong',null,title),detail?h('span',{title:detail},detail):null)),
+        h('button',{type:'button',className:'tanuki-island-close',disabled:item.leavingAt!==undefined,'aria-label':tr('dismiss'),title:tr('dismiss'),onClick:()=>dismiss(item.id)},'×')));
   }
-  return {Island,sync,push,poll,dispose(){disposed=true;active=false;cancelNavigation();window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;clearInterval(timer);window.removeEventListener('tanuki:notify',onMessage);state.enabled=false;state.queue=[];state.seen=[];state.snapshot=[];state.listeners.clear();}};
+  function Island(){
+    useLocale();const queue=React.useSyncExternalStore(subscribe,()=>state.snapshot);
+    if(!preferences.inApp||!queue.length)return null;
+    let index=0;
+    return createPortal(h('div',{className:'tanuki-island-position','data-tanuki-island':''},queue.map(item=>h(IslandCard,{key:item.id,item,index:item.leavingAt===undefined?index++:2}))),document.body);
+  }
+  return {Island,sync,push,poll,dispose(){disposed=true;active=false;cancelNavigation();window.removeEventListener('pointerdown',unlockAudio,true);window.removeEventListener('keydown',unlockAudio,true);player?.dispose();player=null;pending.length=0;pollRequest?.abort();onBubbleState?.([]);for(const note of [...systemNotifications])closeNotification(note);systemNotifications.clear();settingsReady=false;++settingsEpoch;settingsRequest?.abort();settingsRequest=null;window.removeEventListener('tanuki:settings-changed',settingsChanged);window.removeEventListener('tanuki:task-read',taskRead);window.removeEventListener('focus',onFocus);lastSoundId=null;clearIslandTimers();clearInterval(timer);window.removeEventListener('tanuki:notify',onMessage);state.enabled=false;state.queue=[];state.seen=[];state.snapshot=[];state.listeners.clear();}};
 };
   // Shared only inside this renderer: disable/re-enable or a fresh chunk must not
   // let an older bridge promise finish after the next owner's count.
@@ -512,7 +530,7 @@ document.currentScript.__tanukiRegister(function(require){
     const updates=window.dshDesktop?.updates;
     if(typeof updates?.subscribe==='function')offUpdates=updates.subscribe(updateState);
     if(typeof updates?.status==='function')Promise.resolve(updates.status()).then(updateState).catch(()=>{});
-    ctx.effect(()=>{const style=document.createElement('style');style.textContent="/* Native dock's slot anchor uses display:contents; order places only our label\n   after the context meter, without moving or replacing native React children. */\n/* One global surface, with native light/dark neutral colors. */\n.tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:max-content;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}\n.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);min-height:68px;padding:12px 12px 12px 18px;border:1px solid var(--dsw-alias-border-l2);border-radius:30px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);box-shadow:0 10px 32px #0003,0 2px 8px #0002;pointer-events:auto;font-family:inherit;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}\n.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);color:var(--dsw-alias-state-success-primary);}\n.tanuki-island-symbol[data-tone=\"error\"]{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);color:var(--dsw-alias-state-error-primary);}\n.tanuki-island-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}\n.tanuki-island-open{display:flex;flex:1;min-width:0;align-items:center;gap:12px;margin:0;padding:0;border:0;border-radius:18px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .16s;}\n.tanuki-island-open:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:4px;}\n.tanuki-island-copy strong{font-size:14px;font-weight:600;line-height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}\n.tanuki-island-copy>span{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}\n.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;}\n.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}\n.tanuki-island-close:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px;}\n@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(-12px) scale(.92);}to{opacity:1;transform:translateY(0) scale(1);}}\n@media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close,.tanuki-island-open{transition:none}}\n";style.dataset.tanukiStyle='island';document.head.appendChild(style);return()=>style.remove();});
+    ctx.effect(()=>{const style=document.createElement('style');style.textContent="/* Native dock's slot anchor uses display:contents; order places only our label\n   after the context meter, without moving or replacing native React children. */\n/* One global surface, with native light/dark neutral colors. */\n.tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:460px;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}\n.tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);height:88px;min-height:88px;padding:12px 12px 12px 18px;border:1px solid var(--dsw-alias-border-l2);border-radius:30px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);box-shadow:0 10px 32px #0003,0 2px 8px #0002;pointer-events:auto;font-family:inherit;}\n.tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);color:var(--dsw-alias-state-success-primary);}\n.tanuki-island-symbol[data-tone=\"error\"]{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);color:var(--dsw-alias-state-error-primary);}\n.tanuki-island-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}\n.tanuki-island-open{display:flex;flex:1;min-width:0;align-items:center;gap:12px;margin:0;padding:0;border:0;border-radius:18px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .16s;}\n.tanuki-island-open:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:4px;}\n.tanuki-island-copy strong{font-size:14px;font-weight:600;line-height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}\n.tanuki-island-copy>span{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}\n.tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;}\n.tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}\n.tanuki-island-close:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px;}\n@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(calc(-100% - var(--dsh-frame-top-clearance,0px) - 24px));}to{opacity:1;transform:translateY(0);}}\n@media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close,.tanuki-island-open{transition:none}}\n\n.tanuki-island-row{position:absolute;left:0;width:100%;transition:top .32s cubic-bezier(.2,.8,.2,1),opacity .32s ease;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}\n.tanuki-island-row[data-leaving]{opacity:0;pointer-events:none;animation:none;}\n.tanuki-island-row[data-leaving] .tanuki-island{pointer-events:none;}\n@media(prefers-reduced-motion:reduce){.tanuki-island-row{animation:none;transition:none;}}\n";style.dataset.tanukiStyle='island';document.head.appendChild(style);return()=>style.remove();});
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-dynamic-island',locale:NS},island.Island));
     ctx.effect(()=>()=>{badgeClosed=true;writeBadge(0);confirmedTurns.clear();runningSince.clear();readThrough.clear();retiredEpochs.clear();bubbleEnabled=false;emitBubbles();alive=false;++bubbleEpoch;bubbleRequest?.abort();bubbleFiber?.dispose();offUpdates?.();window.removeEventListener('focus',reconcileBubbles);window.removeEventListener('blur',reconcileBubbles);document.removeEventListener('visibilitychange',reconcileBubbles);window.removeEventListener('tanuki:notification-delivered',delivered);completions.clear();acknowledged.clear();hostErrors.clear();interactionKeys.clear();sessionRows=null;hostPluginItems=[];bubbleItems=[];nativeStatus=null;window.removeEventListener('offline',reconcileBubbles);window.removeEventListener('online',reconcileBubbles);window.removeEventListener('tanuki:bubble-request',emitBubbles);for(const controller of requests)controller.abort();requests.clear();island.dispose();});
   }

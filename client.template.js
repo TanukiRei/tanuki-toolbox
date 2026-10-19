@@ -80,6 +80,8 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
     // Always-on default model policy; independent of all optional components.
     start('model-policy');
     const off=ctx.remote.$on('plugin-manager/changed',schedule),offReset=ctx.on('connection/reset',schedule);
+    // Reuse update checks as an extra lifecycle audit, without a core idle timer.
+    window.addEventListener('tanuki:component-maintenance',schedule);
     // A foreground check recovers missed connection events without an idle polling loop.
     const focus=()=>{if(document.visibilityState==='visible'){for(const [key,entry] of entries)if(!entry.fiber&&entry.attempt>=3)stop(key);schedule();}};
     window.addEventListener('focus',focus);void refresh();
@@ -121,7 +123,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
     ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key:SELF,locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-details'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-startup-guard',locale:NS},props=>h(LazyView,{...props,moduleName:'guard-settings'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-composer',locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-settings',view:'composer'})));
-    ctx.effect(()=>()=>{disposed=true;clearTimeout(timer);off();offReset();window.removeEventListener('focus',focus);for(const key of [...entries.keys()])stop(key,false);for(const controller of loads)controller.abort();loads.clear();});
+    ctx.effect(()=>()=>{disposed=true;clearTimeout(timer);off();offReset();window.removeEventListener('tanuki:component-maintenance',schedule);window.removeEventListener('focus',focus);for(const key of [...entries.keys()])stop(key,false);for(const controller of loads)controller.abort();loads.clear();});
   }
   return {name:'tanuki-toolbox',inject:['slots','locale','remote','remote.pluginManager'],apply};
 }});

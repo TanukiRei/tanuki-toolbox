@@ -98,6 +98,13 @@ try{
     $oldIndex=Join-Path $StateRoot 'shortcut-backups\latest.json'
     if(Test-Path -LiteralPath $oldIndex){try{foreach($entry in (Get-Content -LiteralPath $oldIndex -Raw -Encoding UTF8|ConvertFrom-Json)){$legacyBackups[$entry.Path]=$entry.Backup}}catch{}}
     foreach($file in $candidates){
+        # The dedicated login entry belongs to autostart.cjs. Never rewrite or
+        # restore it as a generic DSH shortcut; retire old double-ownership.
+        $loginEntry=Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\Tanuki DeepSeek Harness.lnk'
+        if([IO.Path]::GetFullPath($file) -ieq [IO.Path]::GetFullPath($loginEntry)){
+            if($records[$file] -and $records[$file].Active){$records[$file].Active=$false;Save-Journal}
+            continue
+        }
         $link=$null;$matched=$false
         try{
             $link=$shell.CreateShortcut($file)

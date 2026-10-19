@@ -139,3 +139,23 @@ button:has(.tanuki-sidebar-icon):not(:has(>span:nth-child(2))) .tanuki-side-badg
    only inside our managed list; preserve its native split-menu actions. */
 [data-tanuki-center=manage]>header [role=group] button:is([class*="_addPrimary"],[class*="_addMore"]){background:var(--dsw-alias-bg-module-platform,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-border-l2);}
 [data-tanuki-center=manage]>header [role=group] button:is([class*="_addPrimary"],[class*="_addMore"]):hover:not(:disabled),[data-tanuki-center=manage]>header [role=group] button:is([class*="_addPrimary"],[class*="_addMore"])[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover-solid,var(--dsw-alias-bg-overlay));color:var(--dsw-alias-label-primary);}
+
+/* Search and official grouping preserve every native card and its handlers. */
+.tanuki-plugin-search{padding:8px 0 10px;}
+.tanuki-plugin-search input{display:block;box-sizing:border-box;width:100%;min-height:36px;padding:7px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:9px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;}
+.tanuki-plugin-search input::placeholder{color:var(--dsw-alias-label-secondary);}
+.tanuki-plugin-search input:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:1px;}
+.tanuki-update-checking{display:block;padding:4px 10px;font-size:12px;color:var(--dsw-alias-label-secondary);}
+[data-tanuki-center=manage] [data-tanuki-search-hidden]{display:none!important;}
+[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]{display:grid!important;grid-template-columns:minmax(0,1fr);align-items:stretch;align-content:start;gap:8px;}
+[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]>:is([data-plugin-group=basic],[data-plugin-group=official],[data-plugin-group=extensions],[data-plugin-group=more]),
+[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]>[data-plugin-group]>ul{display:contents!important;}
+[data-tanuki-center=manage] [data-tanuki-official-grid] :is([data-plugin-item],[data-plugin-package]){height:124px;order:0;}
+[data-tanuki-center=manage] [data-tanuki-official-grid] :is([data-plugin-item],[data-plugin-package])>div:first-child{height:100%;box-sizing:border-box;grid-template-rows:40px minmax(0,1fr);}
+[data-tanuki-center=manage] [data-tanuki-official-grid] [data-tanuki-experimental]{order:2;}
+[data-tanuki-official-grid]::before,[data-tanuki-official-grid]::after{grid-column:1 / -1;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px;padding:6px 2px;}
+[data-tanuki-official-grid][data-tanuki-has-stable]::before{content:attr(data-tanuki-stable-label);order:-1;}
+[data-tanuki-official-grid][data-tanuki-has-experimental]::after{content:attr(data-tanuki-experimental-label);order:1;border-top:1px solid var(--dsw-alias-border-l2);margin-top:8px;padding-top:14px;}
+[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid] [data-plugin-group=extensions]>div:first-child:has(button){grid-column:1 / -1;order:3;margin:0;padding-top:4px;}
+@container tanuki-center (min-width:760px){[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@container tanuki-center (min-width:1160px){[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]{grid-template-columns:repeat(3,minmax(0,1fr));}}
