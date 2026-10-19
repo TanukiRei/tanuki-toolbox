@@ -183,9 +183,10 @@ document.currentScript.__tanukiRegister(function(require){
       if(!model.accountTarget)return null;
       return createPortal(h('button',{type:'button',className:'_8RVnMG_linkButton',disabled:model.accountBusy,onClick:requestAccountSignOut},t('signOut')),model.accountTarget);
     }
+    const visibleSettingsModal=()=>[...document.querySelectorAll('[data-shortcut-modal="settings"]')].find(node=>!node.closest('.tanuki-settings-window[data-open="false"]'));
     function attach(){
       if(!alive)return;attachAccount();
-      const modal=document.querySelector('[data-shortcut-modal="settings"]'),settingsOpen=!!modal;
+      const modal=visibleSettingsModal(),settingsOpen=!!modal;
       const toolboxOpen=!!modal?.querySelector('[data-tanuki-settings-icon][aria-current="true"],.tanuki-base-settings');
       const skillsOpen=!!modal?.querySelector('.dssm-section');
       if(state.settingsOpen!==settingsOpen||state.toolboxOpen!==toolboxOpen||state.skillsOpen!==skillsOpen)publish({settingsOpen,toolboxOpen,skillsOpen});
@@ -207,10 +208,12 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function schedule(){if(alive){cancelAnimationFrame(frameRequest);frameRequest=requestAnimationFrame(attach);}}
     const observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true});
+    window.addEventListener('tanuki:settings-visibility',schedule);
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     function openNativeSettings(accountOnly=false){
       if(!alive||!current)return;settingsCleanup?.();
-      if(document.querySelector('[data-shortcut-modal="settings"]'))return;
+      if(visibleSettingsModal())return;
+      if(!accountOnly){const shell=ctx.slots.entriesOfSlot('sidebar.settings').find(entry=>typeof entry.store?.create==='function'),actions=shell?.store.create().actions;if(typeof actions?.open==='function'){actions.open();return;}}
       const root=current.root,slot=root.querySelector('[data-slot="sidebar.settings"]');
       const direct=slot?.querySelector('button[aria-haspopup="dialog"]');if(direct){direct.click();return;}
       const trigger=slot?.querySelector('[data-slot="settings.launcher"] button[aria-haspopup="menu"]');
@@ -252,6 +255,7 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function openToolboxSettings(){
       if(!alive)return;toolboxCleanup?.();
+      const shell=ctx.slots.entriesOfSlot('sidebar.settings').find(entry=>typeof entry.store?.create==='function'),actions=shell?.store.create().actions;if(typeof actions?.openSection==='function'){actions.openSection('tanuki-toolbox');return;}
       // The toolbox core marks its own registered native settings navigation entry.
       // Use that real entry, not a guessed settings service or localized native label.
       let timer,watch;
@@ -270,18 +274,14 @@ document.currentScript.__tanukiRegister(function(require){
     window.addEventListener('resize',schedule);const offLocale=ctx.locale.subscribe(schedule);
     function newSession(){clearHandoff();ctx.layout.selectPanel(null);try{ctx.get('uiWorkspace').startSession();}catch{notify('unavailable');}}
     async function restart(){
+      if(document.documentElement.dataset.platform==='darwin'){notify('restartUnsupported');return;}
       if(!alive||state.restarting)return;publish({restarting:true});
-      const controller=new AbortController();requests.add(controller);let accepted=false,timeout=setTimeout(()=>controller.abort(),15000);
+      const controller=new AbortController();requests.add(controller);let accepted=false;const timeout=setTimeout(()=>controller.abort(),30000);
       try{
         const url=new URL('tanuki-toolbox/restart',document.baseURI);
-        const capability=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:controller.signal});
-        if(!alive)return;
-        const availability=await capability.json();
-        if(!capability.ok||availability.available!==true){if(alive)notify('restartUnavailable',availability.code);return;}
-        if(!alive)return;clearTimeout(timeout);timeout=setTimeout(()=>controller.abort(),120000);
         const response=await fetch(url,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Tanuki-Restart':'1'},body:JSON.stringify({requestId:crypto.randomUUID(),confirmed:true}),signal:controller.signal});
         if(!alive)return;const result=await response.json();if(!alive)return;
-        accepted=result.status==='accepted';
+        accepted=result.status==='accepted'||result.status==='launched';
         if(!accepted&&result.status!=='cancelled')notify(result.status==='unavailable'?'restartUnavailable':'restartFailed',result.code);
       }catch{if(alive&&!controller.signal.aborted)notify('restartFailed');else if(alive)notify('restartFailed');}
       finally{clearTimeout(timeout);requests.delete(controller);if(alive&&!accepted)publish({restarting:false});}
@@ -318,13 +318,14 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function RestartButton({busy}){
       const tr=useLocale(),[progress,setProgress]=React.useState(0);
+      const unsupported=document.documentElement.dataset.platform==='darwin';
       const runtime=React.useRef({active:true,held:false,value:0,frame:0,last:0,source:null,fired:false,busy:false});
-      const r=runtime.current;r.busy=busy;
+      const r=runtime.current;r.busy=busy||unsupported;
       function tick(now){
         r.frame=0;if(!r.active||!alive||r.busy)return;
         if(document.hidden){stop(true);return;}
         const elapsed=Math.min(64,Math.max(0,now-r.last));r.last=now;
-        r.value=Math.max(0,Math.min(1,r.value+(r.held?1:-1)*elapsed/2000));setProgress(r.value);
+        r.value=Math.max(0,Math.min(1,r.value+(r.held?1:-1)*elapsed/1000));setProgress(r.value);
         if(r.value>=1&&r.held&&!r.fired){r.fired=true;r.held=false;void restart();return;}
         if(r.held||r.value>0)r.frame=requestAnimationFrame(tick);
       }
@@ -333,8 +334,8 @@ document.currentScript.__tanukiRegister(function(require){
       function begin(source){if(!alive||r.busy||r.source!==null||document.hidden)return;r.source=source;r.fired=false;r.held=true;animate();}
       React.useEffect(()=>{r.active=true;const cancel=()=>stop(true);const hidden=()=>{if(document.hidden)cancel();};window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',hidden);return()=>{r.active=false;cancelAnimationFrame(r.frame);window.removeEventListener('blur',cancel);document.removeEventListener('visibilitychange',hidden);};},[]);
       React.useEffect(()=>{cancelAnimationFrame(r.frame);r.frame=0;r.held=false;r.value=busy?1:0;setProgress(r.value);},[busy]);
-      const title=tr('menu_restart');
-      return h('button',{type:'button',className:'tanuki-rail-button tanuki-restart-hold',disabled:busy,title,'aria-label':title,'aria-description':tr(busy?'restarting':'restartHold'),
+      const title=tr(unsupported?'restartUnsupported':'menu_restart');
+      return h('button',{type:'button',className:'tanuki-rail-button tanuki-restart-hold',disabled:busy||unsupported,title,'aria-label':title,'aria-description':tr(unsupported?'restartUnsupported':busy?'restarting':'restartHold'),
         onClick:event=>event.preventDefault(),onContextMenu:event=>event.preventDefault(),
         onPointerDown:event=>{if(event.button!==0||!event.isPrimary)return;event.preventDefault();event.currentTarget.focus();begin('p'+event.pointerId);if(r.source==='p'+event.pointerId)event.currentTarget.setPointerCapture(event.pointerId);},
         onPointerUp:event=>{if(r.source==='p'+event.pointerId)stop();},
@@ -414,7 +415,8 @@ document.currentScript.__tanukiRegister(function(require){
         if(!open)return;
         if(drag.current&&drag.current.order!==order)finish(false);
         const place=()=>{const box=anchor.current?.getBoundingClientRect(),popup=menu.current;if(!box||!popup)return;setPosition(previous=>{
-          const left=Math.max(4,Math.min(box.right+8,window.innerWidth-popup.offsetWidth-8)),top=Math.max(4,Math.min(box.top,window.innerHeight-popup.offsetHeight-8));
+          const safeTop=document.documentElement.hasAttribute('data-fullscreen')?8:8+(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-top-clearance'))||(document.documentElement.dataset.platform==='darwin'?48:0));
+          const left=Math.max(4,Math.min(box.right+8,window.innerWidth-popup.offsetWidth-8)),top=Math.max(safeTop,Math.min(box.top,window.innerHeight-popup.offsetHeight-8));
           return previous.left===left&&previous.top===top?previous:{left,top};
         });};
         place();window.addEventListener('resize',place);document.addEventListener('scroll',place,true);
@@ -469,7 +471,7 @@ document.currentScript.__tanukiRegister(function(require){
         if(target){focusWorkspaceToggle=null;target.focus();}
       },[model.pane,model.workspaceTarget,model.conversationTarget,model.target]);
       if(!model.target)return null;
-      const button=(key,action,selected,extra={})=>h('button',{key,type:'button',className:'tanuki-rail-button'+(key==='home'?' tanuki-rail-home':''),title:tr('menu_'+key),'aria-label':tr('menu_'+key),'aria-current':selected?'page':undefined,'data-tanuki-bubble-target':key==='plugins'||key==='workspace'?key:undefined,onClick:action,...extra},h(Icon,{name:key,selected}));
+      const button=(key,action,selected,extra={})=>h('button',{key,type:'button',className:'tanuki-rail-button'+(key==='home'?' tanuki-rail-home':''),title:tr('menu_'+key),'aria-label':tr('menu_'+key),'aria-current':selected?'page':undefined,'data-tanuki-bubble-target':['plugins','workspace','settings'].includes(key)?key:undefined,onClick:action,...extra},h(Icon,{name:key,selected}));
       const item=key=>{
         if(optionalItems.includes(key)&&!model.visibility[key])return null;
         switch(key){
@@ -501,7 +503,7 @@ document.currentScript.__tanukiRegister(function(require){
     const offSkills=ctx.slots.subscribe('settings.section',()=>{const available=hasSkills();if(state.skillsAvailable!==available)publish({skillsAvailable:available});});
     syncPane();attach();
     ctx.effect(()=>()=>{alive=false;offPanel();offMain();offSkills();observer.disconnect();cancelAnimationFrame(frameRequest);for(const request of requests)request.abort();requests.clear();
-      window.removeEventListener('storage',storageChanged);window.removeEventListener('resize',schedule);offLocale();menuCleanup?.();toolboxCleanup?.();settingsCleanup?.();detachAccount();detach();listeners.clear();
+      window.removeEventListener('storage',storageChanged);window.removeEventListener('resize',schedule);window.removeEventListener('tanuki:settings-visibility',schedule);offLocale();menuCleanup?.();toolboxCleanup?.();settingsCleanup?.();detachAccount();detach();listeners.clear();
       if(lifecycle.disabled&&ctx.layout.panelInfo.getSnapshot().activePanelId===HOME)ctx.layout.selectPanel(null);
     });
   }

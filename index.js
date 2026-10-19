@@ -10,10 +10,12 @@ export function apply(ctx) {
   if(!profile?.dir)return;
   const version=JSON.parse(readFileSync(join(root,'package.json'),'utf8')).version;
   routes.register(ctx,{
+    runtime:()=>{let version=null;try{const value=JSON.parse(readFileSync(profile.installAnchor,'utf8')).version;if(typeof value==='string'&&value.length<100)version=value;}catch{}return {version};},
     status:()=>{
       let report={status:'pending',disabled:[]},shortcuts={status:'pending',managed:0,warnings:[]};
       try{report=JSON.parse(readFileSync(join(profile.dir,'.tanuki-toolbox','status.json'),'utf8'));}catch{}
-      try{shortcuts=JSON.parse(readFileSync(join(profile.dir,'.tanuki-toolbox','shortcut-status.json'),'utf8'));}catch{}
+      if(process.platform==='win32'){try{shortcuts=JSON.parse(readFileSync(join(profile.dir,'.tanuki-toolbox','shortcut-status.json'),'utf8'));}catch{}}
+      else shortcuts={status:'unsupported',managed:0,warnings:[]};
       return {...report,shortcuts};
     },
     recommendations:async signal=>(await import('./lib/recommendations.cjs')).default.readRecommendations(signal),
@@ -21,7 +23,7 @@ export function apply(ctx) {
   });
   settings.register(ctx,profile);
   modelPolicy.register(ctx,profile);
-  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
+  const assets=Object.fromEntries(['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files','system-settings','settings-window','settings-enhancements','settings-models','gateway-speed'].map(name=>[name+'.js',{file:join(root,'client-chunks',name+'.js'),type:'text/javascript; charset=utf-8'}]));
   assets['toolbox.png']={file:join(root,'assets/toolbox.png'),type:'image/png'};
   ctx.inject(['webServer', 'connection'], host => {
     for(const [name,asset] of Object.entries(assets))host.effect(() => host.webServer.register({

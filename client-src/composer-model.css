@@ -39,3 +39,5 @@
 
 /* Saving should not flash the whole card between normal and dimmed states. */
 .tanuki-model-popup[aria-busy=true] .tanuki-model-hit:disabled,.tanuki-model-popup[aria-busy=true] .tanuki-model-slider input:disabled,.tanuki-model-popup[aria-busy=true] .tanuki-model-options button:disabled{opacity:1}
+
+html[data-platform=darwin]:not([data-fullscreen]) .tanuki-model-options{max-height:min(280px,calc(100vh - var(--dsh-frame-top-clearance,48px) - 160px));}

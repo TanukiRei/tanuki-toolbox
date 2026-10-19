@@ -25,3 +25,4 @@
 ## Build
 
 Run `node scripts/build.cjs` to regenerate browser files from checked-in source and assets. This parses generated JavaScript without executing plugin components. No dependency installation is required for this build. Windows launcher source and its compiled executable are checked in together; `scripts/build-launcher.ps1` rebuilds it on Windows.
+The one-shot native restart worker uses `scripts/build-restart-worker.ps1`. Keep its C# source, executable and source/binary hash manifest together; the regular build rejects stale artifacts without executing the worker.

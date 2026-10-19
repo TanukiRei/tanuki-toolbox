@@ -78,7 +78,7 @@ document.currentScript.__tanukiRegister(function(require){
       const target=React.useSyncExternalStore(fn=>{listeners.add(fn);return()=>listeners.delete(fn);},()=>snapshot),ref=React.useRef(null);
       const [point,setPoint]=React.useState({left:0,top:0});
       React.useLayoutEffect(()=>{
-        if(!target)return;const box=ref.current.getBoundingClientRect();setPoint({left:Math.max(8,Math.min(target.x,innerWidth-box.width-8)),top:Math.max(8,Math.min(target.y,innerHeight-box.height-8))});ref.current.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
+        if(!target)return;const box=ref.current.getBoundingClientRect(),safeTop=document.documentElement.hasAttribute('data-fullscreen')?8:8+(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-top-clearance'))||(document.documentElement.dataset.platform==='darwin'?48:0));setPoint({left:Math.max(8,Math.min(target.x,innerWidth-box.width-8)),top:Math.max(safeTop,Math.min(target.y,innerHeight-box.height-8))});ref.current.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
         const outside=event=>{if(!ref.current?.contains(event.target))close();},hide=()=>close(),scroll=event=>{if(!ref.current?.contains(event.target))close();};
         document.addEventListener('pointerdown',outside,true);document.addEventListener('scroll',scroll,true);window.addEventListener('resize',hide);window.addEventListener('blur',hide);
         return()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('scroll',scroll,true);window.removeEventListener('resize',hide);window.removeEventListener('blur',hide);};

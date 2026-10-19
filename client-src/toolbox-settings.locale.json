@@ -35,7 +35,7 @@
     "categories": "允许通知",
     "category_plugins": "插件",
     "category_tasks": "任务",
-    "category_updates": "更新",
+    "category_updates": "系统更新",
     "bubbles": "全局气泡",
     "systemNotifications": "系统通知",
     "sound": "提示音",
@@ -60,7 +60,11 @@
     "inAppHint": "应用内顶部消息提示。",
     "systemNotificationsHint": "当应用未聚焦/最小化/收起的时候会发送系统消息。",
     "bubblesHint": "对应的消息会以气泡形式持久提示。",
-    "soundHint": "消息提示伴随提示音。"
+    "soundHint": "消息提示伴随提示音。",
+    "settings-enhancements": "设置优化",
+    "enhancedModels": "模型",
+    "enhancedModelsHint": "模型设置界面重新排版",
+    "componentRestart": "新组件尚未加载，请完全退出 DeepSeek Harness 后重新打开。"
   },
   "en": {
     "title": "Tanuki Toolbox · Basic settings",
@@ -98,7 +102,7 @@
     "categories": "Allow notifications",
     "category_plugins": "Plugins",
     "category_tasks": "Tasks",
-    "category_updates": "Updates",
+    "category_updates": "System updates",
     "bubbles": "Global bubbles",
     "systemNotifications": "System notifications",
     "sound": "Notification sound",
@@ -123,6 +127,10 @@
     "inAppHint": "Message banners at the top of the application.",
     "systemNotificationsHint": "Send system notifications when the app is unfocused, minimized, or hidden.",
     "bubblesHint": "Show persistent notification badges beside the relevant items.",
-    "soundHint": "Play a sound with message notifications."
+    "soundHint": "Play a sound with message notifications.",
+    "settings-enhancements": "Settings Enhancements",
+    "enhancedModels": "Models",
+    "enhancedModelsHint": "Rearrange the Models settings page.",
+    "componentRestart": "This new component has not loaded yet. Quit DeepSeek Harness completely, then reopen it."
   }
 }

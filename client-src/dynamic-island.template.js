@@ -186,7 +186,7 @@ document.currentScript.__tanukiRegister(function(require){
     window.addEventListener('tanuki:bubble-request',emitBubbles);
     window.addEventListener('offline',reconcileBubbles);window.addEventListener('online',reconcileBubbles);
     reconcileBubbles();
-    const updateState=value=>{if(!alive||!value||!['available','downloaded'].includes(value.phase)||typeof value.version!=='string')return;island.push({id:'dsh-update:'+value.phase+':'+value.version,kind:'dsh.update.'+value.phase,category:'updates',title:{zh:'DeepSeek Harness 更新',en:'DeepSeek Harness update'},message:{zh:(value.phase==='downloaded'?'更新已准备就绪：':'发现新版本：')+value.version,en:(value.phase==='downloaded'?'Ready to install: ':'New version: ')+value.version}});};
+    const updateState=value=>{if(!alive||!value||!['available','ready','downloaded'].includes(value.phase)||typeof value.version!=='string')return;const ready=value.phase!=='available';island.push({id:'dsh-update:'+(ready?'downloaded':'available')+':'+value.version,kind:'dsh.update.'+(ready?'downloaded':'available'),category:'updates',title:{zh:'DeepSeek Harness 更新',en:'DeepSeek Harness update'},message:{zh:(ready?'更新已准备就绪：':'发现新版本：')+value.version,en:(ready?'Ready to install: ':'New version: ')+value.version}});};
     // Public origin-scoped desktop bridge, no guessed RPC and no background update polling.
     const updates=window.dshDesktop?.updates;
     if(typeof updates?.subscribe==='function')offUpdates=updates.subscribe(updateState);

@@ -1,4 +1,97 @@
-黎猫工具箱 / Tanuki Toolbox 0.6.22
+黎猫工具箱 / Tanuki Toolbox 0.7.9
+
+0.7.9 中英文介绍与公开发布 / Bilingual descriptions and public release
+- 中英文介绍页标题统一增加 dsh- 前缀，更新七个组件、默认功能、平台限制和安装说明的介绍；插件包名保持 dsh-local-plugin-center，支持原地升级。
+- 本次发布包含此前本机交付的设置优化、服务／模型排序与开关、默认模型、对话框选择卡片、中枢速度控制、主题适配和通知修复，以及 1 秒长按与后台保护重启。
+- 同步中英文插件描述与本机启用的推荐插件；新增 dsh-plugin 仓库 topic，为插件市场收录准备资料。仅声明实际提供的能力，不将收录准备描述为已收录。
+- 必要构建、静态核查、独立打包及本机更新；按本次要求发布 GitHub。未运行功能测试或实际触发重启；不更新一键安装器。
+Adds the dsh- prefix to the bilingual introduction titles and refreshes descriptions of the seven components, default behavior, installation and platform limits. Publishes the previously local-only model/settings, gateway speed, notification/theme and one-second protected-restart changes. Preserves the package identity for in-place upgrades, adds the repository topic required for catalog submission, and prepares a catalog entry. Build/static checks and local update only; no functional tests or live restart. One-click installer unchanged.
+
+0.7.8 一秒长按与后台重启 / One-second hold and background restart
+- 重启长按时间改为 1 秒，保留松开回退与再次接续；中英文说明同步更新。
+- 去掉点击链路里的重复 PowerShell/WMI 检查与固定 1.5 秒等待。独立原生程序完成当前实例和重开入口的必要验证后，先终止当前 DSH，再由原有保护启动入口在后台完成检查并重新打开。
+- 使用原生进程快照、创建时间与固定句柄确认目标，只处理当前实例及其同程序子进程；发现其他 DSH 实例或入口不一致时拒绝操作。HTTP 回执完成即继续关闭，丢失回执最多短暂等待，不自动重试。
+- 外部程序仅在长按完成后启动，随单次重启结束退出；不增加关闭组件的后台消耗。源码、编译产物与摘要一起打包，常规构建只校验不执行重启。
+- 仅构建、静态检查、独立打包及本机更新；未实际执行重启或功能测试，未上传 GitHub、未更新一键安装器。
+Restart now uses a one-second hold. A one-shot native worker replaces repeated PowerShell/WMI probes and the fixed 1.5-second delay. After checking the exact instance and reopen entry, it closes DSH before the existing protected launcher performs preflight and reopens the app. Native identities and pinned handles prevent targeting unrelated instances; accepted transactions finish independently without automatic retries or a resident watcher. Source/binary hashes are checked during packaging. Local build/package/update only; no live restart or functional tests.
+
+0.7.7 快速闪电实心配色 / Solid Fast lightning icon
+- 中枢速度按钮开启快速时改为蓝色实心闪电，颜色复用推理等级的 DSH 业务主色变量；模型卡片和原生选择旁保持一致，关闭时继续描线。
+- 按用户与接口方确认的契约补充说明：接口强制速度策略优先；接口为默认时按 DSH 请求的速度执行。闪电表示请求选择，实际档位仍以服务端返回为准；不改写服务商策略。
+- 仅样式、提示与说明更新；必要构建、静态检查、独立打包与本机更新。未运行功能测试或真实服务联调，未上传 GitHub，未更新一键安装器。
+Fast now uses a solid lightning icon with the same DSH color token as reasoning effort, including the inline control. Clarifies that enforced API speed policies take precedence; otherwise the DSH selection applies. The button represents the requested mode. Local build/package/update only; no functional or live-provider tests.
+
+0.7.6 闪电直接切换速度 / Direct lightning speed toggle
+- 支持速度的模型点击闪电直接在标准与快速之间切换，移除速度菜单及其定位、外部关闭和键盘监听。原生选择旁的速度按钮同步采用直接切换。
+- 灰色表示未选择快速，点亮表示请求快速；悬停保留当前选择、下轮生效与上游实际确认/标准降档/失败状态。默认和还原仍保留中枢继承语义，首次点击明确请求快速，再次点击明确请求标准。
+- 查询能力或保存期间禁止重复提交；无能力或读取失败时禁用，并在设置模型服务中保留重读入口。服务商拒绝快速会保留任务错误，服务商返回实际标准会显示标准降档，不自动降级重试，不凭响应耗时推测实际速度或限制。
+- 仅构建、静态检查、独立打包与本机更新；未运行功能测试或真实服务联调，未上传 GitHub、未更新一键安装器。
+Lightning now directly toggles Standard/Fast without a popup. Hover details keep the selected request tier separate from upstream confirmation, downgrade or failure. Gateway-default/reset semantics and per-turn isolation remain intact; the first click explicitly requests Fast. Removed popup listeners and preserved capability refresh in Models settings. Local build/package/update only; no functional or live-provider tests.
+
+0.7.5 中枢模型速度接入 / Gateway model speed integration
+- “设置优化 → 模型”内接入兼容 OpenAI Chat Completions 的模型目录扩展。根据 /models 的 capabilities.service_tiers 中 priority/fast 能力显示速度，不按服务商 ID 或 GPT 名称猜测。保留模型完整 ID 与现有服务配置。服务展开区增加重新读取速度能力入口。
+- 模型卡片闪电菜单及原生模型选择旁提供继承中枢、标准、快速；分别省略速度参数、明确发送 service_tier=default、发送 service_tier=priority。不向未声明能力的本地/PC/DeepSeek 模型新增速度字段。
+- 偏好按当前 profile 的会话＋提供商＋模型保存；任务开始捕获快照，重试和工具续写沿用，子任务继承创建者的速度快照（明确设置的子任务偏好优先）。中途改档影响下一轮。原有默认模型还原会将目标模型速度恢复为继承中枢。
+- 复用原生 pi-ai 的完整流式适配器，仅为单次请求扩展最终 payload/headers/fetch；不修改全局 fetch 或共享服务商 headers。保留取消、工具、用量与正常错误流程；从 SSE 读取非空 gateway.generation 与 service_tier，区分等待确认、快速确认、上游标准、未确认及失败/中断。
+- 凭据由宿主已有服务解析，不返回前端；磁盘只保存有界能力快照和速度偏好。目录失败保留旧设置但停用能力，提供重读入口；不自动降级或切换其他账号。关闭模型优化/组件时还原适配器、移除 UI 并取消目录请求与订阅，无更新轮询。
+- 仅必要构建、静态检查、独立打包与本机更新。未做 GUI、模拟功能测试或真实中枢/模型联调；未上传 GitHub、未更新一键安装器。
+Adds capability-based gateway speed controls inside Settings Enhancements → Models. Per-session/provider/model preferences map gateway default, Standard and Fast to omitted, default and priority tiers. Native pi-ai requests keep tools, usage and cancellation; request-local hooks observe gateway confirmation without patching global fetch. Capabilities and UI load on demand and clean up on disable. Local build/package/update only; no functional or live gateway tests.
+
+0.7.4 模型排序光标与原位置提示 / Model drag cursor and original-position indicator
+- 模型服务与模型目录排序改用侧栏同类的指针捕获交互，移除原生 HTML 拖放及其逐元素放置判定；拖动期间统一使用抓取光标，穿过输入框、按钮和行间空隙持续定位。
+- 指针回到原行时在该行下方显示白线；其他位置按白线计算最终顺序，保持原顺序时不发起保存。
+- 拖动到设置滚动区域边缘可自动滚动；仅拖动时监听位置变化，结束、取消、失焦、隐藏或卸载时释放指针、监听、动画帧与光标标记。
+- 仅必要构建、静态检查、打包与本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Provider and model ordering use pointer capture instead of native HTML drag/drop, maintaining a grabbing cursor across controls and gaps. Returning to the source row shows a white line below it without saving an unchanged order. Edge scrolling and all temporary drag resources stop on completion, cancellation, hiding, blur or unmount. Local build/package/update only; no functional tests or publishing.
+
+0.7.3 拖动位置提示与设置间距 / Drag indicators and settings spacing
+- 模型设置的服务与模型目录均使用侧栏同款六点拖动手柄；拖动时以白色横线提示最终插入位置，支持行间空隙，松手才保存顺序。保留 Alt＋上下键排序。
+- 取消、失焦、隐藏设置或关闭组件时清理拖动预览与临时监听；不增加后台扫描或轮询。
+- 工具箱卡片内边距、标题与描述、子功能行和分隔线间距略微缩小；保留原来的整行点击区域、开关与收拢按钮高度。
+- 仅必要构建、静态检查、打包与本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Uses the same six-dot drag grips as the sidebar, with white insertion indicators for provider and model ordering. Dragging saves only on drop and releases its preview/listeners when canceled or hidden. Toolbox card padding and subsetting gaps are slightly tighter. Local build/package/update only; no functional tests, publishing or installer changes.
+
+0.7.2 模型设置重构与设置窗口保留 / Models editor and persistent Settings
+- 模型页顶部增加添加服务与默认模型/推理等级选框，对话框还原按钮读取设置的默认选择。
+- 服务与模型的三横手柄可拖动排序，Alt＋上下键可微调；顺序保存到当前 profile，并在宿主目录和对话框模型选择中使用。停用保留行位置。
+- 服务展开后只显示 Provider ID、编辑和删除按钮；服务身份/密钥/地址/协议与模型详细设置改为弹窗，保存/取消独立，点外部或取消遇到未保存修改时提示。
+- 列表名称输入结束、开关与排序自动保存；模型目录恢复默认/获取可用模型提供明确按钮，删除重复的底部模型启用区。
+- 设置关闭改为动画隐藏并保留当前页、滚动和展开状态；隐藏释放焦点约束，模型页暂停自己的读取和监听。默认功能，无新增组件或子项。
+- 使用原生配置修订号、字段路径和凭据接口，不读取已存 API 密钥。仅必要构建、静态检查、打包与本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Adds default model selection, persistent provider/model ordering, autosaved inline fields, and provider/model dialogs with unsaved-change prompts. Settings hides with animation and retains its current page. Native revision checks and credential storage are preserved. Local delivery only; no functional tests, publishing or installer update.
+
+0.7.1 设置优化启用修复 / Settings Enhancements startup fix
+- 修复模型设置首次渲染时展开空数据导致的异常，读取完成前显示空的补充服务列表，原生模型表单继续可用。
+- 设置页发现运行中的宿主尚未登记新增组件时显示完整退出后重开的说明，避免只留下不可操作的灰色开关。
+- 构建、静态检查、独立打包与本机更新；不上传 GitHub、不更新一键安装器。
+Fixes the initial Models render when provider data is still loading, and explains when a newly added component needs a full DSH restart. Local delivery only.
+
+0.7.0 设置优化与系统更新入口 / Settings Enhancements and system update controls
+- 新增“设置优化”组件及“模型”子项：服务标题行展开原生编辑表单；服务开关位于最右侧，保留原生删除与保存操作；文本/图片输入类型改用绿色点亮按钮，保存下方增加整行收拢箭头。
+- 整个模型服务禁用状态原子保存，关闭后过滤目录并在实际派发前拒绝新调用；保留原有单模型限制、草稿与已选禁用模型的灰色占位。默认模型管理可重新启用服务，不因关闭设置优化而无法恢复。
+- 默认设置头部显示 DSH 版本和系统更新按钮，接入原生更新状态与更新窗口，不增加后台检查。消息中心“更新”改名“系统更新”，设置入口的更新气泡随对应类别与气泡总开关切换。
+- 工具箱组件卡片改为透明底色、仅描边，缩小卡片间距。新增组件代码按开关加载，模型页关闭后释放页面订阅、观察器和请求。
+- 推理等级沿用 DSH 自带翻译，不增加自定义命名输入框。
+- 仅构建、静态语法检查、独立打包与本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Adds Settings Enhancements with provider-wide model switches and native expandable editors. Adds a default DSH version label and native update entry, with category-aware Settings bubbles. Retains native reasoning translations. Component cards use outlines and tighter spacing. Local build/package/update only; no functional tests, GitHub publishing, or installer changes.
+
+0.6.24 模型选择卡片恢复与实机验证
+- 在真实 DSH 桌面复现卡片回退为原生菜单，控制台明确报错 cannot get property "remote.session" without inject；补齐模型卡片和默认模型禁用占位两处调用模型目录所需的 remote.session、remote 与 sessions 注入声明。
+- 去掉 0.6.23 中重复声明原生 conversation.input.model.label 的代码，修复宿主以 already declared 拒绝注册卡片的问题；卡片自己渲染标签，不重复拥有原生标签槽。
+- 读取提供方偏好时保留注册项顶层 locale/inject 元数据；options 仅作旧封装兼容，避免丢失 Codex 的高速与输出详略控制。
+- 保留原有卡片、推理滑条、模型/速度/输出详略选择、外侧重置和连续操作交互；不依赖全局刷新掩盖渲染异常。
+- 在本机真实 DSH 窗口验收并留存截图，结果与范围见本次交付说明；不将此前静态构建当成功能验证。不上传 GitHub、不更新一键安装器。
+
+
+0.6.23 macOS 适配核查与模型选择入口恢复
+- 灵动岛使用宿主随窗口/全屏切换的 overlay-top 安全区，修复 Mac 全屏后仍保留 48px 标题栏间距，进入动画也按当前安全区从窗口外侧开始。
+- Mac 在快捷栏关闭时，主页与插件中心独立避让标题栏；快捷栏已开启时不重复计算间距。模型卡片、模型选项、文件右键菜单及侧栏管理菜单避免进入原生标题栏区域；菜单可用高度相应收紧，保留日夜主题和减少动画偏好。
+- 非 Windows 的快捷方式保护详情明确显示不支持入口接管，并停止无效状态轮询；不读取或展示从 Windows 同步过来的快捷方式状态。Mac 的强制重启按钮置灰并说明限制，不再引导安装 Windows 工具。运行中已声明的插件版本检查保留；不新增 macOS 登录项或 Dock 接管。
+- Mac 点击系统通知时，改用固定 /usr/bin/open 和当前已验证 .app 路径请求 Launch Services 激活现有应用，再沿用原有条目定位，不接受用户传入可执行文件或参数。
+- 模型卡片的注册不再等待默认模型屏蔽 UI 服务就绪；服务可用时原位连接禁用状态与占位处理，宿主拦截不变。同步当前原生模型标签子插槽声明，并兼容新旧注册项中的提供方偏好元数据。
+- 稳定客户端协调器允许读取经同源授权资源接口返回的当前版本脚本，避免热更新后协调器仍保留旧版本号而拒绝重新启用的卡片/组件；继续 no-store 按需读取，不整页刷新，不缓存关闭组件工厂。
+- 仅本机构建、静态语法/双语文案核查、打包与更新。未运行功能测试、浏览器模拟或 Mac 实机验收；未上传 GitHub，未更新一键安装器。
+
 
 0.6.22 自启动修复、灵动岛双消息与插件搜索
 - 修复通用快捷方式保护再次改写专用自启动入口，导致误报“手动修改”。专用入口不再参与通用接管/还原；旧入口仅在当前文件摘要与本 profile 管理日志完全一致时识别为工具箱改写，可正常关闭或重新开启，真正的用户改动仍不覆盖。

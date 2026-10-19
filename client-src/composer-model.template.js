@@ -7,19 +7,34 @@ document.currentScript.__tanukiRegister(function(require){
     const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     const notify=()=>{if(alive)window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{kind:'error',destination:{page:'settings',section:'tanuki-toolbox',component:'composer'},title:{zh:'模型选择',en:'Model selection'},message:{zh:'设置未能完成，请稍后重试。',en:'Could not apply the selection. Please retry.'}}}));};
-    ctx.inject(['modelDirectories','sessions','tanukiModels'],scope=>{
-      const models=scope.get('modelDirectories'),sessions=scope.get('sessions'),policy=scope.get('tanukiModels');
+    // Model policy arrives in its own lazy chunk. Do not leave the model seat
+    // unregistered while that optional UI bridge is starting or being replaced.
+    // Host-side model enforcement remains authoritative throughout the transition.
+    const noPolicy={subscribe:emptyStore.subscribe,getSnapshot:emptyStore.getSnapshot,isDisabled:()=>false,retain:()=>()=>{}};
+    const policyListeners=new Set();let policySnapshot={policy:noPolicy};
+    const policyStore={subscribe:fn=>{policyListeners.add(fn);return()=>policyListeners.delete(fn);},getSnapshot:()=>policySnapshot};
+    const publishPolicy=policy=>{if(!alive||policySnapshot.policy===policy)return;policySnapshot={policy};for(const fn of [...policyListeners])fn();};
+    ctx.inject(['tanukiModels'],scope=>{const policy=scope.get('tanukiModels');publishPolicy(policy);scope.effect(()=>()=>{if(policySnapshot.policy===policy)publishPolicy(noPolicy);});});
+    let gatewaySnapshot=null;const gatewayListeners=new Set(),gatewayStore={subscribe:fn=>{gatewayListeners.add(fn);return()=>gatewayListeners.delete(fn);},getSnapshot:()=>gatewaySnapshot};
+    const publishGateway=value=>{gatewaySnapshot=value;for(const fn of gatewayListeners)fn();};
+    ctx.inject(['tanukiGatewaySpeed'],scope=>{const gateway=scope.get('tanukiGatewaySpeed');publishGateway(gateway);scope.effect(()=>()=>{if(gatewaySnapshot===gateway)publishGateway(null);});});
+    ctx.inject(['modelDirectories','sessions','remote','remote.session'],scope=>{
+      const models=scope.get('modelDirectories'),sessions=scope.get('sessions');
       function ModelControl({sessionId,directory,available,locked}){
         React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());
-        React.useSyncExternalStore(policy.subscribe,policy.getSnapshot);
+        const {policy}=React.useSyncExternalStore(policyStore.subscribe,policyStore.getSnapshot);
+        const gateway=React.useSyncExternalStore(gatewayStore.subscribe,gatewayStore.getSnapshot);
+        const modelPolicy=React.useSyncExternalStore(policy.subscribe,policy.getSnapshot);
         const state=React.useSyncExternalStore(fn=>directory.store.subscribe(fn),()=>directory.store.getSnapshot());
-        React.useLayoutEffect(()=>policy.retain(directory),[directory]);
+        React.useLayoutEffect(()=>policy.retain(directory),[directory,policy]);
         const catalogStore=models.catalog?.store||emptyStore;
         const catalog=React.useSyncExternalStore(fn=>catalogStore.subscribe(fn),()=>catalogStore.getSnapshot());
         const entries=React.useSyncExternalStore(fn=>scope.slots.subscribe(SEAT,fn),()=>scope.slots.entries(SEAT));
         // Reuse the installed provider's actual preference controller; no duplicate RPC schema.
         const preference=React.useMemo(()=>{
-          const entry=entries.find(item=>item.locale==='settings.codexSubscription'&&typeof item.inject==='function');
+          // Current DSH keeps locale/inject on the entry and priority in options.
+          // Preserve the entry fields while accepting older metadata wrappers.
+          const entry=entries.map(item=>({...item.options,...item})).find(item=>item.locale==='settings.codexSubscription'&&typeof item.inject==='function');
           if(!available||!entry)return null;
           try{const value=entry.inject(sessionId)?.preference;return typeof value?.subscribe==='function'&&typeof value?.getSnapshot==='function'&&typeof value?.set==='function'?value:null;}catch{return null;}
         },[entries,sessionId,available]);
@@ -39,7 +54,7 @@ document.currentScript.__tanukiRegister(function(require){
         const detailSupported=!!preference&&codex&&prefs.verbosityModels?.includes(current?.model);
         const detailChoices=['default','low','medium','high'],detailValue=detailChoices.includes(prefs.outputVerbosity)?prefs.outputVerbosity:'default';
         const disabled=!!locked||!available||busy||state.status==='selecting',preferenceDisabled=disabled||modelBlocked||prefs.status!=='ready'||prefs.writable!==true;
-        const defaultSelection=catalog.value?.default;
+        const defaultSelection=modelPolicy.defaultSelection||catalog.value?.default;
         const resetAvailable=defaultSelection&&groups.some(group=>group.id===defaultSelection.provider&&group.models.some(model=>model.id===defaultSelection.model&&!model.tanukiDisabled));
         React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;operation.current=false;};},[]);
         React.useEffect(()=>{if(available)void directory.load().catch(()=>{});},[directory,available]);
@@ -57,12 +72,13 @@ document.currentScript.__tanukiRegister(function(require){
             // keeping the popup before the native voice/send controls.
             const right=controls.current?.getBoundingClientRect().right??anchor.right;
             const left=Math.max(8,Math.min(right-box.offsetWidth,window.innerWidth-box.offsetWidth-8));
-            const top=Math.max(8,Math.min(anchor.top-box.offsetHeight-8,window.innerHeight-box.offsetHeight-8));
+            const safeTop=document.documentElement.hasAttribute('data-fullscreen')?8:8+(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-top-clearance'))||(document.documentElement.dataset.platform==='darwin'?48:0));
+            const top=Math.max(safeTop,Math.min(anchor.top-box.offsetHeight-8,window.innerHeight-box.offsetHeight-8));
             setPosition(old=>old.left===left&&old.top===top?old:{left,top});
             const list=options.current;if(list){
               const height=list.offsetHeight,width=list.offsetWidth;
-              const y=top>=height+16?top-height-6:Math.min(window.innerHeight-height-8,top+box.offsetHeight+6);
-              const next={left:Math.max(8,Math.min(left,window.innerWidth-width-8)),top:Math.max(8,y)};
+              const y=top-height-6>=safeTop?top-height-6:Math.min(window.innerHeight-height-8,top+box.offsetHeight+6);
+              const next={left:Math.max(8,Math.min(left,window.innerWidth-width-8)),top:Math.max(safeTop,y)};
               setOptionPosition(old=>old.left===next.left&&old.top===next.top?old:next);
             }
           };
@@ -101,6 +117,7 @@ document.currentScript.__tanukiRegister(function(require){
           await select({...defaultSelection});
           if(!alive||!mounted.current)return;
           if(preference){const latest=preference.getSnapshot();if(latest.speedMode!=='standard'||latest.outputVerbosity!=='default')await setPreferences({speedMode:'standard',outputVerbosity:'default'});}
+          if(gateway)await gateway.set(sessionId,defaultSelection.provider,defaultSelection.model,'inherit');
         });}
         function keydown(event){
           if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(pane)setPane(null);else close();return;}
@@ -122,7 +139,7 @@ document.currentScript.__tanukiRegister(function(require){
           h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-reset',disabled:disabled||!resetAvailable||(!!preference&&(prefs.status!=='ready'||prefs.writable!==true)),title:t('reset'),'aria-label':t('reset'),onClick:reset},h(Icon,{name:'reset'}))),
           open?createPortal(h('div',{ref:popup,id,role:'dialog','aria-label':t('title'),'aria-busy':busy||state.status==='selecting',className:'tanuki-model-popup',style:position,onKeyDown:keydown},
             h('div',{className:'tanuki-model-card'},
-              h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-speed','data-fast':fast,style:{visibility:speedSupported?'visible':'hidden'},disabled:preferenceDisabled||!speedSupported,title:t(fast?'fastHint':'standardHint'),'aria-label':t('speed'),'aria-pressed':fast,onClick:()=>void run(()=>setPreferences({speedMode:fast?'standard':fastSupported?'fast':'ultrafast'}))},h(Icon,{name:'bolt'})),
+              gateway?h(gateway.Control,{sessionId,current,locked:disabled||modelBlocked,variant:'card',fallback:h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-speed','data-fast':fast,style:{visibility:speedSupported?'visible':'hidden'},disabled:preferenceDisabled||!speedSupported,title:t(fast?'fastHint':'standardHint'),'aria-label':t('speed'),'aria-pressed':fast,onClick:()=>void run(()=>setPreferences({speedMode:fast?'standard':fastSupported?'fast':'ultrafast'}))},h(Icon,{name:'bolt'}))}):h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-speed','data-fast':fast,style:{visibility:speedSupported?'visible':'hidden'},disabled:preferenceDisabled||!speedSupported,title:t(fast?'fastHint':'standardHint'),'aria-label':t('speed'),'aria-pressed':fast,onClick:()=>void run(()=>setPreferences({speedMode:fast?'standard':fastSupported?'fast':'ultrafast'}))},h(Icon,{name:'bolt'})),
               h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-main','data-tanuki-model-disabled':modelBlocked,title:modelBlocked?t('modelDisabled'):undefined,'aria-haspopup':'menu','aria-expanded':pane==='models',onClick:()=>{setQuery('');setPane(value=>value==='models'?null:'models');}},h('span',{className:'tanuki-model-name'},h('span',null,modelLabel),h(Icon,{name:'chevron'})),h('span',{className:'tanuki-model-effort',style:{visibility:efforts.length?'visible':'hidden'}},effortLabel||t('default'))),
               h('button',{...buttonProps,className:'tanuki-model-hit tanuki-model-detail',style:{visibility:detailSupported?'visible':'hidden'},disabled:preferenceDisabled||!detailSupported,title:t('detail')+' · '+t('detail_'+detailValue),'aria-label':t('detail')+' · '+t('detail_'+detailValue),'aria-haspopup':'menu','aria-expanded':pane==='detail',onClick:()=>setPane(value=>value==='detail'?null:'detail')},h(Icon,{name:'detail'})),
               h('div',{className:'tanuki-model-slider',style:{visibility:efforts.length?'visible':'hidden','--tanuki-progress':(efforts.length>1?displayIndex/(efforts.length-1)*100:0)+'%'}},
@@ -134,9 +151,11 @@ document.currentScript.__tanukiRegister(function(require){
                 !visibleGroups.some(group=>group.models.some(model=>(model.name+' '+model.id).toLowerCase().includes(query.toLowerCase())))?h('p',null,t('noModels')):null):
               detailChoices.map(value=>h('button',{key:value,type:'button',role:'menuitemradio','aria-checked':detailValue===value,disabled:preferenceDisabled,onClick:()=>{void run(()=>setPreferences({outputVerbosity:value}));}},h('span',null,t('detail_'+value)),detailValue===value?'✓':null))):null),document.body):null);
       }
+      // The native entry owns the shared label slot. This replacement renders
+      // its own label and must not redeclare that already-owned child slot.
       scope.slots.inject(SEAT,()=>scope.slots.register({name:SEAT,id:'tanuki-composer-model',priority:-1000,locale:NS,inject:sessionId=>({sessionId,directory:models.directoryFor(sessionId),available:sessions.subagentAddress(sessionId)===undefined})},ModelControl));
     });
-    ctx.effect(()=>()=>{alive=false;});
+    ctx.effect(()=>()=>{alive=false;policyListeners.clear();policySnapshot={policy:noPolicy};});
   }
   return {name:'tanuki-composer-model',inject:['slots','locale'],apply};
 });

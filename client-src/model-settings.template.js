@@ -44,7 +44,8 @@ document.currentScript.__tanukiRegister(function(require){
         }catch{if(alive&&state.alive)setError(true);}
         finally{if(alive&&state.alive){state.busy=false;setBusy(null);state.refresh();}}
       }
-      const disabled=new Set((data?.disabled||[]).map(pair=>key(...pair))),groups=(data?.groups||[]).map(group=>({...group,models:[...group.models]}));
+      const disabled=new Set((data?.disabled||[]).map(pair=>key(...pair))),disabledProviders=new Set(data?.disabledProviders||[]),groups=(data?.groups||[]).map(group=>({...group,models:[...group.models]}));
+      for(const provider of disabledProviders)if(!groups.some(group=>group.id===provider))groups.push({id:provider,name:provider,models:[]});
       // A removed/unavailable provider must never strand a saved disabled switch.
       for(const [provider,model] of data?.disabled||[]){
         let group=groups.find(item=>item.id===provider);
@@ -60,15 +61,16 @@ document.currentScript.__tanukiRegister(function(require){
         count>5?h('input',{className:'tanuki-model-policy-search',type:'search',value:query,'aria-label':t('search'),placeholder:t('search'),onChange:event=>setQuery(event.target.value)}):null,
         ...groups.map(group=>{
           const models=group.models.filter(model=>(group.name+' '+group.id+' '+model.name+' '+model.id).toLocaleLowerCase().includes(search));
-          if(!models.length)return null;
-          return h('section',{key:group.id,className:'tanuki-model-policy-provider','aria-label':group.name},h('h4',null,group.name),
-            ...models.map(model=>h('div',{key:model.id,className:'tanuki-model-policy-row','data-disabled':disabled.has(key(group.id,model.id))},
+          const providerDisabled=disabledProviders.has(group.id);
+          if(!models.length&&!(providerDisabled&&(group.name+' '+group.id).toLocaleLowerCase().includes(search)))return null;
+          return h('section',{key:group.id,className:'tanuki-model-policy-provider','aria-label':group.name},h('h4',null,group.name,providerDisabled?h('button',{type:'button',className:'tanuki-provider-restore',disabled:busy!==null,onClick:()=>void toggle(group.id,undefined,true)},t('restoreProvider')):null),
+            ...models.map(model=>h('div',{key:model.id,className:'tanuki-model-policy-row','data-disabled':providerDisabled||disabled.has(key(group.id,model.id))},
               h('div',{className:'tanuki-model-policy-identity'},h('span',null,model.name),h('small',null,model.id),model.missing?h('small',null,t('missing')):null),
-              h(Switch,{checked:!disabled.has(key(group.id,model.id)),label:t('toggle')+' '+model.name,disabled:busy!==null,onChange:enabled=>void toggle(group.id,model.id,enabled)}))));
+              h(Switch,{checked:!providerDisabled&&!disabled.has(key(group.id,model.id)),label:t('toggle')+' '+model.name,disabled:busy!==null||providerDisabled,onChange:enabled=>void toggle(group.id,model.id,enabled)}))));
         }),
         data?.failures?.length?h('p',{className:'tanuki-model-policy-hint'},t('partial')+' '+data.failures.map(item=>item.name).join('、')):null,
-        data&&!count?h('p',null,t('empty')):null,
-        search&&!groups.some(group=>group.models.some(model=>(group.name+' '+group.id+' '+model.name+' '+model.id).toLocaleLowerCase().includes(search)))?h('p',null,t('noMatch')):null);
+        data&&!count&&!disabledProviders.size?h('p',null,t('empty')):null,
+        search&&!groups.some(group=>disabledProviders.has(group.id)&&(group.name+' '+group.id).toLocaleLowerCase().includes(search)||group.models.some(model=>(group.name+' '+group.id+' '+model.name+' '+model.id).toLocaleLowerCase().includes(search)))?h('p',null,t('noMatch')):null);
     }
     ready(Models);
     ctx.effect(()=>()=>{alive=false;for(const controller of requests)controller.abort();requests.clear();});

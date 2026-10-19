@@ -28,7 +28,7 @@
     "settings": "设置",
     "settingsHint": "设置（右键打开账号菜单）",
     "restart": "重启 DSH",
-    "restartHold": "长按约2秒强制重启 DSH；松开进度回退，再按接续。请确认插件安装和任务均已完成。",
+    "restartHold": "长按1秒强制重启 DSH；松开进度回退，再按接续。关闭后在后台准备重开，请确认插件安装和任务均已完成。",
     "restarting": "正在重启 DSH…",
     "failed": "操作未能完成",
     "unavailable": "当前功能尚未准备好，请稍后重试。",
@@ -43,7 +43,8 @@
     "widthSaveFailed": "工作区宽度暂时无法保存；本次调整在当前页面有效。",
     "menu_skills": "技能",
     "skillsUnavailable": "请先安装并启用 Skills Manager，准备好技能设置页面后可显示。",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "restartUnsupported": "一键强制重启目前仅支持 Windows；macOS 请使用 DSH 原生退出并重新打开。"
   },
   "en": {
     "toolbox": "Toolbox settings",
@@ -74,7 +75,7 @@
     "settings": "Settings",
     "settingsHint": "Settings (right-click for account menu)",
     "restart": "Restart DSH",
-    "restartHold": "Hold about 2 seconds to force restart DSH. Release to drain; hold again to resume. Finish installs and tasks first.",
+    "restartHold": "Hold for 1 second to force restart DSH. Release to drain; hold again to resume. Preparation continues in the background after closing. Finish installs and tasks first.",
     "restarting": "Restarting DSH…",
     "failed": "Action could not complete",
     "unavailable": "This feature is not ready yet. Please try again shortly.",
@@ -89,6 +90,7 @@
     "widthSaveFailed": "Could not save workspace width. This adjustment still applies to this page.",
     "menu_skills": "Skills",
     "skillsUnavailable": "Install and enable Skills Manager to make its settings page available.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "restartUnsupported": "Force restart currently supports Windows only. On macOS, quit DSH normally and reopen it."
   }
 }

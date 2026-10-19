@@ -2,6 +2,7 @@
 .tanuki-model-settings>header{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .tanuki-model-settings h3{font-size:16px;margin:0;font-weight:600}
 .tanuki-model-settings h4{font-size:14px;font-weight:500;margin:18px 0 6px;color:var(--dsw-alias-label-secondary)}
+.tanuki-model-policy-provider h4{display:flex;align-items:center;justify-content:space-between;gap:12px}.tanuki-provider-restore{font:inherit;font-size:12px;padding:4px 8px;background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;color:var(--dsw-alias-label-secondary);cursor:pointer}.tanuki-provider-restore:disabled{opacity:.5;cursor:default}
 .tanuki-model-settings>header button{font:inherit;font-size:13px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);padding:5px 10px;cursor:pointer}
 .tanuki-model-settings>header button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
 .tanuki-model-settings>header button:disabled{opacity:.5;cursor:default}

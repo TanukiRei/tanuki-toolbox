@@ -3,3 +3,5 @@
 .tanuki-file-menu button{display:block;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:6px;padding:8px 9px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;}
 .tanuki-file-menu button:hover:not(:disabled),.tanuki-file-menu button:focus-visible{outline:none;background:var(--dsw-alias-interactive-bg-hover,#ffffff16);}
 .tanuki-file-menu button:disabled{opacity:.4;cursor:default;}
+
+html[data-platform=darwin]:not([data-fullscreen]) .tanuki-file-menu{max-height:calc(100vh - var(--dsh-frame-top-clearance,48px) - 16px);}

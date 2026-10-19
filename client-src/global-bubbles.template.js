@@ -51,12 +51,13 @@ document.currentScript.__tanukiRegister(function(require){
           frame=0;if(stopped||!alive)return;
           const candidates=new Map();
           for(const element of document.querySelectorAll('[data-tanuki-bubble-target]')){
-            const target=element.getAttribute('data-tanuki-bubble-target');if(!['workspace','plugins','plugin-updates'].includes(target))continue;
+            const target=element.getAttribute('data-tanuki-bubble-target');if(!['workspace','plugins','plugin-updates','settings'].includes(target))continue;
             const anchor=element.closest('button')||element;candidates.set(anchor,target);
           }
           // Native sidebar offers no separate badge slot. Resolve its declared label
           // instead of guessing translated text or replacing its React-owned icon.
           const entries=ctx.slots.entriesOfSlot?.('sidebar.panellist')||[];
+          for(const slot of document.querySelectorAll('[data-slot="settings.trigger"]')){const button=slot.closest('button');if(button)candidates.set(button,'settings');}
           const option=entries.find(entry=>entry.options?.id==='plugins')?.options;
           const label=typeof option?.label==='function'?option.label():option?.label;
           if(typeof label==='string')for(const slot of document.querySelectorAll('[data-slot="sidebar.panellist"]')){

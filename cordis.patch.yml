@@ -7,6 +7,8 @@
       name: dsh-local-plugin-center/home
     - id: tanuki-composer
       name: dsh-local-plugin-center/composer
+    - id: tanuki-settings-enhancements
+      name: dsh-local-plugin-center/settings-enhancements
     - id: tanuki-dynamic-island
       name: dsh-local-plugin-center/dynamic-island
     - id: tanuki-plugin-center

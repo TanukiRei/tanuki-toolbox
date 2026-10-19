@@ -10,7 +10,8 @@
     "missing": "提供方当前未提供此模型；保留已保存的开关。",
     "partial": "以下提供方的模型暂时无法读取：",
     "empty": "当前没有可管理的模型。请先配置模型提供方。",
-    "noMatch": "没有匹配的模型。"
+    "noMatch": "没有匹配的模型。",
+    "restoreProvider": "重新启用模型服务"
   },
   "en": {
     "title": "Enabled models",
@@ -23,6 +24,7 @@
     "missing": "Not currently advertised by its provider; the saved switch is retained.",
     "partial": "Models are temporarily unavailable for:",
     "empty": "No models to manage. Configure a provider first.",
-    "noMatch": "No matching models."
+    "noMatch": "No matching models.",
+    "restoreProvider": "Enable provider again"
   }
 }

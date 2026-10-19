@@ -1,1 +1,6 @@
-{"meta":{"title":"黎猫工具箱","description":"集成了各种小组件，让DeepSeek Harness更好用。持续扩展中。"}}
+{
+  "meta": {
+    "title": "黎猫工具箱",
+    "description": "为 DeepSeek Harness 提供快捷栏、起始页、对话框与模型设置优化、消息通知、插件管理和 Windows 启动保护。"
+  }
+}

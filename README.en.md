@@ -1,12 +1,12 @@
-# Tanuki Toolbox
+# dsh-tanuki-toolbox · Tanuki Toolbox
 
 [简体中文](README.md) · **English**
 
 <img src="assets/toolbox.png" width="144" alt="Tanuki Toolbox">
 
-A growing collection of small improvements that make **DeepSeek Harness (DSH)** easier to use. Enable the components you need, customize your workspace, and keep plugin management close at hand.
+A collection of independently switchable UI and interaction enhancements for **DeepSeek Harness (DSH)**: an editable quick bar, start page, composer controls, model settings, notifications, and plugin management, plus protected startup on Windows. Supports light/dark themes and follows DSH's Chinese or English UI language.
 
-This is a community plugin, not an official DeepSeek product.
+Current version: **0.7.9**. Includes redesigned model settings, compatible gateway speed controls, and a one-second hold for Windows background protected restart. This is a community plugin, not an official DeepSeek product.
 
 ## Install
 
@@ -30,18 +30,31 @@ To update an existing installation, install over it. Keep the package name `dsh-
 | **Quick Bar** | Provides editable navigation for Home, conversations, workspaces, scheduled tasks, skills when available, plugins, settings, and other shortcuts. Supports ordering, visibility, and a collapsible, resizable workspace sidebar. |
 | **Start Page** | Displays a calendar, conversation/task totals, recorded token usage, recent activity, recent conversations, live tasks, and supported account allowance information. |
 | **Composer Enhancements** | Adds time statistics, a compact model/effort/speed/output-detail selector, and file context-menu actions. Each subfeature has its own switch. |
+| **Settings Enhancements** | Offers a compact Models page with provider/model switches, six-dot grips with pointer-captured dragging and white insertion indicators (including the original row), default model selection, and separate provider/model editing dialogs. |
 | **Message Center** | Provides top-of-app Dynamic Island banners, system notifications, persistent status bubbles, and notification sounds. |
 | **Plugin Center** | Combines plugin management with optional [Plugin Market](https://github.com/dsh-market/dsh-market) integration, update indicators, custom names, repository links, and recommendations. |
+
+On Windows, hold Restart for **1 second**. A one-shot background worker checks the current instance and reopen entry, closes DSH, and then uses the existing protected launcher to prepare and reopen it. There is no extra fixed delay or automatic retry. Finish tasks and plugin installations first.
 
 Plugin Center includes a search field for custom and original plugin names. Official cards have consistent sizes, with stable plugins above a divider and experimental plugins below. Update checks display text inside Plugin Center rather than a blue progress bubble; actual update/install operations retain their progress indicators.
 
 Plugin Center works without Plugin Market. Install and enable `dshmarket` to add its market tab and supported online update features.
 
+Settings shows the DSH version beside its title. An **Update system** button beside **Open config file** opens the native updater when an update is available; otherwise it displays a disabled **Up to date** status. The Settings update bubble follows Message Center’s **System updates** category and global bubble switch.
+
+Provider switches preserve credentials, model configuration, and individual model restrictions. Disabled providers disappear from model selection and cannot receive new calls through DSH. A previously selected disabled model remains grey and blocks sending until another model is selected. Saved restrictions remain enforceable when Settings Enhancements is disabled; enable its Models view to change them. Reasoning levels use DSH’s own translations.
+
+The Models header selects the default model and reasoning level used by the composer’s Reset button. Drag provider or model handles to reorder them, or use Alt + arrow keys; the composer follows the saved order. Disabled rows keep their positions. Inline fields and switches save automatically, while provider credentials and detailed model settings use Save/Cancel dialogs with unsaved-change prompts. The former duplicate model switches footer is removed.
+
+After its first opening, Settings hides with an animation instead of unmounting its current page. Reopening resumes that page and its state. The hidden window releases its focus trap, and the Models page pauses its own reads and subscriptions. This is default Toolbox behavior, with no extra component switch.
+
+Choosing a default in Models pins it separately and also updates the native DSH configuration. Later session-level model or effort changes stay local to that session. New sessions and Reset use the pinned default.
+
 The Start Page reports recorded data, rather than estimating unrecorded usage. Missing or partial history is identified in the UI. Account allowance is available through a supported enabled provider integration, such as a signed-in Codex Subscription plugin.
 
 ## Default toolbox behavior: model switches
 
-Open **Settings → Models → Enabled models** to enable or disable each provider/model pair. This is default toolbox behavior, independent of the optional components.
+Enable **Settings Enhancements → Models**, then use the switches beside providers and models in **Settings → Models**. Enforcement of saved restrictions is default toolbox behavior, independent of the optional UI component.
 
 - Disabled models are hidden from DSH's model catalogs and refused before model request dispatch.
 - If a conversation already uses a disabled model, its selection remains as a grey, non-selectable placeholder. Sending is blocked with **“This model is disabled”** and the draft is preserved.
@@ -57,7 +70,7 @@ Open **Settings → Models → Enabled models** to enable or disable each provid
 | --- | --- |
 | **Plugins** | Plugin updates available, update errors, updates in progress, and related plugin activity. |
 | **Tasks** | Tasks in progress, completed, awaiting input, failed, and related task activity. |
-| **Updates** | Updates to the DeepSeek Harness application itself. |
+| **System updates** | Updates to the DeepSeek Harness application itself. |
 
 Dynamic Island banners enter from above the application and remain for eight seconds each, without hover/focus pauses. The newest banner pushes the previous one down. At most two live banners are retained; a third pushes out the oldest with a short downward fade, without a hidden backlog.
 
@@ -89,11 +102,13 @@ Each actual plugin-update check also asks the existing coordinator to recheck co
 
 The default model policy and lightweight settings/coordinator remain active while the toolbox is enabled. JavaScript engines may cache code that was previously loaded; immediate zero memory usage is not guaranteed. See [LIFECYCLE.txt](LIFECYCLE.txt) for implementation details.
 
+The native restart worker is rebuilt with `scripts/build-restart-worker.ps1`. Its source, executable and hash manifest are delivered together; the regular build checks them without running a restart.
+
 ## Compatibility and protected startup
 
 The declared host range is **DSH `>=0.2.0-rc.2 <0.3.0`**. UI integrations may need adapting after DSH changes its page structure.
 
-Windows shortcut protection and sign-in startup are platform-specific. Startup Guard checks **explicitly declared version incompatibility**; it cannot guarantee prevention of undeclared runtime crashes. Launching the original executable directly bypasses the shortcut launcher. Cached Windows pins may require repinning. Manually modified shortcuts are preserved rather than overwritten blindly.
+Windows shortcut protection, sign-in startup and force restart are platform-specific; unsupported controls are disabled on macOS. Runtime declared-version compatibility checking remains available. macOS layout respects window/fullscreen titlebar space, and notification activation uses Launch Services. Startup Guard checks **explicitly declared version incompatibility**; it cannot guarantee prevention of undeclared runtime crashes. Launching the original executable directly bypasses the shortcut launcher. Cached Windows pins may require repinning. Manually modified shortcuts are preserved rather than overwritten blindly.
 
 ## Updates and development
 
@@ -112,3 +127,12 @@ See [README.txt](README.txt) for the release history, [VERSIONING.txt](VERSIONIN
 ## License
 
 [MIT](LICENSE)
+
+
+## Gateway speed integration
+
+With **Settings Enhancements → Models** enabled, compatible OpenAI Chat Completions providers can read `capabilities.service_tiers` from `{baseURL}/models`. Only directly routed models explicitly advertising `priority` or `fast` expose speed controls. Provider IDs and full model IDs are preserved. Use **Refresh speed capabilities** in an expanded provider, or **Fetch available models**, to refresh the catalog. The compact card’s lightning button directly toggles **Standard / Fast**, sending `default` or `priority`. A matching control is used beside the native selector when the card is disabled. Initial/reset selections still inherit the gateway by omitting the tier; the first click explicitly requests Fast. Preferences are isolated by session, provider and model, and captured per task turn for retries, tool continuations and inherited child tasks.
+
+Under the agreed gateway contract, enforced server speed policies take precedence. With the server policy set to default, the DSH-requested tier applies. A solid blue lightning icon represents the Fast request and uses the same color as reasoning effort; actual execution follows the API response.
+
+The lightning button’s hover text reports actual gateway SSE confirmation, keeping waiting/unconfirmed distinct from confirmed Fast and preserving failure/interruption status. Credentials stay in the DSH host. Capability failures preserve existing configuration and offer an explicit refresh. There is no automatic account/model fallback, global fetch patch, or background capability poll. This integration has received build/static checks only, not live gateway or functional acceptance.

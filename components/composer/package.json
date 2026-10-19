@@ -1,6 +1,6 @@
 {
   "name": "tanuki-composer",
-  "version": "0.6.22",
+  "version": "0.7.9",
   "type": "module",
   "description": "Improve the layout and feature display of conversation pages.",
   "icon": "./icon.svg"

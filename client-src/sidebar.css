@@ -121,3 +121,5 @@ body:not([data-ds-dark-theme]) .tanuki-rail-home-mark>:not(.tanuki-rail-home-spo
 .tanuki-rail-menu-item .tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
 .tanuki-rail-menu-item>svg,.tanuki-rail-menu-item>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
 .tanuki-rail-menu-item[data-unavailable=true]>.tanuki-rail-menu-label,.tanuki-rail-menu-item[data-unavailable=true]>svg{opacity:.4;}
+
+html[data-platform=darwin]:not([data-fullscreen]) .tanuki-rail-menu{max-height:calc(100vh - var(--dsh-frame-top-clearance,48px) - 16px);}

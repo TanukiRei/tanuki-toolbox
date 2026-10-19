@@ -1,5 +1,5 @@
 .tanuki-home{height:100%;width:100%;min-width:0;overflow:auto;box-sizing:border-box;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font:inherit;container-type:inline-size;container-name:tanuki-home;}
-.tanuki-home-inner{max-width:1232px;padding:clamp(20px,3.5vw,44px);margin:0 auto;box-sizing:border-box;}
+.tanuki-home-inner{--tanuki-home-top:clamp(20px,3.5vw,44px);max-width:1232px;padding:clamp(20px,3.5vw,44px);margin:0 auto;box-sizing:border-box;}
 .tanuki-home svg{width:20px;height:20px;flex:none;}
 .tanuki-home button{font:inherit;cursor:pointer;color:inherit;}
 .tanuki-home button:disabled{opacity:.4;cursor:default;}
@@ -69,5 +69,8 @@
 .tanuki-home-all-clear>p{font-size:12px;color:var(--dsw-alias-label-tertiary);line-height:1.7;margin:0;}
 .tanuki-home-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:10px;line-height:1.8;color:var(--dsw-alias-label-tertiary);margin:20px 0 0;}
 @container tanuki-home (max-width:900px){.tanuki-home-calendar{gap:16px;padding:20px;}.tanuki-home-week{padding-left:16px;}.tanuki-home-week>div span{width:22px;height:22px;}.tanuki-home-top,.tanuki-home-columns{grid-template-columns:1fr;}.tanuki-home-stats{grid-template-columns:repeat(2,minmax(0,1fr));}.tanuki-home-calendar{justify-content:space-between;}.tanuki-home-date-main{min-width:120px;}.tanuki-home-launch{padding:20px;}}
-@container tanuki-home (max-width:420px){.tanuki-home-inner{padding:20px 14px;}.tanuki-home h1{font-size:24px;}.tanuki-home-date-main{min-width:84px;}.tanuki-home-calendar{gap:10px;padding:16px;}.tanuki-home-week{padding-left:10px;}.tanuki-home-date-main>strong{font-size:50px;}.tanuki-home-shortcuts{grid-template-columns:1fr;}.tanuki-home-stat{padding:14px;}.tanuki-home-stat>strong{font-size:26px;}.tanuki-home-chart{gap:7px;}.tanuki-home-chart-day>small{font-size:9px;}}
+@container tanuki-home (max-width:420px){.tanuki-home-inner{--tanuki-home-top:20px;padding:20px 14px;}.tanuki-home h1{font-size:24px;}.tanuki-home-date-main{min-width:84px;}.tanuki-home-calendar{gap:10px;padding:16px;}.tanuki-home-week{padding-left:10px;}.tanuki-home-date-main>strong{font-size:50px;}.tanuki-home-shortcuts{grid-template-columns:1fr;}.tanuki-home-stat{padding:14px;}.tanuki-home-stat>strong{font-size:26px;}.tanuki-home-chart{gap:7px;}.tanuki-home-chart-day>small{font-size:9px;}}
 @media(prefers-reduced-motion:reduce){.tanuki-home-shortcuts button{transition:none;}}
+
+html[data-platform=darwin]:not([data-fullscreen]) .tanuki-home-inner{padding-top:calc(var(--tanuki-home-top) + var(--dsh-frame-top-clearance,48px));}
+html[data-platform=darwin]:not([data-fullscreen]) [data-tanuki-shell] .tanuki-home-inner{padding-top:var(--tanuki-home-top);}

@@ -14,7 +14,8 @@
     "shortcutDetails": "未处理的入口",
     "shortcutChanged": "已被手动修改，保留现状",
     "shortcutDenied": "无法写入此入口",
-    "shortcutBackupMissing": "原备份缺失或已改变"
+    "shortcutBackupMissing": "原备份缺失或已改变",
+    "shortcutUnsupported": "快捷方式接管目前仅支持 Windows。macOS 不会改写 Dock 或登录项；启动保护组件仍会检查运行中明确声明的版本不兼容插件。"
   },
   "en": {
     "shortcutTitle": "Shortcut protection",
@@ -31,6 +32,7 @@
     "shortcutDetails": "Unprocessed shortcuts",
     "shortcutChanged": "Manually modified; left unchanged",
     "shortcutDenied": "Unable to write this shortcut",
-    "shortcutBackupMissing": "Original backup is missing or changed"
+    "shortcutBackupMissing": "Original backup is missing or changed",
+    "shortcutUnsupported": "Shortcut management currently supports Windows only. On macOS it does not modify Dock entries or login items; Startup Guard can still check explicitly declared plugin version incompatibilities in the running host."
   }
 }

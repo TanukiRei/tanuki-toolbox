@@ -3,7 +3,8 @@ document.currentScript.__tanukiRegister(function(require){
   const key=value=>JSON.stringify([value?.provider,value?.model]);
   function apply(ctx){
     let alive=true,revision=0,flight=null,epoch=0,timer;
-    let snapshot=Object.freeze({disabled:new Set(),ready:false});
+    let snapshot=Object.freeze({disabled:new Set(),disabledProviders:new Set(),providerOrder:[],modelOrder:{},defaultSelection:null,ready:false});
+    const ordered=(rows,ids,getId)=>{const rank=new Map(ids.map((id,index)=>[id,index]));return rows.map((row,index)=>({row,index})).sort((a,b)=>(rank.get(getId(a.row))??ids.length+a.index)-(rank.get(getId(b.row))??ids.length+b.index)).map(item=>item.row);};
     const listeners=new Set(),records=new Map();
     const toolboxLocale=(function createToolboxLocale(ctx, namespace, dictionaries) {
   const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
@@ -39,7 +40,7 @@ document.currentScript.__tanukiRegister(function(require){
     const style=document.createElement('style');document.head.appendChild(style);
     function styleRules(){
       const rules=[".tanuki-disabled-model-notice{display:block;position:absolute;right:12px;bottom:7px;max-width:calc(100% - 24px);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);pointer-events:none}\n[data-composer-card]:has([data-tanuki-disabled-model]) [data-slot=\"conversation.input.model\"] button{color:var(--dsw-alias-label-tertiary)}\n.tanuki-model-trigger[data-tanuki-model-disabled=true],.tanuki-model-main[data-tanuki-model-disabled=true]{color:var(--dsw-alias-label-tertiary)!important}\n.tanuki-model-options button[data-tanuki-model-disabled=true]{color:var(--dsw-alias-label-tertiary);cursor:not-allowed;opacity:.6}\n.tanuki-model-options button[data-tanuki-model-disabled=true] small{margin-left:8px;font-size:11px}\n"];
-      const active=new Set([...records.values()].map(record=>key(record.selection())).filter(value=>snapshot.disabled.has(value)));
+      const active=new Set([...records.values()].map(record=>record.selection()).filter(isDisabled).map(key));
       for(const value of active){const [provider,model]=JSON.parse(value),match='[data-provider-id="'+CSS.escape(provider)+'"][data-model-id="'+CSS.escape(model)+'"]';
         rules.push('button:has('+match+'){color:var(--dsw-alias-label-tertiary)!important}button[role="menuitemradio"]:has('+match+'){cursor:not-allowed;pointer-events:none;opacity:.6}');
       }
@@ -47,13 +48,15 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function accept(value){
       if(!alive||value?.schema!==1||!Array.isArray(value.disabled)||value.disabled.length>8192||!value.disabled.every(pair=>Array.isArray(pair)&&pair.length===2&&pair.every(id=>typeof id==='string'&&id.length>0&&id.length<=1024)))return;
-      const disabled=new Set(value.disabled.map(pair=>JSON.stringify(pair)));
-      if(snapshot.ready&&disabled.size===snapshot.disabled.size&&[...disabled].every(value=>snapshot.disabled.has(value)))return;
-      snapshot=Object.freeze({ready:true,disabled});++revision;styleRules();
+      if(value.disabledProviders!==undefined&&(!Array.isArray(value.disabledProviders)||!value.disabledProviders.every(id=>typeof id==='string'&&id.length>0&&id.length<=1024)))return;
+      const disabled=new Set(value.disabled.map(pair=>JSON.stringify(pair))),disabledProviders=new Set(value.disabledProviders||[]);
+      const providerOrder=Array.isArray(value.providerOrder)?value.providerOrder:[],modelOrder=value.modelOrder&&typeof value.modelOrder==='object'?value.modelOrder:{},defaultSelection=value.defaultSelection||null;
+      if(snapshot.ready&&disabled.size===snapshot.disabled.size&&[...disabled].every(value=>snapshot.disabled.has(value))&&disabledProviders.size===snapshot.disabledProviders.size&&[...disabledProviders].every(value=>snapshot.disabledProviders.has(value))&&JSON.stringify([providerOrder,modelOrder,defaultSelection])===JSON.stringify([snapshot.providerOrder,snapshot.modelOrder,snapshot.defaultSelection]))return;
+      snapshot=Object.freeze({ready:true,disabled,disabledProviders,providerOrder,modelOrder,defaultSelection});++revision;styleRules();
       for(const record of records.values())record.notify();
       for(const listener of [...listeners])listener();
     }
-    function isDisabled(selection){return snapshot.disabled.has(key(selection));}
+    function isDisabled(selection){return snapshot.disabledProviders.has(selection?.provider)||snapshot.disabled.has(key(selection));}
     function retain(directory){
       let record=records.get(directory);
       if(record){++record.users;return()=>release(directory,record);}
@@ -67,7 +70,7 @@ document.currentScript.__tanukiRegister(function(require){
         const current=raw.current,choice=raw.groups?.find(group=>group.id===current?.provider)?.models.find(model=>model.id===current?.model);
         if(choice&&!choice.tanukiDisabled)lastChoice={selection:key(current),model:choice};
         const blocked=isDisabled(current);
-        const groups=(raw.groups||[]).map(group=>({...group,models:group.models.filter(model=>!isDisabled({provider:group.id,model:model.id}))})).filter(group=>group.models.length);
+        const groups=ordered((raw.groups||[]).map(group=>({...group,models:ordered(group.models.filter(model=>!isDisabled({provider:group.id,model:model.id})),snapshot.modelOrder[group.id]||[],model=>model.id)})).filter(group=>group.models.length),snapshot.providerOrder,group=>group.id);
         if(blocked){
           let group=groups.find(item=>item.id===current.provider);
           if(!group){group={id:current.provider,name:raw.groups?.find(item=>item.id===current.provider)?.name||current.provider,models:[]};groups.push(group);}
@@ -109,7 +112,7 @@ document.currentScript.__tanukiRegister(function(require){
     const focus=()=>{if(document.visibilityState==='visible')schedule();};
     const off=ctx.remote.$on('llm/adapters-updated',schedule),reset=ctx.on('connection/reset',schedule);
     window.addEventListener('tanuki:model-policy-changed',changed);window.addEventListener('focus',focus);void refresh();styleRules();
-    ctx.inject(['modelDirectories','conversation'],scope=>{
+    ctx.inject(['modelDirectories','conversation','sessions','remote','remote.session'],scope=>{
       const models=scope.get('modelDirectories'),conversation=scope.get('conversation');
       function Guard({sessionId,directory}){
         React.useSyncExternalStore(policy.subscribe,policy.getSnapshot);

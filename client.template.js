@@ -3,7 +3,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
   const React=require('react'),h=React.createElement,VERSION=__VERSION__;
   const SELF='dsh-local-plugin-center',NS='tanukiCore';
   function apply(ctx){
-    let disposed=false,flight=null,again=false,timer;
+    let disposed=false,flight=null,again=false,timer,assetVersion=VERSION;
     const entries=new Map(),loads=new Set();
     const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,{
       zh:{loading:'正在加载…',failed:'加载失败，请重试',retry:'重试',startFailed:'组件未能启动',description:'集成了各种小组件，让DeepSeek Harness更好用。持续扩展中。',guardSummary:'开启时接管 DSH 快捷方式，关闭时还原。'},
@@ -27,9 +27,14 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       if(signal?.aborted)controller.abort();
       const timeout=setTimeout(cancel,20000);
       try{
-        const url=new URL('tanuki-toolbox/assets/'+name+'.js?v='+VERSION,document.baseURI);
+        const url=new URL('tanuki-toolbox/assets/'+name+'.js?v='+assetVersion,document.baseURI);
         const answer=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:controller.signal});
-        if(!answer.ok||answer.headers.get('x-tanuki-version')!==VERSION)throw new Error('Component version unavailable');
+        const servedVersion=answer.headers.get('x-tanuki-version');
+        // The stable coordinator can survive a local package update. Its next
+        // lazy child must use the authenticated server's current assets rather
+        // than rejecting every child until the whole application is reloaded.
+        if(!answer.ok||!/^0\.\d+\.\d+$/.test(servedVersion||''))throw new Error('Component version unavailable');
+        assetVersion=servedVersion;
         const source=await answer.text();
         if(disposed||controller.signal.aborted)throw new DOMException('Cancelled','AbortError');
         const script=document.createElement('script');let module;
@@ -69,7 +74,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       flight=(async()=>{
         const result=await ctx.remote.pluginManager.listPlugins();
         if(disposed||!result.ok)return;
-        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer']){
+        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer','settings-enhancements']){
           const enabled=result.value.some(row=>row.moduleName===SELF+'/'+key&&row.enabled);
           if(enabled)start(key);else stop(key);
         }
@@ -79,6 +84,8 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
     function schedule(){clearTimeout(timer);if(!disposed)timer=setTimeout(()=>void refresh(),100);}
     // Always-on default model policy; independent of all optional components.
     start('model-policy');
+    start('system-settings');
+    start('settings-window');
     const off=ctx.remote.$on('plugin-manager/changed',schedule),offReset=ctx.on('connection/reset',schedule);
     // Reuse update checks as an extra lifecycle audit, without a core idle timer.
     window.addEventListener('tanuki:component-maintenance',schedule);
@@ -118,8 +125,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       return()=>{observer.disconnect();modalObserver.disconnect();off();if(frame!==undefined)cancelAnimationFrame(frame);for(const button of marked)button.removeAttribute('data-tanuki-settings-icon');marked.clear();style.remove();};
     });
     ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'tanuki-toolbox',order:80,label:()=>toolboxLocale.language()==='zh'?'黎猫工具箱':'Tanuki Toolbox',locale:NS},()=>h(LazyView,{moduleName:'toolbox-settings'})));
-    // Default toolbox behavior, not a component. UI loads only inside native Models settings.
-    ctx.slots.inject('settings.models.footer',()=>ctx.slots.register({name:'settings.models.footer',id:'tanuki-model-switches',order:50,locale:NS},()=>h(LazyView,{moduleName:'model-settings'})));
+    // Per-model switches now live beside each model in the optimized Models page.
     ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key:SELF,locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-details'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-startup-guard',locale:NS},props=>h(LazyView,{...props,moduleName:'guard-settings'})));
     ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:SELF+'#tanuki-composer',locale:NS},props=>h(LazyView,{...props,moduleName:'toolbox-settings',view:'composer'})));

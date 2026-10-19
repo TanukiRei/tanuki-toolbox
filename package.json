@@ -1,9 +1,9 @@
 {
   "name": "dsh-local-plugin-center",
-  "version": "0.6.22",
+  "version": "0.7.9",
   "private": true,
   "type": "module",
-  "description": "A growing collection of small components that make DeepSeek Harness easier to use.",
+  "description": "Modular UI enhancements for DeepSeek Harness: quick bar, start page, composer, model settings, notifications, plugin management and Windows startup protection.",
   "icon": "./assets/toolbox.png",
   "main": "./index.js",
   "license": "MIT",
@@ -36,7 +36,10 @@
     "./dynamic-island/locale/*.json": "./components/dynamic-island/locale/*.json",
     "./composer": "./components/composer/index.js",
     "./composer/package.json": "./components/composer/package.json",
-    "./composer/locale/*.json": "./components/composer/locale/*.json"
+    "./composer/locale/*.json": "./components/composer/locale/*.json",
+    "./settings-enhancements": "./components/settings-enhancements/index.js",
+    "./settings-enhancements/package.json": "./components/settings-enhancements/package.json",
+    "./settings-enhancements/locale/*.json": "./components/settings-enhancements/locale/*.json"
   },
   "dsh": {
     "manifestVersion": 1,

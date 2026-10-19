@@ -12,18 +12,6 @@
     }
   },
   {
-    "repository": "https://github.com/liustack/modlens",
-    "packageName": "@liustack/modlens",
-    "title": {
-      "zh": "@liustack/modlens",
-      "en": "@liustack/modlens"
-    },
-    "description": {
-      "zh": "Plug-in vision for text-only LLMs, powered by the free Antigravity CLI",
-      "en": "Plug-in vision for text-only LLMs, powered by the free Antigravity CLI"
-    }
-  },
-  {
     "repository": "https://github.com/MichengAI/dsh-skills-manager",
     "packageName": "@michengai/dsh-skills-manager",
     "title": {

@@ -1,6 +1,6 @@
 {
   "name": "tanuki-home",
-  "version": "0.6.22",
+  "version": "0.7.9",
   "type": "module",
   "description": "Add a start page with useful information.",
   "icon": "./icon.svg"

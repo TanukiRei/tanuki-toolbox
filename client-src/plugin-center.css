@@ -159,3 +159,9 @@ button:has(.tanuki-sidebar-icon):not(:has(>span:nth-child(2))) .tanuki-side-badg
 [data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid] [data-plugin-group=extensions]>div:first-child:has(button){grid-column:1 / -1;order:3;margin:0;padding-top:4px;}
 @container tanuki-center (min-width:760px){[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @container tanuki-center (min-width:1160px){[data-tanuki-center=manage][data-tanuki-category=official] [data-tanuki-official-grid]{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+/* Native Mac pages reserve their own titlebar space. Our replacement toolbar
+   must do so too when Quick Bar is off; its shell already reserves that space. */
+html[data-platform=darwin]:not([data-fullscreen]) [data-plugin-panel][data-tanuki-center]>[data-tanuki-toolbar]{padding-top:calc(14px + var(--dsh-frame-top-clearance,48px));}
+html[data-platform=darwin]:not([data-fullscreen]) [data-tanuki-shell] [data-plugin-panel][data-tanuki-center]>[data-tanuki-toolbar]{padding-top:14px;}
+html[data-platform=darwin] [data-plugin-panel][data-tanuki-center]>[data-tanuki-toolbar] :is(button,input),html[data-platform=darwin] [data-tanuki-center] [data-tanuki-pinned-actions],html[data-platform=darwin] [data-tanuki-center=manage]>header>div{-webkit-app-region:no-drag;}

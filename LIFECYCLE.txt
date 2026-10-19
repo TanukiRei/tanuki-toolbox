@@ -1,5 +1,26 @@
-黎猫工具箱 0.5.4 — 组件加载与释放约定
-Tanuki Toolbox 0.5.4 — Component lifecycle
+黎猫工具箱 0.7.9 — 组件加载与释放约定
+Tanuki Toolbox 0.7.9 — Component lifecycle
+
+0.7.8：一键重启的原生后台程序仅在 1 秒长按完成后按需创建，先验证当前实例与启动入口，再关闭并通过保护入口重开。移除重复 PowerShell/WMI 探测及固定等待；仅在已开始的单次事务中短暂读取回执。原生句柄、文件锁和互斥量随事务退出释放，无常驻进程、自动重试或关闭组件预热。已接受的关闭/重开事务不随组件停用而取消。
+0.7.8: The native restart worker starts only after a one-second hold. It validates the current instance and reopen entry, closes DSH, then delegates protected startup. No repeated PowerShell/WMI probes, resident watcher or automatic retry. Receipt polling exists only during a submitted transaction; native handles, file locks and mutexes are released on exit. Accepted transactions finish independently of component disposal.
+
+0.7.6：闪电改为单次点击保存速度偏好，不再挂载菜单、定位/滚动/外部关闭/菜单键盘监听。保留挂载控件所需的现有轻量事件流，无新增请求扫描或轮询。能力获取、失效处理、任务快照与停用清理规则不变。
+0.7.6: Direct speed toggling removes the popup and its layout/outside/keyboard listeners. Existing scoped event streams and cleanup remain; no new scanning or polling.
+
+0.7.5：中枢速度模块仅在设置优化及模型子项开启时动态加载；冷启动关闭不读能力缓存、不修饰适配器。目录只在明确刷新、获取模型或查看当前模型速度时读取，无后台扫描/轮询。客户端事件流仅在速度控件挂载时连接，最后一个视图释放即中止，Host 取消没有消费者的目录请求。隐藏设置停止设置能力读请求；关闭组件恢复原生适配器实例方法和模型插槽，移除连接、订阅及缓存状态。已开始的原生生成保留其单次不可变请求选项，流式字节不缓存/复制，只解析有界 SSE 元数据；停用后停止提示收集。能力/偏好文件有大小与条数限制，不包含密钥。
+0.7.5: Gateway speed is lazy under Settings Enhancements → Models. Catalogs are read on explicit access, never polled. UI event streams, capability requests and adapter/slot decorations are disposed with their owners. Already accepted native generations retain request-local snapshots; SSE observation buffers only bounded metadata and stops on disposal. Persisted capabilities/preferences are bounded and contain no credentials.
+
+0.7.4：模型排序的指针捕获、位置/取消监听和全局抓取光标标记只存在于手柄按下到松手/取消期间；边缘滚动仅在实际拖动且可滚动时申请动画帧。松手只写入有变化的最终顺序。结束、取消、失焦、隐藏或卸载立即清理捕获、监听、光标标记和动画帧，不增加空闲扫描或后台定时器。
+0.7.4: Pointer capture, drag listeners and the grabbing-cursor marker exist only during handle interaction. Edge-scroll frames run only while dragging and scrollable. Only a changed final order saves. Completion, cancellation, blur, hiding and unmount release all transient resources; no idle scans or background timers.
+
+0.7.3：模型设置只在实际拖动期间订阅取消与失焦事件；拖动预览不发送保存请求，松手后才保存最终顺序。结束、取消、隐藏、失焦或组件卸载时释放预览和监听，无新增轮询。
+0.7.3: Model drag previews use cancellation listeners only during a drag. Ordering saves only on drop; completion, cancellation, hiding, blur and unmount release transient state/listeners. No new polling.
+
+0.7.2：默认设置窗口只在首次打开后保留 React 页面和滚动状态，隐藏不再卸载当前页面；此项是用户明确要求的状态保留，不代表关闭了工具箱或组件。隐藏窗口 inert 且没有活动焦点层，模型页取消自己的只读请求、短暂刷新和订阅，不做后台模型调用。模型 UI 仍由设置优化开关按需加载。宿主默认模型策略只持有少量禁用与排序数据，并复用已有目录失效事件。设置壳和模型页只修饰现有注册项的组件，保留原生拥有的子槽和授权渲染面；停用还原原组件及操作函数，不重复声明原生子槽。对已提交的用户保存事务允许安全完成；弹窗关闭释放密钥草稿，不读取已存密钥。不强制即时释放引擎代码缓存。
+0.7.2: The Settings shell keeps only an already-opened page mounted, as explicitly requested. Hidden Settings releases its modal focus layer; Models cancels its own read requests and subscriptions. Model UI remains optional and lazy. Default policy stores small ordering/disable metadata and reuses native catalog invalidation. Scoped component decorations preserve native child-slot ownership and are restored on disposal. Accepted writes finish safely; closed dialogs release key drafts without reading stored credentials.
+
+0.7.0：默认系统更新入口仅订阅桌面桥接现有状态并读取一次快照，不新增更新检查计时器；DSH 版本仅在打开设置标题时读取。设置优化组件关闭时不加载功能代码；“模型”子项关闭时卸载其独立子模块。模型页面打开后才读取原生服务行和未过滤的模型元数据、绑定页面范围的订阅与观察器，页面关闭或子项停用均取消请求、清除订阅并还原原生标题属性。服务禁用使用默认模型策略的一个小型集合；关闭设置优化保留已保存限制，默认管理页可恢复服务，不执行后台模型探测。
+0.7.0: The default updater reuses the desktop bridge's status snapshot/subscription without another update-check timer; the DSH version is read only when Settings opens. Settings Enhancements and its Models subfeature load on demand. Opening Models creates scoped metadata requests and UI subscriptions; closing or disabling removes them. Saved provider restrictions use the existing default policy and can be reversed even with the optional component disabled.
 
 用户可见行为
 - DSH 冷启动时，只按开关加载已启用组件的功能代码。插件中心、起始页、消息中心的浏览器代码分文件；启动保护和消息中心的 Host 功能也在各自组件启动时才导入。
@@ -24,7 +45,7 @@ Tanuki Toolbox 0.5.4 — Component lifecycle
 消息中心默认提示音由本地Web Audio合成，默认音量50；已有保存音量保留，恢复默认同时重置音频和音量。设置页仅在用户主动调节后试听，关闭设置释放独立试听资源。通知音不因重绘重复播放，自动播放受限时不补播过期提示。组件关闭释放上下文、请求、缓存与解锁监听。
 
 图标侧边栏
-图标侧边栏及重启路由仅随 sidebar 组件开启加载。工作区保留原生 React 挂载，不复制会话树；关闭时卸载自有 portal、恢复布局属性并清理观察器、请求、监听与设置入口。重启圆环仅在长按或回退时运行动画帧，停用取消。重启工具在明确长按完成后才启动，严格识别当前实例，强制终止后经保护入口重开；已接受的外部事务不因组件停用而中断，不自动重试。未完成任务和安装可能被中断，请等待其完成后使用。无需宿主扩展。
+图标侧边栏及重启路由仅随 sidebar 组件开启加载。工作区保留原生 React 挂载，不复制会话树；关闭时卸载自有 portal、恢复布局属性并清理观察器、请求、监听与设置入口。重启圆环仅在长按或回退时运行动画帧，停用取消。重启工具在明确长按 1 秒后才启动，由独立原生程序识别当前实例，先关闭 DSH，再经保护入口在后台准备重开；已接受的外部事务不因组件停用而中断，不自动重试。未完成任务和安装可能被中断，请等待其完成后使用。无需宿主扩展。
 
 后续开发规则
 1. client.template.js 仅负责开关与按需加载，不静态引用组件业务函数、重图片、CSS 或组件字典。
@@ -87,3 +108,7 @@ Small manifest/configuration metadata remains necessary. Modules used earlier in
 0.6.21：通知分类通过既有气泡快照事件同步，不新增请求、扫描或定时器。气泡模型保留两路权威来源的最新状态，在显示投影时按类别过滤；分类关闭期间继续沿用现有状态更新与任务已读围栏，重开不复活旧状态。关闭任务分类同时隐藏原生任务状态点，避免自定义气泡移除后露出原生提示；气泡卸载清理样式标记。分类切换不重载气泡脚本，气泡总开关关闭仍释放显示模块；独立任务栏成功计数逻辑不变。
 
 0.6.22：更新检查开始时发送本窗口 component-maintenance 事件，复用核心开关读取与 stop 路径；无新增核心轮询、闲置缓存注册表或预热。浏览器脚本使用 no-store 且加载后移除 script/工厂，停用清理实例，再开重新取代码；Node ESM 和引擎编译缓存不能可靠主动卸载，禁止删除共享全局缓存或强制 GC。消息中心为最多两条活动消息和一条短暂退出动画保存有界状态，按接收时间 8 秒绝对期限管理计时器；停用/分类过滤及时清理，不由 React 悬停状态控制到期。搜索及分组仅随已打开插件页运行局部观察器，离开释放并恢复属性，不搬移原生 React 节点。通用快捷方式管理排除专用自启动入口，旧版改写按管理日志摘要证明归属；不新增后台系统入口扫描。
+
+0.6.23：Mac 标题栏与全屏避让复用原生 CSS 安全区和 data-platform/data-fullscreen，不新增平台或主题轮询。Windows 专用快捷方式状态在非 Windows 返回 unsupported，详情收到后清理自己的轮询。系统通知唤起仍仅在点击时执行，Mac 使用固定 Launch Services open 路径激活当前应用，无常驻进程。模型卡片与按需策略服务之间采用可释放的小型订阅桥，策略热替换不销毁卡片；关闭卡片清理桥和自身注入。脚本资源仍用 no-store 并立即移除 script/工厂；协调器在热更新后接受受当前同源授权接口确认的构建版本，不强制页面重载、不跨源取代码。未做运行期或实体 Mac 验证。
+
+0.6.24：补齐调用 modelDirectories.directoryFor 的两个局部作用域的 remote.session 等宿主依赖；遵循 Cordis 服务跟踪和就绪/停用流程，不新增后台任务、请求或常驻组件。去掉重复的原生标签子槽声明，卡片自行渲染标题；提供方偏好读取保留注册项顶层元数据。通过真实 Windows DSH 验证卡片显示及连续选择，不将静态构建当作运行验收。

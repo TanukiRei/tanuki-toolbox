@@ -1,1 +1,6 @@
-{"meta":{"title":"Tanuki Toolbox","description":"A growing collection of small components that make DeepSeek Harness easier to use."}}
+{
+  "meta": {
+    "title": "Tanuki Toolbox",
+    "description": "Modular UI enhancements for DeepSeek Harness: quick bar, start page, composer, model settings, notifications, plugin management and Windows startup protection."
+  }
+}

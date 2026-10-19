@@ -1,7 +1,7 @@
 /* Native dock's slot anchor uses display:contents; order places only our label
    after the context meter, without moving or replacing native React children. */
 /* One global surface, with native light/dark neutral colors. */
-.tanuki-island-position{position:fixed;top:calc(var(--dsh-frame-top-clearance,0px) + 12px);left:50%;transform:translateX(-50%);z-index:12000;width:460px;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}
+.tanuki-island-position{position:fixed;--tanuki-island-top:max(12px,calc(var(--dsh-frame-overlay-top,20px) - 8px));top:var(--tanuki-island-top);left:50%;transform:translateX(-50%);z-index:12000;width:460px;max-width:calc(100vw - 32px);pointer-events:none;-webkit-app-region:no-drag;}
 .tanuki-island{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:460px;max-width:calc(100vw - 32px);height:88px;min-height:88px;padding:12px 12px 12px 18px;border:1px solid var(--dsw-alias-border-l2);border-radius:30px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);box-shadow:0 10px 32px #0003,0 2px 8px #0002;pointer-events:auto;font-family:inherit;}
 .tanuki-island-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);color:var(--dsw-alias-state-success-primary);}
 .tanuki-island-symbol[data-tone="error"]{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 12%,transparent);color:var(--dsw-alias-state-error-primary);}
@@ -13,7 +13,7 @@
 .tanuki-island-count{flex:none;font-size:11px;line-height:20px;padding:0 6px;border-radius:10px;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;}
 .tanuki-island-close{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:21px;line-height:1;cursor:pointer;transition:background .16s,color .16s;}
 .tanuki-island-close:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px;}
-@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(calc(-100% - var(--dsh-frame-top-clearance,0px) - 24px));}to{opacity:1;transform:translateY(0);}}
+@keyframes tanuki-island-enter{from{opacity:0;transform:translateY(calc(-100% - var(--tanuki-island-top) - 12px));}to{opacity:1;transform:translateY(0);}}
 @media(prefers-reduced-motion:reduce){.tanuki-island{animation:none}.tanuki-island-close,.tanuki-island-open{transition:none}}
 
 .tanuki-island-row{position:absolute;left:0;width:100%;transition:top .32s cubic-bezier(.2,.8,.2,1),opacity .32s ease;animation:tanuki-island-enter .32s cubic-bezier(.2,.8,.2,1);}

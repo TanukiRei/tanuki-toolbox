@@ -1,0 +1,7 @@
+{
+  "name": "tanuki-settings-enhancements",
+  "version": "0.7.9",
+  "type": "module",
+  "description": "Improve settings with a more intuitive interface.",
+  "icon": "./icon.svg"
+}
