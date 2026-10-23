@@ -208,7 +208,7 @@ document.currentScript.__tanukiRegister(function(require) {
         const s=useModel(),tr=useLocale(),names=[...new Set(updateCandidates(s).map(p=>p.name))];
         const busy=s.update.busy||s.update.batchBusy,allowed=names.length>0&&updater.supported(s.caps)&&!s.updateCheckError;
         const title=busy?tr('updateAllProgress',{current:s.update.batchIndex||1,total:s.update.batchTotal||1}):!s.marketEnabled?tr('updateUnavailable'):allowed?tr('updateAllCount',{n:names.length}):tr('noUpdate');
-        return h('button',{type:'button',className:'tanuki-update-button tanuki-update-all','data-tanuki-bubble-target':'plugin-updates','data-available':allowed||undefined,disabled:!allowed||busy,title,onClick:()=>void updater.startAll(names)},tr(busy?'updating':'updateAll'));
+        return h('button',{type:'button',className:'tanuki-update-button tanuki-update-all','data-available':allowed||undefined,disabled:!allowed||busy,title,onClick:()=>void updater.startAll(names)},tr(busy?'updating':'updateAll'));
       }
       function UpdateNotice(){
         const s=useModel(),tr=useLocale(),n=s.notice;if(!n)return null;

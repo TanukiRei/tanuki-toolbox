@@ -1,4 +1,58 @@
-黎猫工具箱 / Tanuki Toolbox 0.7.9
+0.10.3 侧边栏图标与仓库更名 / Sidebar icons and repository rename
+- 回收站列表的三个点改用工作区同款原生图标与尺寸。
+- 回收站入口选中时填充桶身、挖空两条竖杠；侧边栏图标缩为原来 90%，描线减细 1px，保留侧栏宽度及按钮占位，继续跟随日夜主题。
+- GitHub 仓库改名 dsh-tanuki-toolbox，同步中英文安装链接及包的来源信息；包名 dsh-local-plugin-center 保持不变，支持原位升级。
+- 本次同时发布此前本机交付的规则、会话优化和回收站等更新；保留规则分叉复制、原生会话／轨迹和底部／右侧插件挂载、永久删除确认。
+- Necessary build/static checks/package/local update; no functional tests or installer changes.
+Uses the native workspace ellipsis in Recycle Bin rows, adds a filled selected trash can with two cutout slots, and reduces sidebar icon size to 90% with thinner strokes while preserving rail/button dimensions and theme colors. Renames the repository to dsh-tanuki-toolbox and updates bilingual installation/source links without changing the installable package identity. Also publishes the previously local Rules, Conversation Enhancements and Recycle Bin deliveries, including forked rule states, native conversation/trajectory and plugin-panel integration, and confirmed permanent deletion.
+
+0.10.2 回收站操作细节 / Recycle Bin actions
+- 列表操作区与按钮使用透明背景，灰色描线，悬停仅提亮图标，跟随日夜主题。
+- 回收站右键／三个点菜单增加“永久删除”，逐条确认并绑定该次移入记录，复用原生写锁与精确日志清理。
+- 会话页倒计时统一使用“永久删除”。
+- Build/static checks/package/local update only; no functional tests, publication or installer changes.
+
+0.10.1 回收站工作区布局 / Workspace-style Recycle Bin
+- 回收站左侧为任务列表，右侧复用原生会话绑定及对话／轨迹页面，不复制简化文本，保留原生插件挂载位置及底部统计。
+- 输入区替换为恢复按钮与秒级完全删除倒计时；列表悬停位置显示恢复按钮，平时显示剩余小时／天数，恢复后返回原工作区继续会话。
+- 左侧顶部增加红色清空按钮，确认后只永久清除确认时的精确列表；内容变化要求重新确认，无法安全释放的会话保留并重试。
+- 只读浏览不改变宿主归档状态或任务派发限制；离开／停用恢复原生导航、视图和方法，取消订阅、计时器及请求。
+- Build/static checks/package/local update only; no functional tests, GitHub publication or installer update.
+
+
+0.10.0 会话优化与回收站 / Conversations and Recycle Bin
+- 修正规则窗的隐藏初始化等待，以及 WebView 回调内同步拖动导致的重入卡顿；两种规则编辑器继续使用同一份 UI。
+- 对话框优化更名会话优化，新增会话列表子开关；右键直接触发原生三个点菜单，归档只在菜单内显示，已置顶标记使用蓝色。
+- 新增回收站组件；原生会话菜单支持移入回收站，保留原工作区归属，只读查看/引用，恢复后继续会话。组件启用期间调度 30 天到期清理，停用时停止清理，下次启用补处理。
+- 原生归档集合保留只读限制。永久清理仅处理回收站中到期的精确会话，获取原生写锁后删除已核验的日志；不能安全处理时保留并稍后重试。
+- No functional tests or browser acceptance were run for this release; build and local update only.
+
+0.9.2 统一规则编辑器与分叉复制 / Shared Rules editor and fork copying
+- 再次点击规则按钮会保存并收回独立编辑窗；移除对已可见窗体的重复 Show 调用，异常不再通过 .NET 对话框显示。
+- 独立窗改为系统 WebView2 承载的本地页面，两种模式从 lib/rules-editor-client.cjs、rules.css 和同一翻译文件生成，统一图标、粗体标题、排版、字号、行号和按钮。保留 owner 层级、圆角、拖出动效及边缘缩放。
+- 每行增加绿点启停与垃圾桶；停用行保留但不加入请求，悬停超过 1 秒显示完整规则。旧规则在读取时兼容为全部启用，用户修改时原子保存新结构。
+- 原生分叉操作返回之前复制源会话规则快照，包含内容、顺序与逐条开关；先冲刷当前浏览器/独立窗的未保存编辑，分叉后各自独立。规则继续不写入对话正文或压缩来源。
+- 仅构建、静态检查、打包和本机更新；未运行功能测试，未上传 GitHub 或更新一键安装器。
+Uses a single DOM/CSS editor in the popup and a local WebView2-owned window, eliminating separate WinForms layout and repeated Show calls. Adds one-second full-text tooltips, per-rule enabled states and trash actions. Native session forks copy an independent snapshot of all rule contents/order/states before returning, with pending editor changes flushed first. Old records remain readable; rules are still request-only and excluded from compaction input. Build/static checks/package/local update only; no functional tests, publication or installer changes.
+
+0.9.1 规则注入与独立窗交接 / Rules dispatch and detached editor
+- 修复已保存规则可能因内部请求身份识别而被跳过：经宿主模块加载器获取 LLM API，并以官方 agent/request 事件和请求信号确认正式任务派发。LLM 注入不再等待可选计量服务；压缩等辅助请求仍跳过，规则不归档到聊天记录。
+- 显示注入未就绪状态，避免规则静默失效；正式派发后以规则版本标记显示“当前规则已加入最近一次任务请求”，不记录额外的对话正文。
+- 拖出时保留原面板尺寸和鼠标抓取位置，180ms 移动淡入，并接续拖动；独立窗保持圆角、同款 Segoe UI 字体、13px 正文和 11px 辅助文字，匹配当前窗口缩放。
+- 保留既有规则及组件设置；必要构建、静态检查、打包和本机更新，未运行功能测试，未上传 GitHub 或更新安装器。
+Fixes silently skipped rules by using the host module loader and public agent/request provenance. LLM injection no longer depends on optional token accounting; compaction and other auxiliary calls remain excluded. Adds hook readiness and attached-revision status. Detachment preserves panel size/grab offset, animates over 180ms and retains rounded corners and matching font sizes at the current window scale. Existing rules/settings are preserved. Build/static checks/package/local update only; no functional tests, publishing or installer changes.
+
+0.9.0 规则组件 / Rules component
+- 新增天平图标与任务独立规则；输入框权限按钮右侧显示规则入口和有效条数，向上展开、逐行编辑、回车换行、自动保存。
+- 最新完整规则仅在正式任务派发时注入一次，不归档到上下文或压缩输入；空规则沿用原生逻辑。支持服务商压缩后重新附带规则，保留原生系统和权限约束。
+- Windows 原生独立规则编辑窗归属 DSH，可拖动和边缘缩放；随宿主最小化，可被其他应用遮挡。其他平台使用应用内浮窗。
+- 组件停用清理前后端注入、请求、订阅和窗口，保留用户规则文件。必要构建、静态检查、独立打包与本机更新；未运行功能测试，未上传 GitHub、未更新安装器。
+Adds per-task autosaved rules, scale icons and a composer editor. Current rules are attached once at formal dispatch without entering history or compaction input; empty rules preserve native requests. Includes an owned, resizable Windows editor and an in-app fallback elsewhere. Disabling removes runtime hooks and closes editors while retaining saved rules. Build/static checks/package/local update only; no functional tests, publishing or installer changes.
+
+0.8.33 组件移除 / Component removal
+- 按用户要求移除独立陪伴组件的入口、设置、前后端实现、动画素材、原生程序和本机运行数据；移除前已另存完整离线组件备份及恢复说明。
+- 保留七个现有组件、模型/速度/通知功能及其他配置。仅构建、打包和本机更新；未运行功能测试，未上传 GitHub，未更新一键安装器。
+Removed the optional companion component, its UI, host code, artwork, native executable and local runtime data after creating a separate offline backup with restoration instructions. Keeps the seven other components and their settings. Build/package/local update only; no functional tests, GitHub publication or installer update.
 
 0.7.9 中英文介绍与公开发布 / Bilingual descriptions and public release
 - 中英文介绍页标题统一增加 dsh- 前缀，更新七个组件、默认功能、平台限制和安装说明的介绍；插件包名保持 dsh-local-plugin-center，支持原地升级。
@@ -327,7 +381,7 @@ Drag the workspace divider to resize it and save the width for reopening, naviga
 Preserve working native artwork, resolve declared local package/exported icons, and use verified Market and Skills settings marks when the manifests omit them. Keep lists and package details consistent; use name initials when a plugin has no dedicated icon. Read artwork locally on demand, cancel on exit, and restore native DOM on cleanup. Sources and licenses are included. Built and packaged without functional or browser tests.
 
 0.5.24 GitHub 首次公开发布 / First public GitHub release
-- 仓库：https://github.com/TanukiRei/tanuki-toolbox。补齐包的仓库、作者、主页和问题反馈地址，使 Git 页面及 GitHub 更新来源可识别。
+- 仓库：https://github.com/TanukiRei/dsh-tanuki-toolbox。补齐包的仓库、作者、主页和问题反馈地址，使 Git 页面及 GitHub 更新来源可识别。
 - 仓库同时包含源码和已构建文件，可直接在 DSH 添加仓库地址或 GitHub 源码下载地址，无需安装时编译。
 - 增加中英安装说明、MIT 许可证和可移植构建脚本；以后每次交付同步 main、版本标签和发布安装包。
 - 本机插件从本地 .tgz 改为 GitHub 下载来源，保留原包名及已有配置；本地 .tgz 继续作为离线备份。
@@ -671,3 +725,4 @@ launcher/preflight.cjs is the testable pre-launch compatibility checker.
 2.1.6 安装助手适配：
 - 保护启动支持安装助手指定的 DSH 安装目录，并转交应用启动参数。
 - 安装助手使用固定保护入口，每次启动调用当前已安装工具箱的保护代码。
+

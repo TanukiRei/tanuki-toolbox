@@ -1,5 +1,5 @@
-黎猫工具箱 0.7.9 — 组件加载与释放约定
-Tanuki Toolbox 0.7.9 — Component lifecycle
+黎猫工具箱 0.8.33 — 组件加载与释放约定
+Tanuki Toolbox 0.8.33 — Component lifecycle
 
 0.7.8：一键重启的原生后台程序仅在 1 秒长按完成后按需创建，先验证当前实例与启动入口，再关闭并通过保护入口重开。移除重复 PowerShell/WMI 探测及固定等待；仅在已开始的单次事务中短暂读取回执。原生句柄、文件锁和互斥量随事务退出释放，无常驻进程、自动重试或关闭组件预热。已接受的关闭/重开事务不随组件停用而取消。
 0.7.8: The native restart worker starts only after a one-second hold. It validates the current instance and reopen entry, closes DSH, then delegates protected startup. No repeated PowerShell/WMI probes, resident watcher or automatic retry. Receipt polling exists only during a submitted transaction; native handles, file locks and mutexes are released on exit. Accepted transactions finish independently of component disposal.
@@ -112,3 +112,35 @@ Small manifest/configuration metadata remains necessary. Modules used earlier in
 0.6.23：Mac 标题栏与全屏避让复用原生 CSS 安全区和 data-platform/data-fullscreen，不新增平台或主题轮询。Windows 专用快捷方式状态在非 Windows 返回 unsupported，详情收到后清理自己的轮询。系统通知唤起仍仅在点击时执行，Mac 使用固定 Launch Services open 路径激活当前应用，无常驻进程。模型卡片与按需策略服务之间采用可释放的小型订阅桥，策略热替换不销毁卡片；关闭卡片清理桥和自身注入。脚本资源仍用 no-store 并立即移除 script/工厂；协调器在热更新后接受受当前同源授权接口确认的构建版本，不强制页面重载、不跨源取代码。未做运行期或实体 Mac 验证。
 
 0.6.24：补齐调用 modelDirectories.directoryFor 的两个局部作用域的 remote.session 等宿主依赖；遵循 Cordis 服务跟踪和就绪/停用流程，不新增后台任务、请求或常驻组件。去掉重复的原生标签子槽声明，卡片自行渲染标题；提供方偏好读取保留注册项顶层元数据。通过真实 Windows DSH 验证卡片显示及连续选择，不将静态构建当作运行验收。
+
+0.8.33：已移除可选陪伴组件及其资源路由、懒加载入口和设置读取。核心不保留该组件的扫描、监听、窗口、模型请求或恢复钩子。其他七个组件继续遵循上述按需加载与停用清理规则。离线备份置于仓库之外，不随插件构建或运行加载。
+0.8.33: The optional companion component and its routes, lazy entry points and settings reads are removed. No scans, listeners, windows, model calls or restore hooks remain for it. The other seven components retain the lazy-loading and cleanup rules above. Its offline backup stays outside the repository and is never loaded by the build or runtime.
+
+启动：保护开关控制兼容检查、旧认证 Cookie 整理及快捷方式接管。关闭时停止扫描并串行还原已接管入口；正常退出/热更新不还原。开机启动入口按保护开关选用受保护或原始 DSH，保留手动改动。Cookie 整理只在 DSH 未运行时处理限定的本地认证记录，不碰账号登录、其他站点 Cookie 或模型/任务配置。
+Startup: The protection switch controls compatibility checks, old local-auth cookie maintenance and shortcut management. Explicit disable stops scans and restores owned entries serially; normal shutdown/HMR does not restore them. Login startup uses protected or plain DSH according to the switch and preserves manual changes. Cookie maintenance runs before DSH starts and only touches narrowly matched local-auth records, leaving account logins, other sites and model/task configuration intact.
+
+0.9.0 规则：Host 和客户端仅随组件启用加载。只在已挂载任务输入框读取小型规则文件，活动视图使用可释放 SSE，不全量扫描会话、不后台调用模型。每次正式派发从当前任务文件读取规则，独立编辑窗先通过本地管道确认保存；规则不写入 Session，压缩调用跳过注入。Token 计量为完整规则预留估算，不改变压缩节点。关闭取消请求、计时器、订阅、方法修饰并关闭所有原生编辑窗；保留任务规则文件。Windows 原生窗口只在拖出时启动，使用 OS owner 关系而非置顶轮询；不设置全局 TopMost。其他平台使用应用内浮窗。
+0.9.0 Rules: host and browser code load only when enabled. Mounted task inputs read small rule records and share disposable SSE views; there are no session scans or background model calls. Formal dispatch reads current rules and flushes any detached editor over a local pipe. Rules never enter Session; compaction requests skip injection. Token estimates reserve space without changing compaction nodes. Disable aborts requests, clears timers/subscriptions/method wrappers and closes native editors, retaining saved records. The Windows editor starts only on detach and uses OS ownership, not global topmost or z-order polling. Other platforms use an in-app panel.
+
+0.9.1：规则注入通过官方 agent/request 记录每个运行任务的信号，turn/end 或 agent/disposed 即清理，停用清空。LLM 包由宿主当前加载器解析，原请求身份检查作为兼容补充而非唯一依据。计量服务按可用性独立接入，不阻塞注入。最近附加状态仅保存有限的任务 ID/规则版本，无对话文本。独立窗动效仅在登场的 180ms 使用计时器，结束或关闭立即停止，不新增常驻动画、置顶轮询或模型调用。字体和原面板几何在拖出时按需传送。
+0.9.1: Public agent/request events track a running task's signal; turn/end, agent disposal and disable release it. The host loader resolves the LLM API; private request identity is only a compatibility aid. Optional token accounting no longer gates injection. Attachment status stores bounded task IDs/revisions, never conversation text. Native entry animation uses a timer only for its 180ms transition and stops on completion/close. Geometry and font scale are transferred on detach; no persistent animation, z-order polling or model calls are added.
+
+0.9.2：两种规则 UI 由同一 DOM 工厂和样式生成；WebView2 SDK 与本地 HTML 仅在拖出时校验、加载，不随禁用组件预载，关闭窗体释放控制器和子进程。不与 DSH 共享认证或模型配置，页面禁止外部导航和网络内容，仅通过父进程管道提交条目；系统 Runtime 不由插件安装或更新。悬停计时器只在活动行保留一项，离开、修改或卸载清理。启停状态保存在规则文件，不写入聊天日志。分叉装饰仅随 Rules 启用，创建时先保存源编辑再拷贝规则快照，已经接受的分叉安全完成，停用恢复自己的方法，不增加会话扫描或后台补拷。
+0.9.2: One DOM factory and stylesheet generate both editors. The native SDK/local HTML load only on detach and are disposed on close. The isolated view shares no DSH authentication or model configuration, blocks external navigation/content and exchanges entries only over its parent pipe. The plugin never installs/updates the system Runtime. At most one active hover timer is retained and cleaned up on leave/edit/dispose. Enabled states stay outside conversation logs. Fork hooks exist only while Rules is enabled; they flush source edits and copy one independent snapshot before returning. Already accepted fork work completes safely; disable restores owned wrappers without session scans or background backfills.
+
+
+0.10.0 会话优化与回收站 / Conversations and Recycle Bin
+- 修正规则窗的隐藏初始化等待，以及 WebView 回调内同步拖动导致的重入卡顿；两种规则编辑器继续使用同一份 UI。
+- 对话框优化更名会话优化，新增会话列表子开关；右键直接触发原生三个点菜单，归档只在菜单内显示，已置顶标记使用蓝色。
+- 新增回收站组件；原生会话菜单支持移入回收站，保留原工作区归属，只读查看/引用，恢复后继续会话。组件启用期间调度 30 天到期清理，停用时停止清理，下次启用补处理。
+- 原生归档集合保留只读限制。永久清理仅处理回收站中到期的精确会话，获取原生写锁后删除已核验的日志；不能安全处理时保留并稍后重试。
+- No functional tests or browser acceptance were run for this release; build and local update only.
+
+0.10.1：回收站视图使用原生 main.conversation 会话绑定及授权子槽，导航别名只选择原生会话主面板；独立回收站列表只在该视图挂载。只对回收站只读浏览放行客户端归档导航检查，持久归档集合和宿主派发拦截保持不变。输入卡片禁用且隐藏，只保留原生统计 dock；倒计时只随活动任务显示运行，列表分钟更新，离开释放。清空请求绑定已确认列表的摘要，先释放当前浏览，再串行处理已核验的原生日志；失败保留 purging 状态，下次启用或重试继续。停用恢复自己的方法／槽装饰、关闭 SSE、清理计时器与请求；已接受的删除事务安全完成。
+0.10.1: Recycle Bin uses the native main.conversation binding and authorized child slots, preserving conversation/trajectory views and bottom/right plugins. Its list mounts only in Bin mode; the composer is disabled/hidden while the original statistics dock remains. Only client view navigation is exempted from archived-selection clearing; durable archive state and host dispatch admission remain intact. Countdown timers belong to the visible task/list. Confirmed clearing is bound to the exact item-set digest, releases the viewed task first, and uses serialized, verified native-log cleanup. Failed purges remain pending for safe retries. Disable restores owned methods/slot decorations and clears views, SSE, requests and timers; accepted durable transactions finish safely.
+
+0.10.2：单项永久删除仅由回收站菜单确认后触发，绑定会话 ID 与该次移入时间，复用既有串行永久清理和失败重试；删除当前项前释放原生浏览绑定。纯样式改动不新增监听、扫描或定时器。
+0.10.2: Per-item permanent deletion requires menu confirmation and matches the session ID plus its exact Bin-entry timestamp. It reuses serialized purge/retry handling and releases the current native view before deletion. Row styling adds no listeners, scans or timers.
+
+0.10.3：侧边栏与回收站图标调整只修改 SVG 和 CSS，不增加扫描、请求或计时器；仍随对应组件懒加载与停用清理。
+0.10.3: Sidebar and Recycle Bin icon changes affect SVG/CSS only, add no scans, requests or timers, and retain existing lazy loading and cleanup.

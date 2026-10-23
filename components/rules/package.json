@@ -1,0 +1,7 @@
+{
+  "name": "tanuki-rules",
+  "version": "0.10.3",
+  "type": "module",
+  "description": "Set per-task rules that apply in full to each model request, with an optional detached editor.",
+  "icon": "./icon.svg"
+}

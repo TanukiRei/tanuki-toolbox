@@ -32,7 +32,7 @@ document.currentScript.__tanukiRegister(function(require){
     return {page:'settings',section:'tanuki-toolbox',component:'dynamic-island'};
   }
   function locateComponent(component){
-    if(!['startup-guard','sidebar','home','composer','settings-enhancements','dynamic-island','plugin-center'].includes(component))return;
+    if(!['startup-guard','sidebar','home','composer','rules','settings-enhancements','dynamic-island','plugin-center'].includes(component))return;
     const selector='[data-shortcut-modal="settings"] [data-tanuki-setting="'+component+'"]';
     let observer,timeout;
     const cleanup=()=>{observer?.disconnect();clearTimeout(timeout);if(stopLocate===cleanup)stopLocate=null;};
@@ -236,12 +236,12 @@ document.currentScript.__tanukiRegister(function(require){
   }
   function IslandCard({item,index}){
     const tr=useLocale(),{title,detail}=format(item,tr);
-    const glyph=(item.kind==='error'||item.kind==='task.failed')?'error':item.kind==='launch.protected'?'shield':item.kind==='task.completed'?'check':item.kind==='plugin.disabled'?'pause':item.kind==='plugin.removed'?'remove':'check';
-    const paths={error:'M12 8v5m0 3h.01M12 3 2 21h20L12 3Z',shield:'M12 3 4.5 6v5.5c0 4 3 7.3 7.5 9.5 4.5-2.2 7.5-5.5 7.5-9.5V6L12 3Zm-4 9 2.5 2.5L16 9',check:'m6 12 4 4 8-8',pause:'M9 6v12M15 6v12',remove:'M7 12h10'};
+    const glyph=(item.kind==='error'||item.kind==='task.failed')?'error':item.kind==='launch.protected'?'shield':item.kind==='task.completed'?'check':item.kind==='plugin.disabled'?'stop':item.kind==='plugin.removed'?'remove':'check';
+    const paths={error:'M12 8v5m0 3h.01M12 3 2 21h20L12 3Z',shield:'M12 3 4.5 6v5.5c0 4 3 7.3 7.5 9.5 4.5-2.2 7.5-5.5 7.5-9.5V6L12 3Zm-4 9 2.5 2.5L16 9',check:'m6 12 4 4 8-8',stop:'M7 7h10v10H7Z',remove:'M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6m4-6v6'};
     return h('div',{className:'tanuki-island-row','data-leaving':item.leavingAt!==undefined||undefined,style:{top:(item.leavingAt!==undefined?2:index)*100+'px'}},
       h('div',{className:'tanuki-island'},
         h('button',{type:'button',className:'tanuki-island-open',disabled:item.leavingAt!==undefined,'aria-label':tr('openTarget')+' · '+title,title:tr('openTarget'),onClick:()=>activate(item)},
-          h('span',{className:'tanuki-island-symbol','data-tone':glyph==='error'?'error':undefined,'aria-hidden':true},h('svg',{viewBox:'0 0 24 24',width:23,height:23,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:paths[glyph]}))),
+          h('span',{className:'tanuki-island-symbol','data-tone':glyph==='error'?'error':undefined,'aria-hidden':true},h('svg',{viewBox:'0 0 24 24',width:23,height:23,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:paths[glyph],fill:glyph==='stop'?'currentColor':'none'}))),
           h('span',{className:'tanuki-island-copy',role:'status','aria-live':'polite','aria-atomic':true},h('strong',null,title),detail?h('span',{title:detail},detail):null)),
         h('button',{type:'button',className:'tanuki-island-close',disabled:item.leavingAt!==undefined,'aria-label':tr('dismiss'),title:tr('dismiss'),onClick:()=>dismiss(item.id)},'×')));
   }

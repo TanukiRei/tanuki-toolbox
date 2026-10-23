@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "启动保护",
-    "description": "启动前检测并停用会导致闪退的第三方插件。"
+    "title": "启动",
+    "description": "增加启动相关的优化处理"
   }
 }

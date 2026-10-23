@@ -1,6 +1,6 @@
 {
   "name": "tanuki-dynamic-island",
-  "version": "0.7.9",
+  "version": "0.10.3",
   "type": "module",
   "description": "Add message notifications.",
   "icon": "./icon.svg"

@@ -44,7 +44,9 @@
     "menu_skills": "技能",
     "skillsUnavailable": "请先安装并启用 Skills Manager，准备好技能设置页面后可显示。",
     "signOut": "退出登录",
-    "restartUnsupported": "一键强制重启目前仅支持 Windows；macOS 请使用 DSH 原生退出并重新打开。"
+    "restartUnsupported": "一键强制重启目前仅支持 Windows；macOS 请使用 DSH 原生退出并重新打开。",
+    "menu_recycleBin": "回收站",
+    "recycleUnavailable": "请先开启回收站组件"
   },
   "en": {
     "toolbox": "Toolbox settings",
@@ -91,6 +93,8 @@
     "menu_skills": "Skills",
     "skillsUnavailable": "Install and enable Skills Manager to make its settings page available.",
     "signOut": "Sign out",
-    "restartUnsupported": "Force restart currently supports Windows only. On macOS, quit DSH normally and reopen it."
+    "restartUnsupported": "Force restart currently supports Windows only. On macOS, quit DSH normally and reopen it.",
+    "menu_recycleBin": "Recycle Bin",
+    "recycleUnavailable": "Enable the Recycle Bin component first"
   }
 }

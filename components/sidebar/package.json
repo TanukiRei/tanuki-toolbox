@@ -1,6 +1,6 @@
 {
   "name": "tanuki-sidebar",
-  "version": "0.7.9",
+  "version": "0.10.3",
   "type": "module",
   "description": "Bring common features together in an editable left quick bar.",
   "icon": "./icon.svg"

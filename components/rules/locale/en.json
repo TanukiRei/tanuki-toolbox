@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Rules",
+    "description": "Set per-task rules that apply to each request, with an optional detached editor."
+  }
+}

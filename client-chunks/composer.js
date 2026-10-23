@@ -8,7 +8,7 @@ document.currentScript.__tanukiRegister(function(){
       const entry={controller:new AbortController(),fiber:null};children.set(key,entry);
       load(key,entry.controller.signal).then(module=>{
         if(alive&&children.get(key)===entry&&!entry.controller.signal.aborted)entry.fiber=ctx.plugin(module);
-      }).catch(()=>{if(alive&&children.get(key)===entry&&!entry.controller.signal.aborted){children.delete(key);window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{kind:'error',destination:{page:'settings',section:'tanuki-toolbox',component:'composer'},title:{zh:'对话框优化',en:'Composer'},message:{zh:'子功能加载失败，请重新开启后重试。',en:'Feature could not load. Toggle it off and on to retry.'}}}));}});
+      }).catch(()=>{if(alive&&children.get(key)===entry&&!entry.controller.signal.aborted){children.delete(key);window.dispatchEvent(new CustomEvent('tanuki:notify',{detail:{kind:'error',destination:{page:'settings',section:'tanuki-toolbox',component:'composer'},title:{zh:'会话优化',en:'Conversation Enhancements'},message:{zh:'子功能加载失败，请重新开启后重试。',en:'Feature could not load. Toggle it off and on to retry.'}}}));}});
     }
     async function refresh(){
       const current=++epoch;request?.abort();const controller=new AbortController();request=controller;
@@ -17,7 +17,7 @@ document.currentScript.__tanukiRegister(function(){
         const response=await fetch(new URL('tanuki-toolbox/settings',document.baseURI),{credentials:'same-origin',cache:'no-store',signal:controller.signal});
         if(!response.ok)throw new Error('Settings unavailable');const value=await response.json();
         if(!alive||current!==epoch||controller.signal.aborted)return;
-        for(const [flag,key] of [['timeStats','composer-clock'],['modelSelection','composer-model'],['fileMenu','composer-files']]){
+        for(const [flag,key] of [['timeStats','composer-clock'],['modelSelection','composer-model'],['fileMenu','composer-files'],['sessionList','composer-list']]){
           if(value.composer?.[flag]===true)start(key);else stop(key);
         }
       }catch{}finally{clearTimeout(timer);if(request===controller)request=null;}

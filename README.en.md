@@ -6,21 +6,29 @@
 
 A collection of independently switchable UI and interaction enhancements for **DeepSeek Harness (DSH)**: an editable quick bar, start page, composer controls, model settings, notifications, and plugin management, plus protected startup on Windows. Supports light/dark themes and follows DSH's Chinese or English UI language.
 
-Current version: **0.7.9**. Includes redesigned model settings, compatible gateway speed controls, and a one-second hold for Windows background protected restart. This is a community plugin, not an official DeepSeek product.
+Current version: **0.10.3**. Includes model settings, gateway speed controls, notifications and Windows protected restart. This is a community plugin, not an official DeepSeek product.
 
 ## Install
 
 In DSH, open **Plugins → Add plugin** and enter:
 
 ```text
-https://github.com/TanukiRei/tanuki-toolbox
+https://github.com/TanukiRei/dsh-tanuki-toolbox
 ```
 
 Then enable **Tanuki Toolbox** and choose your components in **Settings → Tanuki Toolbox**. Built client files are included; installation does not require compiling the plugin.
 
-If Git is unavailable on your computer, open the [latest release](https://github.com/TanukiRei/tanuki-toolbox/releases/latest) and use its **Install without Git** URL, or download `tanuki-toolbox.tgz` and install the local package. A release's commit-specific download URL preserves the source repository for subsequent update checks.
+If Git is unavailable on your computer, open the [latest release](https://github.com/TanukiRei/dsh-tanuki-toolbox/releases/latest) and use its **Install without Git** URL, or download `tanuki-toolbox.tgz` and install the local package. A release's commit-specific download URL preserves the source repository for subsequent update checks.
 
 To update an existing installation, install over it. Keep the package name `dsh-local-plugin-center`; uninstalling first is unnecessary and may discard host-managed settings.
+
+## Task rules
+
+Enable **Rules** to add a scale icon and rule count next to the composer's workspace permission control. Click to expand upward, edit one rule per line, and press Enter to add a line. Changes are autosaved per task. Each rule has a green/gray enable button and a trash button; hovering for one second reveals its full text. Disabled rules are excluded from model requests. Forking copies the current contents, order and enabled states into an independent child record. Click outside or the button again to collapse; empty rules leave native requests unchanged.
+
+The complete current rules are injected once at formal task dispatch, without entering durable conversation history or compaction input. The next request after compaction reads the complete latest version. Existing DSH system, tool and permission requirements remain in force. Rules consume context; oversized rules are rejected explicitly rather than silently truncated. Model compliance depends on the model.
+
+Drag the header out to open a resizable Windows native editor owned by DSH. It stays above its owner, can be covered by other applications and minimizes with DSH. Clicking the composer Rules button again returns the detached editor to the popup. Closing the editor retains its rules. Both modes share one DOM renderer, stylesheet and translations. The Windows editor uses an already installed WebView2 Runtime; the plugin does not install or update the Runtime. If unavailable, in-app editing remains usable. Other platforms currently use a draggable, resizable in-app panel. Disabling the component closes editors and removes injection while retaining saved rules.
 
 ## Components
 
@@ -29,7 +37,9 @@ To update an existing installation, install over it. Keep the package name `dsh-
 | **Startup Guard** | Checks declared version compatibility before protected startup and disables incompatible third-party plugins. On Windows, it can manage existing DSH shortcuts and optionally start DSH after sign-in. |
 | **Quick Bar** | Provides editable navigation for Home, conversations, workspaces, scheduled tasks, skills when available, plugins, settings, and other shortcuts. Supports ordering, visibility, and a collapsible, resizable workspace sidebar. |
 | **Start Page** | Displays a calendar, conversation/task totals, recorded token usage, recent activity, recent conversations, live tasks, and supported account allowance information. |
-| **Composer Enhancements** | Adds time statistics, a compact model/effort/speed/output-detail selector, and file context-menu actions. Each subfeature has its own switch. |
+| **Conversation Enhancements** | Adds time statistics, a compact model/effort/speed/output-detail selector, file context-menu actions, and a conversation-list right-click menu backed by the native menu. Each subfeature has its own switch. |
+| **Recycle Bin** | Workspace-style task list and native conversation/trajectory views, with bottom/right-panel plugins and statistics preserved. Replaces the composer with Restore and a live deletion countdown; retains tasks for 30 days and supports confirmed per-task permanent deletion or clearing. |
+| **Rules** | Edit and autosave per-task rules. Each formal task request receives the complete current version; the editor can be detached. |
 | **Settings Enhancements** | Offers a compact Models page with provider/model switches, six-dot grips with pointer-captured dragging and white insertion indicators (including the original row), default model selection, and separate provider/model editing dialogs. |
 | **Message Center** | Provides top-of-app Dynamic Island banners, system notifications, persistent status bubbles, and notification sounds. |
 | **Plugin Center** | Combines plugin management with optional [Plugin Market](https://github.com/dsh-market/dsh-market) integration, update indicators, custom names, repository links, and recommendations. |
@@ -112,7 +122,7 @@ Windows shortcut protection, sign-in startup and force restart are platform-spec
 
 ## Updates and development
 
-Released versions are published to [GitHub Releases](https://github.com/TanukiRei/tanuki-toolbox/releases). With Plugin Market enabled, Plugin Center can offer supported repository updates. There is no silent background installation.
+Released versions are published to [GitHub Releases](https://github.com/TanukiRei/dsh-tanuki-toolbox/releases). With Plugin Market enabled, Plugin Center can offer supported repository updates. There is no silent background installation.
 
 ```text
 node scripts/build.cjs
@@ -136,3 +146,5 @@ With **Settings Enhancements → Models** enabled, compatible OpenAI Chat Comple
 Under the agreed gateway contract, enforced server speed policies take precedence. With the server policy set to default, the DSH-requested tier applies. A solid blue lightning icon represents the Fast request and uses the same color as reasoning effort; actual execution follows the API response.
 
 The lightning button’s hover text reports actual gateway SSE confirmation, keeping waiting/unconfirmed distinct from confirmed Fast and preserving failure/interruption status. Credentials stay in the DSH host. Capability failures preserve existing configuration and offer an explicit refresh. There is no automatic account/model fallback, global fetch patch, or background capability poll. This integration has received build/static checks only, not live gateway or functional acceptance.
+
+Conversation lists reuse the native three-dot menu on right-click. The Recycle Bin keeps deleted conversations read-only for 30 days and can restore them to their original workspace. Expired conversations are permanently deleted while the component is enabled. Its sidebar entry requires both Recycle Bin and Quick Bar.

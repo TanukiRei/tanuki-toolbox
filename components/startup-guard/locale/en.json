@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Startup Guard",
-    "description": "Detect and disable third-party plugins that can cause crashes before startup."
+    "title": "Startup",
+    "description": "Add startup-related optimizations."
   }
 }

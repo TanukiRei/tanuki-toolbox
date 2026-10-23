@@ -1,5 +1,6 @@
 document.currentScript.__tanukiRegister(function(require){
-  const React=require('react'),h=React.createElement,{createPortal}=require('react-dom'),{Switch,useModalLayer}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSettingsModels';
+  const React=require('react'),{createPortal}=require('react-dom'),{Switch,useModalLayer}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSettingsModels';
+  const SettingsSelect=(__SETTINGS_SELECT_FACTORY__)({React,createPortal,useModalLayer}),h=(type,props,...children)=>React.createElement(type==='select'?SettingsSelect:type,props,...children);
   const copy=value=>structuredClone(value),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),pair=(provider,model)=>JSON.stringify([provider,model]);
   const ordered=(rows,ids,getId)=>{const ranks=new Map(ids.map((id,index)=>[id,index]));return rows.map((row,index)=>({row,index})).sort((a,b)=>(ranks.get(getId(a.row))??ids.length+a.index)-(ranks.get(getId(b.row))??ids.length+b.index)).map(item=>item.row);};
   const move=(items,from,to)=>{const next=[...items],a=next.indexOf(from),b=next.indexOf(to);if(a<0||b<0||a===b)return next;next.splice(b,0,next.splice(a,1)[0]);return next;};

@@ -1,9 +1,9 @@
 {
   "name": "dsh-local-plugin-center",
-  "version": "0.7.9",
+  "version": "0.10.3",
   "private": true,
   "type": "module",
-  "description": "Modular UI enhancements for DeepSeek Harness: quick bar, start page, composer, model settings, notifications, plugin management and Windows startup protection.",
+  "description": "Modular DeepSeek Harness enhancements: task rules, quick bar, start page, conversations, recycle bin, model settings, notifications, plugin management and Windows startup protection.",
   "icon": "./assets/toolbox.png",
   "main": "./index.js",
   "license": "MIT",
@@ -39,7 +39,13 @@
     "./composer/locale/*.json": "./components/composer/locale/*.json",
     "./settings-enhancements": "./components/settings-enhancements/index.js",
     "./settings-enhancements/package.json": "./components/settings-enhancements/package.json",
-    "./settings-enhancements/locale/*.json": "./components/settings-enhancements/locale/*.json"
+    "./settings-enhancements/locale/*.json": "./components/settings-enhancements/locale/*.json",
+    "./rules": "./components/rules/index.js",
+    "./rules/package.json": "./components/rules/package.json",
+    "./rules/locale/*.json": "./components/rules/locale/*.json",
+    "./recycle-bin": "./components/recycle-bin/index.js",
+    "./recycle-bin/package.json": "./components/recycle-bin/package.json",
+    "./recycle-bin/locale/*.json": "./components/recycle-bin/locale/*.json"
   },
   "dsh": {
     "manifestVersion": 1,
@@ -80,11 +86,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TanukiRei/tanuki-toolbox.git"
+    "url": "git+https://github.com/TanukiRei/dsh-tanuki-toolbox.git"
   },
-  "homepage": "https://github.com/TanukiRei/tanuki-toolbox#readme",
+  "homepage": "https://github.com/TanukiRei/dsh-tanuki-toolbox#readme",
   "bugs": {
-    "url": "https://github.com/TanukiRei/tanuki-toolbox/issues"
+    "url": "https://github.com/TanukiRei/dsh-tanuki-toolbox/issues"
   },
   "author": "TanukiRei",
   "scripts": {

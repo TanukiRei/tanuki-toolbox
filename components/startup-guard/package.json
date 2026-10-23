@@ -1,7 +1,7 @@
 {
   "name": "tanuki-startup-guard",
-  "version": "0.7.9",
+  "version": "0.10.3",
   "type": "module",
-  "description": "Detect and disable third-party plugins that can cause crashes before startup.",
+  "description": "Add startup-related optimizations.",
   "icon": "./icon.svg"
 }

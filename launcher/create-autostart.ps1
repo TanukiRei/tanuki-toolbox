@@ -10,7 +10,7 @@ try {
   $link.TargetPath=$Launcher
   $link.Arguments=''
   $link.WorkingDirectory=[IO.Path]::GetDirectoryName($Launcher)
-  $link.Description='Tanuki Toolbox - DeepSeek Harness protected login startup'
+  $link.Description='Tanuki Toolbox - DeepSeek Harness login startup'
   $link.IconLocation=$Launcher+',0'
   $link.Save()
 } finally {

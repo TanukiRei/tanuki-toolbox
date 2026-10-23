@@ -12,18 +12,6 @@
     }
   },
   {
-    "repository": "https://github.com/MichengAI/dsh-skills-manager",
-    "packageName": "@michengai/dsh-skills-manager",
-    "title": {
-      "zh": "Skills Manager",
-      "en": "Skills Manager"
-    },
-    "description": {
-      "zh": "统一加载并安全管理本机 Agent Skills。",
-      "en": "Load and safely manage local Agent Skills."
-    }
-  },
-  {
     "repository": "https://github.com/omdsh-dev/DSH-better-sidebar",
     "packageName": "dsh-better-sidebar",
     "title": {
@@ -45,6 +33,18 @@
     "description": {
       "zh": "Free web search for DeepSeek Harness: 27 engines (Bing/DuckDuckGo/AnySearch/SearXNG/Exa/Tavily/Keenable/Firecrawl/Parallel keyless; Zhihu global/site via MCP and Perplexity/SerpBase/DeepSeek (official + native tools/search)/You.com/Baidu/Kimi/Aliyun/Doubao with key; OpenAI/Gemini/Claude model built-in search, explicit-only) + auto smart routing + global engine enable/disable & fallback priority + editable zh/en language pools + multi mode (parallel full language-pool merge) + multi_search cross-source tool + failure-aware fallback (quota/auth cooldown, transient retry, fallbackOn) + time filtering + platform search + domain blocklist (blockedDomains) + web_fetch, with web settings UI.",
       "en": "Free web search for DeepSeek Harness: 27 engines (Bing/DuckDuckGo/AnySearch/SearXNG/Exa/Tavily/Keenable/Firecrawl/Parallel keyless; Zhihu global/site via MCP and Perplexity/SerpBase/DeepSeek (official + native tools/search)/You.com/Baidu/Kimi/Aliyun/Doubao with key; OpenAI/Gemini/Claude model built-in search, explicit-only) + auto smart routing + global engine enable/disable & fallback priority + editable zh/en language pools + multi mode (parallel full language-pool merge) + multi_search cross-source tool + failure-aware fallback (quota/auth cooldown, transient retry, fallbackOn) + time filtering + platform search + domain blocklist (blockedDomains) + web_fetch, with web settings UI."
+    }
+  },
+  {
+    "repository": "https://github.com/STARDUSTLC666/dsh-remotion",
+    "packageName": "dsh-remotion",
+    "title": {
+      "zh": "dsh-remotion",
+      "en": "dsh-remotion"
+    },
+    "description": {
+      "zh": "DSH 视频插件：Remotion 技能、模板与素材工作台、官方 Studio 预览和本地 MP4 导出。",
+      "en": "DSH 视频插件：Remotion 技能、模板与素材工作台、官方 Studio 预览和本地 MP4 导出。"
     }
   }
 ]

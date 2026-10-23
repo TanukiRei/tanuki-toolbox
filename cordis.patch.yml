@@ -7,6 +7,10 @@
       name: dsh-local-plugin-center/home
     - id: tanuki-composer
       name: dsh-local-plugin-center/composer
+    - id: tanuki-recycle-bin
+      name: dsh-local-plugin-center/recycle-bin
+    - id: tanuki-rules
+      name: dsh-local-plugin-center/rules
     - id: tanuki-settings-enhancements
       name: dsh-local-plugin-center/settings-enhancements
     - id: tanuki-dynamic-island

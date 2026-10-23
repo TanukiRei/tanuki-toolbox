@@ -26,3 +26,15 @@
 
 Run `node scripts/build.cjs` to regenerate browser files from checked-in source and assets. This parses generated JavaScript without executing plugin components. No dependency installation is required for this build. Windows launcher source and its compiled executable are checked in together; `scripts/build-launcher.ps1` rebuilds it on Windows.
 The one-shot native restart worker uses `scripts/build-restart-worker.ps1`. Keep its C# source, executable and source/binary hash manifest together; the regular build rejects stale artifacts without executing the worker.
+
+## Shared settings controls (owner request, 2026-10-20)
+
+- All Toolbox settings dropdowns use `lib/settings-select-client.cjs` via the `__SETTINGS_SELECT_FACTORY__` build token and `client-src/settings-select.css`. Reuse it for future settings fields; do not introduce native OS select popups or hard-coded dark/black field backgrounds.
+- Match rounded trigger and popup borders, theme-token gray surfaces, disabled states, grouped options and keyboard navigation. Models and provider/model dialogs share the same component.
+- Notification bubble colors keep their existing status palette; number ink is black in light mode and white in dark mode.
+
+## Shared Rules editor (owner request, 2026-10-23)
+
+- Popup and detached Rules windows MUST share lib/rules-editor-client.cjs, client-src/rules.css and rules.locale.json. scripts/build.cjs embeds these same sources into client-chunks/rules.js and launcher/RulesEditor.html. Do not implement a second native layout or separate translations.
+- RulesWindow.cs owns only native grouping/geometry/pipe/WebView hosting. Keep its SDK DLLs, license and build hashes together; never download/install the WebView2 Runtime silently. Preserve the in-app editor if the Runtime is unavailable.
+- Forking must copy all row contents, order and enabled states at creation, with independent parent/child storage. Disabled rows must never reach the request-only rules block.

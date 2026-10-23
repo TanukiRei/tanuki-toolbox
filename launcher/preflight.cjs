@@ -16,7 +16,7 @@ async function preflight({profile,installAnchor,boot,dryRun=false}) {
   const entries=boot.composeEntries([...loaded.layers.map(l=>l.patches),loaded.patches,homePatches]);
   const guard=entries.find(e=>e.id==='tanuki-startup-guard');
   // Expressions are deliberately not executed by this helper. DSH evaluates them itself.
-  const enabled=selected.includes(SELF) && guard && (guard.disabled===undefined||guard.disabled===false);
+  const enabled=require('../lib/toolbox-settings.cjs').startupEnabled({dir:profile}) && selected.includes(SELF) && guard && (guard.disabled===undefined||guard.disabled===false);
   if(!enabled) return {status:'off',disabled:[],checked:0};
   const exemptions=boot.readProfileVersionExemptions(profile);
   const disabled=[],unknown=[];

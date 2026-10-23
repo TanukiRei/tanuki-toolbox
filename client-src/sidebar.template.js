@@ -1,11 +1,11 @@
 document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,{createPortal}=require('react-dom');
-  const {FishLogo,IconSkillOutlineRegular}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSidebar',HOME='tanuki-sidebar-home';
+  const {FishLogo}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSidebar',HOME='tanuki-sidebar-home';
   const createWorkspaceSplitter=__WORKSPACE_SPLITTER_FUNCTION__;
   function apply(ctx,{lifecycle}){
     let alive=true,current=null,frameRequest=null,settingsCleanup=null,toolboxCleanup=null,accountMount=null,accountCleanup=null,menuCleanup=null;
-    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['workspace','automations','skills','toolbox','plugins','restart'];
-    const orderKey='tanuki.sidebar.order.v2',legacyOrderKey='tanuki.sidebar.order.v1',defaultOrder={top:['home','newSession','workspace','more'],bottom:['automations','skills','toolbox','plugins','settings','restart']};
+    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['workspace','automations','skills','toolbox','plugins','recycleBin','restart'];
+    const orderKey='tanuki.sidebar.order.v2',legacyOrderKey='tanuki.sidebar.order.v1',defaultOrder={top:['home','newSession','workspace','more'],bottom:['automations','skills','toolbox','plugins','recycleBin','settings','restart']};
     const allItems=[...defaultOrder.top,...defaultOrder.bottom];
     // Both groups use visual top-to-bottom order; the bottom group stays bottom-aligned.
     function normalizeOrder(saved){
@@ -44,9 +44,10 @@ document.currentScript.__tanukiRegister(function(require){
     }
     function saveWidth(width){previewWidth=null;preferredWidth=Math.round(width);updateLayout();try{localStorage.setItem(widthKey,String(preferredWidth));}catch{notify('widthSaveFailed');}}
     const hasAutomations=()=>ctx.slots.entriesOfSlot('main').some(entry=>entry.options?.key==='schedules');
+    const hasRecycleBin=()=>ctx.slots.entriesOfSlot('main').some(entry=>entry.options?.key==='tanuki-recycle-bin');
     const hasSkills=()=>ctx.slots.entriesOfSlot('settings.section').some(entry=>entry.options?.id==='skills-manager');
     function readVisibility(){try{const saved=JSON.parse(localStorage.getItem(visibilityKey)||'{}');return Object.fromEntries(optionalItems.map(key=>[key,saved?.[key]!==false]));}catch{return Object.fromEntries(optionalItems.map(key=>[key,true]));}}
-    const listeners=new Set(),requests=new Set();let focusWorkspaceToggle=null,state={target:null,workspaceTarget:null,conversationTarget:null,accountTarget:null,accountBusy:false,workspaceCollapsed:readCollapsed(),pane:ctx.layout.panelInfo.getSnapshot().activePanelId===null&&!readCollapsed(),automationsAvailable:hasAutomations(),skillsAvailable:hasSkills(),skillsOpen:false,restarting:false,settingsOpen:false,toolboxOpen:false,visibility:readVisibility(),order:readOrder()};
+    const listeners=new Set(),requests=new Set();let focusWorkspaceToggle=null,state={target:null,workspaceTarget:null,conversationTarget:null,accountTarget:null,accountBusy:false,workspaceCollapsed:readCollapsed(),pane:ctx.layout.panelInfo.getSnapshot().activePanelId===null&&!readCollapsed(),automationsAvailable:hasAutomations(),skillsAvailable:hasSkills(),recycleAvailable:hasRecycleBin(),skillsOpen:false,restarting:false,settingsOpen:false,toolboxOpen:false,visibility:readVisibility(),order:readOrder()};
     const publish=next=>{if(!alive)return;state={...state,...next};for(const fn of listeners)fn();};
     const subscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn);};
     const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
@@ -76,7 +77,7 @@ document.currentScript.__tanukiRegister(function(require){
     // dialogs/account menus do not select a panel and must not hide its backdrop.
     // Keep the native workspace mounted; optional rail-icon visibility is separate.
     function syncPane(){
-      const pane=ctx.layout.panelInfo.getSnapshot().activePanelId===null&&!state.workspaceCollapsed;
+      const panel=ctx.layout.panelInfo.getSnapshot().activePanelId,pane=(panel===null||panel==='tanuki-recycle-bin')&&!state.workspaceCollapsed;
       // Commit visual/interaction state before subscribers transfer focus.
       if(state.pane!==pane){state={...state,pane};updateLayout();publish({pane});}
       else updateLayout();
@@ -246,7 +247,7 @@ document.currentScript.__tanukiRegister(function(require){
     function Home(){const tr=useLocale();return h('main',{'aria-label':tr('home'),style:{height:'100%',width:'100%',background:'var(--dsw-alias-bg-base,#151515)'}});}
     ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:HOME,locale:NS},Home));
     const clearHandoff=()=>window.dispatchEvent(new Event('tanuki:clear-handoff'));
-    function navigate(panel){clearHandoff();ctx.layout.selectPanel(panel);}
+    function navigate(panel){if(panel!=='tanuki-recycle-bin')window.dispatchEvent(new CustomEvent('tanuki:leave-recycle'));clearHandoff();ctx.layout.selectPanel(panel);}
     function openAutomations(){if(hasAutomations())navigate('schedules');else notify('automationsUnavailable');}
     function openSkills(){
       if(!hasSkills())return;
@@ -286,35 +287,38 @@ document.currentScript.__tanukiRegister(function(require){
       }catch{if(alive&&!controller.signal.aborted)notify('restartFailed');else if(alive)notify('restartFailed');}
       finally{clearTimeout(timeout);requests.delete(controller);if(alive&&!accepted)publish({restarting:false});}
     }
-    const paths={newSession:'M20 11.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5M16 3v6M13 6h6',plugins:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',workspace:'M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 11h18',restart:'M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7',settings:'M9 3h6l.6 2.4 2.1 1.2 2.4-.7 3 5.2-1.8 1.7v2.4l1.8 1.7-3 5.2-2.4-.7-2.1 1.2L15 24H9l-.6-2.4-2.1-1.2-2.4.7-3-5.2 1.8-1.7v-2.4L.9 11.1l3-5.2 2.4.7 2.1-1.2z'};
+    const paths={recycleBin:'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7',newSession:'M20 11.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5M16 3v6M13 6h6',plugins:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',workspace:'M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 11h18',restart:'M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7',settings:'M9 3h6l.6 2.4 2.1 1.2 2.4-.7 3 5.2-1.8 1.7v2.4l1.8 1.7-3 5.2-2.4-.7-2.1 1.2L15 24H9l-.6-2.4-2.1-1.2-2.4.7-3-5.2 1.8-1.7v-2.4L.9 11.1l3-5.2 2.4.7 2.1-1.2z'};
     function Icon({name,selected=false}){
       const cutoutId=React.useId();
-      const svg={viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true};
-      if(name==='skills')return IconSkillOutlineRegular?h(IconSkillOutlineRegular,{size:24}):h('svg',svg,h('path',{d:'M14 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h6M8 7h8M8 12h5M18 13l1.5 3.5L23 18l-3.5 1.5L18 23l-1.5-3.5L13 18l3.5-1.5z'}));
+      const svg={viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true};
+      // Trace the same Skills paper/sparkle geometry with a real centerline,
+      // so the filled native paper border can share the thinner icon weight.
+      if(name==='skills')return h('svg',{...svg,viewBox:'0 0 17 17',strokeWidth:.7*17/24},h('path',{d:'M13.1404 8.89856V2.64465C13.1404 2.12 12.69 1.69446 12.1404 1.69446H3.14038C2.59 1.69446 2.14038 2.12 2.14038 2.64465V13.0929C2.14038 13.6175 2.59 14.0421 3.14038 14.0421H8.88159M4.57788 5.77124H10.7029M4.57788 8.89819H7.91879M12.0051 15.1056C12.0051 13.6395 10.8166 12.451 9.35059 12.451C10.8166 12.451 12.0051 11.2626 12.0051 9.79651C12.0051 11.2626 13.1936 12.451 14.6597 12.451C13.1936 12.451 12.0051 13.6395 12.0051 15.1056Z'}));
       if(name==='eyeOpen')return h('svg',svg,h('path',{d:'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'}),h('circle',{cx:12,cy:12,r:3}));
       if(name==='eyeClosed')return h('svg',svg,h('path',{d:'M3 9c4 6 14 6 18 0M5 12l-2 3M9 14l-1 3M15 14l1 3M19 12l2 3'}));
-      if(name==='home')return h('span',{className:'tanuki-rail-home-mark','aria-hidden':true},h(FishLogo,{size:24}),selected?h('svg',{...svg,className:'tanuki-rail-home-spout',strokeWidth:1.5},h('path',{d:'M7 8V4M7 4C7 2.4 5.8 1.5 4.3 1.5M7 4C7 2.4 8.2 1.5 9.7 1.5'})):null);
+      if(name==='home')return h('span',{className:'tanuki-rail-home-mark','aria-hidden':true},h(FishLogo,{size:24}),selected?h('svg',{...svg,className:'tanuki-rail-home-spout',strokeWidth:.5},h('path',{d:'M7 8V4M7 4C7 2.4 5.8 1.5 4.3 1.5M7 4C7 2.4 8.2 1.5 9.7 1.5'})):null);
       if(name==='automations'){
         const hands='M12 6.5V12l-3 3';
         if(!selected)return h('svg',svg,h('circle',{cx:12,cy:12,r:9.5}),h('path',{d:hands}));
-        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:hands,stroke:'black',strokeWidth:1.8}))),h('circle',{cx:12,cy:12,r:10.35,fill:'currentColor',stroke:'none',mask:'url(#'+cutoutId+')'}));
+        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:hands,stroke:'black',strokeWidth:.8}))),h('circle',{cx:12,cy:12,r:9.85,fill:'currentColor',stroke:'none',mask:'url(#'+cutoutId+')'}));
       }
       if(name==='workspace')return h('svg',svg,selected?h('path',{d:'M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',fill:'currentColor',stroke:'none'}):null,h('path',{d:paths.workspace}));
       if(name==='plugins')return h('svg',svg,h('path',{d:paths.plugins,fill:selected?'currentColor':'none'}));
-      if(name==='expandWorkspace')return h('svg',{viewBox:'0 0 12 16',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:'M4 4l4 4-4 4'}));
-      if(name==='collapseWorkspace')return h('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('rect',{x:3,y:4,width:18,height:16,rx:2}),h('path',{d:'M9 4v16M16 9l-3 3 3 3'}));
-      if(name==='more')return h('svg',{viewBox:'0 0 24 24',fill:'currentColor','aria-hidden':true},...[5,12,19].map(cx=>h('circle',{key:cx,cx,cy:12,r:1.7})));
-      if(name==='reorder')return h('svg',{viewBox:'0 0 16 24',fill:'currentColor','aria-hidden':true},...[6,12,18].flatMap(cy=>[5,11].map(cx=>h('circle',{key:cx+'-'+cy,cx,cy,r:1.4}))));
+      if(name==='recycleBin')return h('svg',svg,selected?h(React.Fragment,null,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:'M10 10v7m4-7v7',stroke:'black',strokeWidth:.7}))),h('path',{d:'M6 6l1 15h10l1-15z',fill:'currentColor',mask:'url(#'+cutoutId+')'}),h('path',{d:'M3 6h18M9 6V3h6v3'})):h('path',{d:paths.recycleBin}));
+      if(name==='expandWorkspace')return h('svg',{viewBox:'0 0 12 16',fill:'none',stroke:'currentColor',strokeWidth:.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:'M4 4l4 4-4 4'}));
+      if(name==='collapseWorkspace')return h('svg',svg,h('rect',{x:3,y:4,width:18,height:16,rx:2}),h('path',{d:'M9 4v16M16 9l-3 3 3 3'}));
+      if(name==='more')return h('svg',{viewBox:'0 0 24 24',fill:'currentColor','aria-hidden':true},...[5,12,19].map(cx=>h('circle',{key:cx,cx,cy:12,r:1.2})));
+      if(name==='reorder')return h('svg',{viewBox:'0 0 16 24',fill:'currentColor','aria-hidden':true},...[6,12,18].flatMap(cy=>[5,11].map(cx=>h('circle',{key:cx+'-'+cy,cx,cy,r:.9}))));
       if(name==='toolbox'){
         const handle='M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7',seam='M3 11.5l8 2a4 4 0 0 0 2 0l8-2M10 12.5v3h4v-3';
         if(!selected)return h('svg',svg,h('path',{d:handle+seam}),h('rect',{x:3,y:7,width:18,height:13,rx:2}));
-        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:seam,stroke:'black',strokeWidth:1.5}))),h('path',{d:handle}),h('rect',{x:3,y:7,width:18,height:13,rx:2,fill:'currentColor',mask:'url(#'+cutoutId+')'}));
+        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:seam,stroke:'black',strokeWidth:.5}))),h('path',{d:handle}),h('rect',{x:3,y:7,width:18,height:13,rx:2,fill:'currentColor',mask:'url(#'+cutoutId+')'}));
       }
       if(name==='settings'){
         const gear='m9.5 3-.6 2.1-1.8 1-2.1-.5-2.5 4.3L4 11.5v2l-1.5 1.6L5 19.4l2.1-.5 1.8 1 .6 2.1h5l.6-2.1 1.8-1 2.1.5 2.5-4.3-1.5-1.6v-2l1.5-1.6L19 5.6l-2.1.5-1.8-1L14.5 3z';
         return h('svg',svg,selected?h(React.Fragment,null,h('path',{d:gear+'M15 12.5a3 3 0 1 0-6 0a3 3 0 1 0 6 0z',fill:'currentColor',fillRule:'evenodd',stroke:'none'}),h('path',{d:gear})):h(React.Fragment,null,h('path',{d:gear}),h('circle',{cx:12,cy:12.5,r:3})));
       }
-      return h('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:paths[name]}));
+      return h('svg',svg,h('path',{d:paths[name]}));
     }
     function RestartButton({busy}){
       const tr=useLocale(),[progress,setProgress]=React.useState(0);
@@ -346,7 +350,7 @@ document.currentScript.__tanukiRegister(function(require){
         onKeyUp:event=>{if(event.key!==' '&&event.key!=='Enter')return;event.preventDefault();if(r.source==='k'+event.key)stop();},onBlur:()=>stop(true)
       },h(Icon,{name:'restart'}),h('svg',{className:'tanuki-restart-ring',viewBox:'0 0 40 40','aria-hidden':true,style:{opacity:progress>0?1:0}},h('circle',{cx:20,cy:20,r:18,pathLength:100,fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeDasharray:100,strokeDashoffset:100*(1-progress),transform:'rotate(-90 20 20)'})));
     }
-    function VisibilityMenu({visibility,order,skillsAvailable}){
+    function VisibilityMenu({visibility,order,skillsAvailable,recycleAvailable}){
       const tr=useLocale(),[open,setOpen]=React.useState(false),[position,setPosition]=React.useState({left:52,top:0}),[preview,setPreview]=React.useState(null);
       const anchor=React.useRef(null),menu=React.useRef(null),drag=React.useRef(null),pendingFocus=React.useRef(null),menuId=React.useId();
       function finish(commit=false,focus=true){
@@ -449,14 +453,14 @@ document.currentScript.__tanukiRegister(function(require){
       const section=group=>h('div',{key:group,role:'group','aria-label':tr('order_'+group),'data-sort-group':group,className:'tanuki-rail-menu-group'},
         h('div',{className:'tanuki-rail-sort-list','data-drop-end':preview?.target?.group===group&&!preview.target.before?'true':undefined},
           ...order[group].map(key=>{
-            const required=!optionalItems.includes(key),unavailable=key==='skills'&&!skillsAvailable,visible=!unavailable&&(required||visibility[key]);
+            const required=!optionalItems.includes(key),unavailable=key==='skills'&&!skillsAvailable||key==='recycleBin'&&!recycleAvailable,visible=!unavailable&&(required||visibility[key]);
             return h('div',{key,role:'none','data-sort-key':key,'data-dragging':preview?.key===key?'true':undefined,'data-drop-before':preview?.target?.group===group&&preview.target.before===key?'true':undefined,className:'tanuki-rail-menu-row'},
               h('button',{type:'button',role:'menuitem',tabIndex:-1,className:'tanuki-rail-sort-handle',title:tr('reorderHint'),'aria-label':tr('reorder')+' '+tr('menu_'+key),'aria-description':tr('reorderHint'),
                 onPointerDown:event=>begin(event,key),onPointerMove:pointerMove,
                 onPointerUp:event=>{if(drag.current?.id===event.pointerId){if(drag.current.started){drag.current.x=event.clientX;drag.current.y=event.clientY;locate(drag.current);}finish(true);}},
                 onPointerCancel:event=>{if(drag.current?.id===event.pointerId)finish(false);},onLostPointerCapture:event=>{if(drag.current?.id===event.pointerId)finish(false);},
                 onKeyDown:event=>reorderWithKeyboard(event,key),onClick:event=>{event.preventDefault();event.stopPropagation();}},h(Icon,{name:'reorder'})),
-              h('button',{type:'button',role:'menuitemcheckbox','aria-checked':visible,'aria-disabled':required||unavailable||undefined,'data-unavailable':unavailable||undefined,title:tr(unavailable?'skillsUnavailable':required?'alwaysVisible':visible?'visibilityShown':'visibilityHidden'),tabIndex:-1,className:'tanuki-rail-menu-item',onClick:()=>{if(!required&&!unavailable)setVisible(key);}},
+              h('button',{type:'button',role:'menuitemcheckbox','aria-checked':visible,'aria-disabled':required||unavailable||undefined,'data-unavailable':unavailable||undefined,title:tr(unavailable?(key==='recycleBin'?'recycleUnavailable':'skillsUnavailable'):required?'alwaysVisible':visible?'visibilityShown':'visibilityHidden'),tabIndex:-1,className:'tanuki-rail-menu-item',onClick:()=>{if(!required&&!unavailable)setVisible(key);}},
                 h(Icon,{name:key}),h('span',{className:'tanuki-rail-menu-label'},tr('menu_'+key)),h('span',{className:'tanuki-rail-menu-status','data-locked':required||unavailable?'true':undefined,'aria-hidden':true},h(Icon,{name:visible?'eyeOpen':'eyeClosed'}))));
           }),order[group].length?null:h('div',{className:'tanuki-rail-drop-empty'},tr('dropHere'))));
       return h(React.Fragment,null,h('button',{ref:anchor,type:'button',className:'tanuki-rail-button',title:tr('more'),'aria-label':tr('more'),'aria-haspopup':'menu','aria-expanded':open,'aria-controls':open?menuId:undefined,onClick:()=>{if(open)close();else setOpen(true);},onKeyDown:event=>{if(event.key==='ArrowDown'){event.preventDefault();setOpen(true);}}},h(Icon,{name:'more'})),
@@ -477,11 +481,12 @@ document.currentScript.__tanukiRegister(function(require){
         switch(key){
           case 'home':return button(key,()=>navigate(ctx.slots.entries('main').some(entry=>entry.options?.key==='tanuki-home')?'tanuki-home':HOME),panel===HOME||panel==='tanuki-home');
           case 'newSession':return button(key,newSession,false);
-          case 'workspace':return button(key,openWorkspace,panel===null,{'aria-expanded':model.pane});
-          case 'more':return h(VisibilityMenu,{key,visibility:model.visibility,order:model.order,skillsAvailable:model.skillsAvailable});
+          case 'workspace':return button(key,openWorkspace,panel===null&&!model.recycleActive,{'aria-expanded':model.pane});
+          case 'more':return h(VisibilityMenu,{key,visibility:model.visibility,order:model.order,skillsAvailable:model.skillsAvailable,recycleAvailable:model.recycleAvailable});
           case 'skills':return model.skillsAvailable?button(key,openSkills,model.skillsOpen,{'aria-haspopup':'dialog','aria-expanded':model.skillsOpen}):null;
           case 'automations':return button(key,openAutomations,panel==='schedules',{disabled:!model.automationsAvailable,title:tr(model.automationsAvailable?'menu_automations':'automationsUnavailable')});
           case 'toolbox':return button(key,openToolboxSettings,model.toolboxOpen,{'aria-haspopup':'dialog','aria-expanded':model.toolboxOpen});
+          case 'recycleBin':return model.recycleAvailable?button(key,()=>{setWorkspaceCollapsed(false);navigate('tanuki-recycle-bin');},panel==='tanuki-recycle-bin'||model.recycleActive):null;
           case 'plugins':return button(key,()=>navigate('plugins'),panel==='plugins');
           case 'settings':return button(key,()=>openNativeSettings(),model.settingsOpen,{'aria-haspopup':'dialog','aria-expanded':model.settingsOpen,onContextMenu:event=>{event.preventDefault();openNativeSettings(true);},'aria-description':tr('settingsHint')});
           case 'restart':return h(RestartButton,{key,busy:model.restarting});
@@ -492,18 +497,20 @@ document.currentScript.__tanukiRegister(function(require){
       const railItems=[...model.order.top.map(item),h('div',{key:'spacer',className:'tanuki-rail-spacer'}),...model.order.bottom.map(item)];
       return createPortal(h(React.Fragment,null,
         h('nav',{className:'tanuki-rail','aria-label':tr('rail')},railItems),
-        h('div',{className:'tanuki-workspace-heading','aria-hidden':!model.pane},h('span',null,tr('workspace'))),
+        h('div',{className:'tanuki-workspace-heading','aria-hidden':!model.pane},h('span',null,tr(model.recycleActive?'menu_recycleBin':'workspace'))),
         model.workspaceTarget?createPortal(h('button',{ref:collapseButton,type:'button',className:'tanuki-workspace-collapse',title:tr('collapseWorkspace'),'aria-label':tr('collapseWorkspace'),'aria-expanded':model.pane,disabled:!model.pane,tabIndex:model.pane?0:-1,onClick:()=>setWorkspaceCollapsed(true,true)},h(Icon,{name:'collapseWorkspace'})),model.workspaceTarget):null,
         model.conversationTarget&&panel===null?createPortal(h('button',{ref:expandButton,type:'button',className:'tanuki-workspace-collapse tanuki-workspace-expand','data-visible':!model.pane,title:tr('expandWorkspace'),'aria-label':tr('expandWorkspace'),'aria-expanded':model.pane,'aria-hidden':model.pane,disabled:model.pane,tabIndex:model.pane?-1:0,onClick:()=>setWorkspaceCollapsed(false,true)},h(Icon,{name:'expandWorkspace'})),model.conversationTarget):null),model.target);
     }
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-sidebar',locale:NS,inject:()=>({hooks:{sidebarPanel:ctx.layout.panelInfo}})},Rail));
     ctx.slots.inject('shell.overlay',()=>ctx.slots.register({name:'shell.overlay',id:'tanuki-sidebar-account-signout',locale:NS},AccountSignOut));
     const offPanel=ctx.layout.panelInfo.subscribe(syncPane);
-    const offMain=ctx.slots.subscribe('main',()=>{const available=hasAutomations();if(state.automationsAvailable!==available)publish({automationsAvailable:available});});
+    const offMain=ctx.slots.subscribe('main',()=>{const available=hasAutomations(),recycleAvailable=hasRecycleBin();if(state.automationsAvailable!==available||state.recycleAvailable!==recycleAvailable)publish({automationsAvailable:available,recycleAvailable});});
     const offSkills=ctx.slots.subscribe('settings.section',()=>{const available=hasSkills();if(state.skillsAvailable!==available)publish({skillsAvailable:available});});
+    const recycleView=event=>{publish({recycleActive:event.detail?.active===true});syncPane();};
+    window.addEventListener('tanuki:recycle-view',recycleView);publish({recycleActive:document.documentElement.hasAttribute('data-tanuki-recycle-view')});
     syncPane();attach();
     ctx.effect(()=>()=>{alive=false;offPanel();offMain();offSkills();observer.disconnect();cancelAnimationFrame(frameRequest);for(const request of requests)request.abort();requests.clear();
-      window.removeEventListener('storage',storageChanged);window.removeEventListener('resize',schedule);window.removeEventListener('tanuki:settings-visibility',schedule);offLocale();menuCleanup?.();toolboxCleanup?.();settingsCleanup?.();detachAccount();detach();listeners.clear();
+      window.removeEventListener('tanuki:recycle-view',recycleView);window.removeEventListener('storage',storageChanged);window.removeEventListener('resize',schedule);window.removeEventListener('tanuki:settings-visibility',schedule);offLocale();menuCleanup?.();toolboxCleanup?.();settingsCleanup?.();detachAccount();detach();listeners.clear();
       if(lifecycle.disabled&&ctx.layout.panelInfo.getSnapshot().activePanelId===HOME)ctx.layout.selectPanel(null);
     });
   }

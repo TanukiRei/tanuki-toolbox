@@ -1,6 +1,6 @@
 window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
   'use strict';
-  const React=require('react'),h=React.createElement,VERSION="0.7.9";
+  const React=require('react'),h=React.createElement,VERSION="0.10.3";
   const SELF='dsh-local-plugin-center',NS='tanukiCore';
   function apply(ctx){
     let disposed=false,flight=null,again=false,timer,assetVersion=VERSION;
@@ -104,8 +104,15 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       flight=(async()=>{
         const result=await ctx.remote.pluginManager.listPlugins();
         if(disposed||!result.ok)return;
-        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer','settings-enhancements']){
-          const enabled=result.value.some(row=>row.moduleName===SELF+'/'+key&&row.enabled);
+        let rulesEnabled=true;
+        const ruleRow=result.value.find(row=>row.moduleName===SELF+'/rules');
+        if(ruleRow?.enabled){
+          const controller=new AbortController();loads.add(controller);const timeout=setTimeout(()=>controller.abort(),8000);
+          try{const answer=await fetch(new URL('tanuki-toolbox/component-state',document.baseURI),{credentials:'same-origin',cache:'no-store',signal:controller.signal});if(answer.ok)rulesEnabled=(await answer.json()).rules!==false;}catch{rulesEnabled=false;}finally{clearTimeout(timeout);loads.delete(controller);}
+        }
+        if(disposed)return;
+        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer','settings-enhancements','rules','recycle-bin']){
+          const enabled=result.value.some(row=>row.moduleName===SELF+'/'+key&&row.enabled)&&(key!=='rules'||rulesEnabled);
           if(enabled)start(key);else stop(key);
         }
       })().catch(error=>{if(!disposed)console.warn('[Tanuki] Component state unavailable',error);}).finally(()=>{flight=null;if(again&&!disposed){again=false;schedule();}});
@@ -129,7 +136,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
         let active=true,fiber;const controller=new AbortController();setComponent(null);setError(false);
         load(moduleName,controller.signal).then(module=>{
           if(!active||disposed)return;
-          fiber=ctx.plugin(module,{ready:component=>{if(active)setComponent(()=>component);}});
+          fiber=ctx.plugin(module,{load,ready:component=>{if(active)setComponent(()=>component);}});
         }).catch(()=>{if(active&&!controller.signal.aborted)setError(true);});
         return()=>{active=false;controller.abort();fiber?.dispose();};
       },[moduleName,view,retry]);

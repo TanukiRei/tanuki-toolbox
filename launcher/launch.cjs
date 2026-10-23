@@ -35,11 +35,18 @@ async function main() {
     }
   }
   if(!dryRun) {
+    const separator=process.argv.indexOf('--');
+    const appArgs=separator<0?[]:process.argv.slice(separator+1);
+    // Must happen before Electron opens Chromium's cookie database, not in a host plugin.
+    if(!running&&result?.status!=='off') {
+      const cleanup=require('./auth-cookie-cleanup.cjs').cleanAuthCookies({profile:options.profile,args:appArgs});
+      if(cleanup.status==='cleaned')process.stdout.write('Tanuki local authentication cleanup: removed '+cleanup.removed+' old cookies; backup saved.\n');
+      else if(cleanup.status==='skipped')process.stderr.write('Tanuki local authentication cleanup skipped: '+cleanup.reason+'\n');
+    }
     const {env,token}=prepareLaunch(process.env,running?null:result); delete env.ELECTRON_RUN_AS_NODE;
     await new Promise((resolve,reject)=>{
       // Only the preflight helper is hidden; the application must open visibly.
-      const separator=process.argv.indexOf('--');
-      const child=spawn(app,separator<0?[]:process.argv.slice(separator+1),{env,detached:true,stdio:'ignore',windowsHide:false});
+      const child=spawn(app,appArgs,{env,detached:true,stdio:'ignore',windowsHide:false});
       child.once('error',reject);child.once('spawn',()=>{
         try{recordLaunch(options.profile,token,child.pid,result);}catch(error){console.warn('Tanuki launch receipt unavailable:',error.message);}
         child.unref();resolve();
