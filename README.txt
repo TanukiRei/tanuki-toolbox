@@ -1,3 +1,84 @@
+0.11.3 设置保存与回读修复 / Settings save/read ordering
+- 工具箱在开始保存前取消并作废旧读取，保存结束后再通知界面刷新，防止消息分类、通知、会话优化、设置优化、启动保护和音量等控件被旧响应覆盖；失败仍保留错误提示并重新读取实际状态。
+- 开机启动和组件列表读取使用各自的版本标记，避免开关保存完成后被之前的状态请求覆盖。
+- 模型设置收到已保存的开关、默认模型或排序变更时，立即作废旧目录请求；速度控件不再让迟到的 HTTP 结果覆盖更新的事件流状态。
+- 审查原生主题、语言、字体、模型服务设置共用的配置保存路径，沿用 0.11.2 的规范路径修复；规则编辑继续使用原有修订检查，侧栏顺序和显示偏好同步写入本地存储。
+- 此次 GitHub 同步包含本机此前未发布的 Agent接口、规则独立窗修复及整行实时排序。默认关闭的 Agent接口仅在启用时监听当前电脑，关闭立即拒绝连接并保留连接资料。
+- 完成必要构建、静态语法/翻译/原生文件摘要核对和打包；本机通过 Agent 接口更新并核对设置保留，不操作鼠标、不运行界面自动化测试，不更新一键安装器。
+Toolbox writes invalidate older reads and notify views after unlocking; failed saves retain errors and reconcile actual state. Autostart and component inventory use independent read generations. Models invalidate old catalog requests on saved policy events, and late speed HTTP responses cannot replace newer streamed state. Native appearance/language/font/provider settings retain the canonical-path fix. This publication also includes the previously local Agent Interface, detached Rules editor fixes and live full-row sorting. Local deployment uses the Agent API; no mouse automation, UI tests or installer changes.
+
+0.11.2 修复日间模式回退 / Light-mode persistence fix
+- 保护启动先规范安装目录与 profile 的实际磁盘路径，快捷方式管理也保留实际路径大小写。避免 Windows 下以另一种大小写启动后，Node ESM 将原生模块视为两个实例，丢失配置重载根节点，导致主题短暂变亮后回退及插件热重载失败。
+- Agent 接口增加严格限定的原生主题偏好读写（light/dark/system），通过 DSH 原生设置服务保存并校验版本；不开放任意设置或账号数据。
+- 本机更新与正常重启通过 Agent 接口执行，已将日间偏好保存为 light 并读取持久化结果。必要构建/打包与操作回执核对完成；未运行界面自动化测试，未上传 GitHub，未更新一键安装器。
+Protected startup canonicalizes physical installation/profile paths, and shortcut management preserves their on-disk spelling. This prevents Windows path-case variants from splitting native ESM singleton state and breaking the root Include registry used for settings persistence and hot reload. The Agent API adds narrowly scoped native light/dark/system preference reads/writes with revision checks. Local update/restart and saving the requested light preference use the API. Build/package and operation-receipt verification only; no UI automation, GitHub publication or installer changes.
+
+0.11.1 修复 Agent接口启用 / Agent Interface startup fix
+- 修复将 Cordis Fiber 直接作为启动结果返回而触发 Invalid effect、导致开关启用回滚的问题；等待子运行时启动，但不返回内部生命周期对象。
+- 接受 Node 自带 fetch 的 Sec-Fetch-Mode，仍检查密钥、本机地址、Host、Origin 和 Sec-Fetch-Site，避免误拦本机 Agent。
+- 桌面适配使用 Electron original-fs 读取原始 ASAR，避免虚拟目录误判；先生成适配文件，Electron 退出后由 profile 内的原生程序验证摘要并原子写入，避免安装进程占用自身归档。路径按 Windows 实际文件身份比较，不因大小写差异误报适配被改动。
+- 连接说明预览默认遮住密钥；用户明确复制说明时包含真实密钥。
+Fixes Cordis Invalid effect by awaiting runtime readiness without returning a Fiber. Accepts Node fetch's Sec-Fetch-Mode while retaining auth, loopback/Host and browser-origin checks. Raw archive work uses Electron original-fs without changing global noAsar. Instruction previews mask the key; explicit copying includes the credential.
+- 已通过真实 Cordis 隔离回归，以及本机 DSH 验收：组件开启及设置页正常、正确/错误密钥、来源限制、关闭即断连、重新开启/重启保留连接，以及通过公开接口正常重启并确认新进程恢复。未上传 GitHub，未改一键安装器。
+Real-Cordis regression and live DSH acceptance passed: startup/settings UI, valid/invalid credentials, origin restrictions, immediate disconnect on disable, retained connection on reopening/restart, and public-API graceful restart confirmed by a new main process. Native setup stages archive bytes with original-fs, waits for Electron to exit, then commits from the private profile helper with hash verification. Windows paths are compared by canonical file identity. No GitHub or installer update.
+
+0.11.0 Agent接口 / Agent Interface
+- 新增默认关闭的 Agent接口组件；开启后显示当前电脑的地址、密钥和可复制的连接说明。每台安装插件的电脑均可使用自身接口，关闭立即停止监听及连接，保留密钥与地址，重开、重启及升级后沿用。
+- 提供经过 Bearer 密钥校验的本机 HTTP JSON API：状态、原生组件/插件列表、工具箱配置读写、插件安装/更新/移除、配置重载和接口操作日志。修改请求使用 UUID 去重与最近 200 份持久回执；不导出账号密钥、执行 Shell 或任意代码。
+- Windows 正常退出/重启通过原生任务检查、准入锁及清理流程；首次启用后由单次隐藏程序等待正常退出，再备份并安装精确版本适配，下次启动生效。不强制关闭、不操作鼠标、不修改 EXE/fuses；未知版本明确标记不支持，基础 API 保留。
+- 设置细节按展开加载、主题和中英文跟随 DSH；接口停用释放监听、连接、请求及队列，不在后台预热或扫描。已开始的安全文件/安装事务允许完成。
+A default-off component exposes each installation's own loopback address, persistent management key and copyable Agent instructions. Disabling immediately disconnects clients while preserving details for re-enable/restart/update. Authenticated, bounded JSON operations reuse native plugin management, durable idempotent receipts and Toolbox preferences. The Windows graceful lifecycle adapter uses native inspection/admission/cleanup; one hidden setup transaction waits for normal exit and applies an exact-version backed-up adapter for the next launch. No mouse control, force-kill, EXE/fuse changes, account-secret export, eval or shell endpoint. Other systems/versions retain the base API. Details load only when expanded, use DSH's language/theme, and release activity when disabled.
+- 仅做必要构建、静态语法/翻译/原生摘要核对、打包及本机更新。未运行接口功能测试、退出/重启或浏览器验收；未上传 GitHub，未改一键安装器。
+Build/static parsing/translation/native-hash validation, packaging and local update only. No functional API, quit/restart or browser acceptance tests, GitHub publication or installer changes.
+
+0.10.10 整行实时排序 / Live row sorting
+- 侧栏工作区入口始终显示，不再允许隐藏；以前保存的隐藏状态不再影响该入口。
+- 侧栏显示设置、模型服务商和模型目录统一采用整行实时换位、轻微回弹动画；移出所属列表框立即预览复原，只有在框内松手才保存。取消、失焦或关闭同样不保存中间排序。
+- 跨组拖动的指针捕获放在稳定的列表容器，整行动画由共享工厂生成；动画中的位移不参与命中判断。遵循系统减少动画设置。
+The Workspace sidebar entry is always visible, including for older saved hidden preferences. Sidebar visibility rows, model providers and model entries now preview full-row reordering with the same subtle spring motion. Leaving a list restores the original order; only an in-bounds release saves. Cancellation, focus loss and closing discard intermediate positions. Stable container pointer capture supports cross-group movement; one shared animation factory excludes temporary transforms from hit testing and honors reduced motion.
+- 必要构建、静态语法/翻译核对、打包和本机更新；本版未运行交互测试。未上传 GitHub，未修改一键安装器。Build, static syntax/translation validation, packaging and local update only; no functional interaction tests, GitHub publication or installer changes.
+
+0.10.9 规则窗跟随拖动修复 / Rules owner-movement fix
+- 主窗口位置事件不再同步移动规则窗；只排队一次短时更新，合并中间位置并读取主窗口最新坐标，避免密集事件重入窗口拖动。
+- 跟随移动保留焦点、尺寸以及两个窗口的层级，明确禁止重新调整主窗口的 Z 顺序及同步重绘消息。保持重叠时跟随、完全移出后独立放置的规则。
+- 计时器只在收到位置事件后短时启动，完成即停止；关闭窗口时一并释放，无空闲位置轮询。
+Owner location events now schedule one short deferred update instead of synchronously moving the Rules window from inside the event callback. Intermediate positions are coalesced and the latest owner coordinates are used. Follow moves preserve focus, size and both windows’ Z order, suppressing owner repositioning and synchronous paint requests. Overlapping windows still follow the owner; fully separated windows retain their independent position. The one-shot timer stops after processing and is disposed on close, with no idle position polling.
+- 本机编译、构建、打包和更新；未上传 GitHub，未修改一键安装器。Local build/package/update only; no GitHub publication or installer changes.
+
+0.10.8 修复原生规则窗启动 / Native Rules editor startup fix
+- 原生编辑器改为固定的虚拟主机本地页面，不再因 NavigateToString 产生 data: 导航而被自身导航检查拦截。只允许该编辑页面，继续禁止外部内容；两种规则窗仍共用相同布局、样式和翻译。
+- 宿主退出监听改用原生进程句柄，避免 .NET Framework 进程枚举误报不存在。
+- 独立窗拖动采用鼠标按下瞬间的抓取点，异步回调到达后也保留已移动的距离，避免快速拖动丢失位移。
+- 准备期间保留页面内拖动和关闭能力；新手势更新当前放置，失败后仅保留可编辑浮窗，不再每拖一次就自动重新进入等待。显式重试仍可再次启动。
+The native editor now loads one fixed local virtual-host document, avoiding the self-blocked data: navigation produced by NavigateToString. External content remains blocked and both editors share their UI sources. Native process-handle monitoring replaces unreliable framework process enumeration. Native dragging preserves the original pointer-down grab offset through async callbacks. Pending preparation permits dragging/closing, tracks replacement gestures and no longer automatically retries on every drag after failure.
+- Local native compilation/build/package/install; no GitHub publication or installer changes.
+
+0.10.7 规则窗连续拖动与窗口联动 / Continuous Rules window drag and grouping
+- 清空回收站采用无描边、无阴影的红底白字按钮。
+- 规则栏展开时按需准备隐藏的原生编辑窗；首次拖动保持鼠标捕获及页面内跟随，原生窗就绪后接续同一次按住动作。松手位置按该次手势同步，不需要再次按下。
+- 修复将 WebView 初始化取消导航误判为致命错误的问题，保留真正失败时的页面内编辑与重试。
+- 原生规则窗保留统一编辑布局和圆角，以 DSH 所属窗口方式显示在本体上方，随本体最小化；与本体重叠时一起移动，完全移出后保持独立位置。
+The Recycle Bin clear button now has a flat red fill and white text. Opening Rules prepares its hidden native editor on demand. One held drag continues from the popup into the native window, with gesture-matched drop positioning. Canceled bootstrap navigations no longer count as fatal WebView failures. The rounded native editor remains owned by DSH: it sits above its owner and follows owner movement only while overlapping; fully separate placement stays fixed. Both modes retain the same shared UI.
+- Native compilation/build/package/local update only; no functional tests, GitHub publication or installer changes.
+
+0.10.6 侧边栏图标颜色 / Sidebar icon colors
+- 未选中的侧边栏图标进一步调淡；选中时日间使用完整的深色主题文字颜色，夜间使用白色。主页图标同步采用相同的状态配色。
+- 保持 1.4px 实际描线、图标尺寸、侧边栏宽度及原有按钮和气泡背景。
+Idle sidebar icons are softer. Selected icons use the full primary text color in light mode and white in dark mode, including the home glyph. The 1.4px rendered outline, icon sizes, sidebar width and existing button/bubble backgrounds are retained.
+- Build/package/local update only; no functional tests, GitHub publication or installer changes.
+
+0.10.5 侧边栏描线 / Sidebar outline weight
+- 侧边栏 SVG 图标在当前 21.6px 尺寸下的实际描线调整为 1.4px；共享图标及选中状态的挖空细节同步使用相同权重。
+- 保留图标大小、侧边栏宽度、按钮占位和日夜主题配色。
+The shared sidebar SVG outline now renders at 1.4px at the current 21.6px rail icon size. Matching cutouts share the same weight. Icon size, rail/button layout and theme colors are retained.
+- Build/package/local update only; no functional tests, GitHub publication or installer changes.
+
+0.10.4 侧边栏描线 / Sidebar outline weight
+- 按用户提供的 Codex 截图调整 SVG 图标描线，统一使用 24 单位画布下的 2.0 描线，在当前 21.6px 图标上约为 1.8px；管理菜单、选中填充的挖空细节和圆点同步调整。
+- 保留图标当前大小、侧栏宽度、按钮占位及日夜颜色，纯 SVG 代码绘制，不增加图片资源或运行任务。
+- Build/static checks/package/local update only; no functional tests, GitHub publication or installer changes.
+Uses a shared two-unit SVG outline (about 1.8px at the current rail size), with matching menu glyphs, selected cutouts and dots, guided by the supplied Codex screenshot. Existing icon size, rail/button layout and theme colors are retained. No bitmap assets or runtime work are added.
+
 0.10.3 侧边栏图标与仓库更名 / Sidebar icons and repository rename
 - 回收站列表的三个点改用工作区同款原生图标与尺寸。
 - 回收站入口选中时填充桶身、挖空两条竖杠；侧边栏图标缩为原来 90%，描线减细 1px，保留侧栏宽度及按钮占位，继续跟随日夜主题。

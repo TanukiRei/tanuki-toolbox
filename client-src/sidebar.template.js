@@ -2,9 +2,10 @@ document.currentScript.__tanukiRegister(function(require){
   const React=require('react'),h=React.createElement,{createPortal}=require('react-dom');
   const {FishLogo}=require('@deepseek-ai/dsh-client-ui-primitives'),NS='tanukiSidebar',HOME='tanuki-sidebar-home';
   const createWorkspaceSplitter=__WORKSPACE_SPLITTER_FUNCTION__;
+  const useSortMotion=(__SORT_MOTION_FACTORY__)({React});
   function apply(ctx,{lifecycle}){
     let alive=true,current=null,frameRequest=null,settingsCleanup=null,toolboxCleanup=null,accountMount=null,accountCleanup=null,menuCleanup=null;
-    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['workspace','automations','skills','toolbox','plugins','recycleBin','restart'];
+    const visibilityKey='tanuki.sidebar.visibility.v1',paneKey='tanuki.sidebar.workspace-collapsed.v1',optionalItems=['automations','skills','toolbox','plugins','recycleBin','restart'];
     const orderKey='tanuki.sidebar.order.v2',legacyOrderKey='tanuki.sidebar.order.v1',defaultOrder={top:['home','newSession','workspace','more'],bottom:['automations','skills','toolbox','plugins','recycleBin','settings','restart']};
     const allItems=[...defaultOrder.top,...defaultOrder.bottom];
     // Both groups use visual top-to-bottom order; the bottom group stays bottom-aligned.
@@ -288,31 +289,34 @@ document.currentScript.__tanukiRegister(function(require){
       finally{clearTimeout(timeout);requests.delete(controller);if(alive&&!accepted)publish({restarting:false});}
     }
     const paths={recycleBin:'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7',newSession:'M20 11.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5M16 3v6M13 6h6',plugins:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',workspace:'M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 11h18',restart:'M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7',settings:'M9 3h6l.6 2.4 2.1 1.2 2.4-.7 3 5.2-1.8 1.7v2.4l1.8 1.7-3 5.2-2.4-.7-2.1 1.2L15 24H9l-.6-2.4-2.1-1.2-2.4.7-3-5.2 1.8-1.7v-2.4L.9 11.1l3-5.2 2.4.7 2.1-1.2z'};
+    // Shared optical weight in the 24-unit icon canvas. At the retained
+    // 21.6px rail size this renders the requested 1.4px outline.
+    const iconWeight=1.4*24/21.6;
     function Icon({name,selected=false}){
       const cutoutId=React.useId();
-      const svg={viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true};
+      const svg={viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:iconWeight,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true};
       // Trace the same Skills paper/sparkle geometry with a real centerline,
-      // so the filled native paper border can share the thinner icon weight.
-      if(name==='skills')return h('svg',{...svg,viewBox:'0 0 17 17',strokeWidth:.7*17/24},h('path',{d:'M13.1404 8.89856V2.64465C13.1404 2.12 12.69 1.69446 12.1404 1.69446H3.14038C2.59 1.69446 2.14038 2.12 2.14038 2.64465V13.0929C2.14038 13.6175 2.59 14.0421 3.14038 14.0421H8.88159M4.57788 5.77124H10.7029M4.57788 8.89819H7.91879M12.0051 15.1056C12.0051 13.6395 10.8166 12.451 9.35059 12.451C10.8166 12.451 12.0051 11.2626 12.0051 9.79651C12.0051 11.2626 13.1936 12.451 14.6597 12.451C13.1936 12.451 12.0051 13.6395 12.0051 15.1056Z'}));
+      // so the filled native paper border can share the same outline weight.
+      if(name==='skills')return h('svg',{...svg,viewBox:'0 0 17 17',strokeWidth:iconWeight*17/24},h('path',{d:'M13.1404 8.89856V2.64465C13.1404 2.12 12.69 1.69446 12.1404 1.69446H3.14038C2.59 1.69446 2.14038 2.12 2.14038 2.64465V13.0929C2.14038 13.6175 2.59 14.0421 3.14038 14.0421H8.88159M4.57788 5.77124H10.7029M4.57788 8.89819H7.91879M12.0051 15.1056C12.0051 13.6395 10.8166 12.451 9.35059 12.451C10.8166 12.451 12.0051 11.2626 12.0051 9.79651C12.0051 11.2626 13.1936 12.451 14.6597 12.451C13.1936 12.451 12.0051 13.6395 12.0051 15.1056Z'}));
       if(name==='eyeOpen')return h('svg',svg,h('path',{d:'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'}),h('circle',{cx:12,cy:12,r:3}));
       if(name==='eyeClosed')return h('svg',svg,h('path',{d:'M3 9c4 6 14 6 18 0M5 12l-2 3M9 14l-1 3M15 14l1 3M19 12l2 3'}));
-      if(name==='home')return h('span',{className:'tanuki-rail-home-mark','aria-hidden':true},h(FishLogo,{size:24}),selected?h('svg',{...svg,className:'tanuki-rail-home-spout',strokeWidth:.5},h('path',{d:'M7 8V4M7 4C7 2.4 5.8 1.5 4.3 1.5M7 4C7 2.4 8.2 1.5 9.7 1.5'})):null);
+      if(name==='home')return h('span',{className:'tanuki-rail-home-mark','aria-hidden':true},h(FishLogo,{size:24}),selected?h('svg',{...svg,className:'tanuki-rail-home-spout'},h('path',{d:'M7 8V4M7 4C7 2.4 5.8 1.5 4.3 1.5M7 4C7 2.4 8.2 1.5 9.7 1.5'})):null);
       if(name==='automations'){
         const hands='M12 6.5V12l-3 3';
         if(!selected)return h('svg',svg,h('circle',{cx:12,cy:12,r:9.5}),h('path',{d:hands}));
-        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:hands,stroke:'black',strokeWidth:.8}))),h('circle',{cx:12,cy:12,r:9.85,fill:'currentColor',stroke:'none',mask:'url(#'+cutoutId+')'}));
+        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:hands,stroke:'black',strokeWidth:iconWeight}))),h('circle',{cx:12,cy:12,r:9.5+iconWeight/2,fill:'currentColor',stroke:'none',mask:'url(#'+cutoutId+')'}));
       }
       if(name==='workspace')return h('svg',svg,selected?h('path',{d:'M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',fill:'currentColor',stroke:'none'}):null,h('path',{d:paths.workspace}));
       if(name==='plugins')return h('svg',svg,h('path',{d:paths.plugins,fill:selected?'currentColor':'none'}));
-      if(name==='recycleBin')return h('svg',svg,selected?h(React.Fragment,null,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:'M10 10v7m4-7v7',stroke:'black',strokeWidth:.7}))),h('path',{d:'M6 6l1 15h10l1-15z',fill:'currentColor',mask:'url(#'+cutoutId+')'}),h('path',{d:'M3 6h18M9 6V3h6v3'})):h('path',{d:paths.recycleBin}));
-      if(name==='expandWorkspace')return h('svg',{viewBox:'0 0 12 16',fill:'none',stroke:'currentColor',strokeWidth:.7,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:'M4 4l4 4-4 4'}));
+      if(name==='recycleBin')return h('svg',svg,selected?h(React.Fragment,null,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:'M10 10v7m4-7v7',stroke:'black',strokeWidth:iconWeight}))),h('path',{d:'M6 6l1 15h10l1-15z',fill:'currentColor',mask:'url(#'+cutoutId+')'}),h('path',{d:'M3 6h18M9 6V3h6v3'})):h('path',{d:paths.recycleBin}));
+      if(name==='expandWorkspace')return h('svg',{viewBox:'0 0 12 16',fill:'none',stroke:'currentColor',strokeWidth:iconWeight,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},h('path',{d:'M4 4l4 4-4 4'}));
       if(name==='collapseWorkspace')return h('svg',svg,h('rect',{x:3,y:4,width:18,height:16,rx:2}),h('path',{d:'M9 4v16M16 9l-3 3 3 3'}));
-      if(name==='more')return h('svg',{viewBox:'0 0 24 24',fill:'currentColor','aria-hidden':true},...[5,12,19].map(cx=>h('circle',{key:cx,cx,cy:12,r:1.2})));
-      if(name==='reorder')return h('svg',{viewBox:'0 0 16 24',fill:'currentColor','aria-hidden':true},...[6,12,18].flatMap(cy=>[5,11].map(cx=>h('circle',{key:cx+'-'+cy,cx,cy,r:.9}))));
+      if(name==='more')return h('svg',{viewBox:'0 0 24 24',fill:'currentColor','aria-hidden':true},...[5,12,19].map(cx=>h('circle',{key:cx,cx,cy:12,r:1.8})));
+      if(name==='reorder')return h('svg',{viewBox:'0 0 16 24',fill:'currentColor','aria-hidden':true},...[6,12,18].flatMap(cy=>[5,11].map(cx=>h('circle',{key:cx+'-'+cy,cx,cy,r:1.4}))));
       if(name==='toolbox'){
         const handle='M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7',seam='M3 11.5l8 2a4 4 0 0 0 2 0l8-2M10 12.5v3h4v-3';
         if(!selected)return h('svg',svg,h('path',{d:handle+seam}),h('rect',{x:3,y:7,width:18,height:13,rx:2}));
-        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:seam,stroke:'black',strokeWidth:.5}))),h('path',{d:handle}),h('rect',{x:3,y:7,width:18,height:13,rx:2,fill:'currentColor',mask:'url(#'+cutoutId+')'}));
+        return h('svg',svg,h('defs',null,h('mask',{id:cutoutId,maskUnits:'userSpaceOnUse',x:0,y:0,width:24,height:24},h('rect',{width:24,height:24,fill:'white',stroke:'none'}),h('path',{d:seam,stroke:'black',strokeWidth:iconWeight}))),h('path',{d:handle}),h('rect',{x:3,y:7,width:18,height:13,rx:2,fill:'currentColor',mask:'url(#'+cutoutId+')'}));
       }
       if(name==='settings'){
         const gear='m9.5 3-.6 2.1-1.8 1-2.1-.5-2.5 4.3L4 11.5v2l-1.5 1.6L5 19.4l2.1-.5 1.8 1 .6 2.1h5l.6-2.1 1.8-1 2.1.5 2.5-4.3-1.5-1.6v-2l1.5-1.6L19 5.6l-2.1.5-1.8-1L14.5 3z';
@@ -353,13 +357,16 @@ document.currentScript.__tanukiRegister(function(require){
     function VisibilityMenu({visibility,order,skillsAvailable,recycleAvailable}){
       const tr=useLocale(),[open,setOpen]=React.useState(false),[position,setPosition]=React.useState({left:52,top:0}),[preview,setPreview]=React.useState(null);
       const anchor=React.useRef(null),menu=React.useRef(null),drag=React.useRef(null),pendingFocus=React.useRef(null),menuId=React.useId();
+      const motion=useSortMotion(),visualOrder=preview?.order||order;
+      function previewOrder(value){motion.capture(menu.current,'[data-sort-key]');setPreview(value);}
       function finish(commit=false,focus=true){
         const active=drag.current;if(!active)return;
-        drag.current=null;cancelAnimationFrame(active.frame);
-        if(active.node.hasPointerCapture(active.id))active.node.releasePointerCapture(active.id);
+        drag.current=null;cancelAnimationFrame(active.frame);active.cleanup?.();
+        document.documentElement.removeAttribute('data-tanuki-list-dragging');
+        if(active.capture.hasPointerCapture(active.id))active.capture.releasePointerCapture(active.id);
         if(!alive)return;
-        setPreview(null);
-        if(focus){pendingFocus.current=active.key;active.node.focus({preventScroll:true});}
+        previewOrder(null);
+        if(focus)pendingFocus.current=active.key;
         if(commit&&active.started&&active.target&&active.order===state.order)moveItem(active.key,active.target.group,active.target.index);
       }
       const close=()=>{finish(false,false);setOpen(false);anchor.current?.focus({preventScroll:true});};
@@ -369,13 +376,19 @@ document.currentScript.__tanukiRegister(function(require){
         if(active.x>=box.left&&active.x<=box.right&&active.y>=box.top&&active.y<=box.bottom){
           const divider=popup.querySelector('[role="separator"]').getBoundingClientRect();
           const group=active.y<divider.top+divider.height/2?'top':'bottom';
+          const source=popup.querySelector('[data-sort-key="'+active.key+'"]'),own=source&&motion.rect(source),sourceGroup=source?.closest('[data-sort-group]')?.dataset.sortGroup;
           const rows=[...popup.querySelectorAll('[data-sort-group="'+group+'"] [data-sort-key]')].filter(row=>row.dataset.sortKey!==active.key);
-          let index=rows.findIndex(row=>{const bounds=row.getBoundingClientRect();return active.y<bounds.top+bounds.height/2;});
+          let index=sourceGroup===group&&own&&active.y>=own.top&&active.y<=own.bottom?active.preview[group].indexOf(active.key):rows.findIndex(row=>{const bounds=motion.rect(row);return active.y<bounds.top+bounds.height/2;});
           if(index<0)index=rows.length;
-          target={group,index,before:rows[index]?.dataset.sortKey||null};
+          target={group,index};
         }
+        const previous=active.target;
         active.target=target;
-        setPreview(previous=>previous?.key===active.key&&previous?.target?.group===target?.group&&previous?.target?.index===target?.index?previous:{key:active.key,target});
+        if(previous?.group===target?.group&&previous?.index===target?.index)return;
+        const next={top:active.order.top.filter(key=>key!==active.key),bottom:active.order.bottom.filter(key=>key!==active.key)};
+        if(target)next[target.group].splice(target.index,0,active.key);
+        active.preview=target?next:active.order;
+        previewOrder(target?{key:active.key,order:next}:null);
       }
       function scrollSpeed(active){
         const popup=menu.current;if(!popup)return 0;
@@ -394,18 +407,23 @@ document.currentScript.__tanukiRegister(function(require){
       }
       function pointerMove(event){
         const active=drag.current;if(!active||event.pointerId!==active.id)return;
+        if(event.pointerType==='mouse'&&!(event.buttons&1)){finish(false,false);return;}
         active.x=event.clientX;active.y=event.clientY;
         if(!active.started&&Math.hypot(active.x-active.startX,active.y-active.startY)<4)return;
-        active.started=true;event.preventDefault();locate(active);
+        active.started=true;event.preventDefault();document.documentElement.setAttribute('data-tanuki-list-dragging','');locate(active);
         if(scrollSpeed(active)){if(!active.frame){active.last=0;active.frame=requestAnimationFrame(scrollTick);}}
         else{cancelAnimationFrame(active.frame);active.frame=0;}
       }
       function begin(event,key){
         if(!alive||event.button!==0||!event.isPrimary||drag.current)return;
         event.preventDefault();event.stopPropagation();event.currentTarget.focus({preventScroll:true});
-        const active={key,id:event.pointerId,node:event.currentTarget,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,started:false,target:null,order:state.order,frame:0,last:0};
+        const active={key,id:event.pointerId,node:event.currentTarget,capture:menu.current,height:menu.current.offsetHeight,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,started:false,target:null,order:state.order,preview:state.order,frame:0,last:0,cleanup:null};
+        const release=pointer=>{if(drag.current!==active||pointer.pointerId!==active.id)return;if(active.started){active.x=pointer.clientX;active.y=pointer.clientY;locate(active);}finish(true);};
+        const cancel=pointer=>{if(pointer.pointerId===active.id)finish(false,false);},lost=event=>{if(event.pointerId===active.id)finish(false,false);},escape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();finish(false);}};
+        active.cleanup=()=>{window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',cancel);window.removeEventListener('keydown',escape,true);active.capture.removeEventListener('lostpointercapture',lost);};
         drag.current=active;
-        try{active.node.setPointerCapture(active.id);}catch{finish(false);}
+        window.addEventListener('pointermove',pointerMove,{passive:false});window.addEventListener('pointerup',release);window.addEventListener('pointercancel',cancel);window.addEventListener('keydown',escape,true);active.capture.addEventListener('lostpointercapture',lost);
+        try{active.capture.setPointerCapture(active.id);}catch{finish(false);}
       }
       function reorderWithKeyboard(event,key){
         if(!event.altKey||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;
@@ -413,7 +431,7 @@ document.currentScript.__tanukiRegister(function(require){
         const source=order.top.includes(key)?'top':'bottom',index=order[source].indexOf(key);
         const group=event.key==='ArrowLeft'?'top':event.key==='ArrowRight'?'bottom':source;
         const next=group!==source?order[group].length:index+(event.key==='ArrowUp'?-1:event.key==='ArrowDown'?1:0);
-        pendingFocus.current=key;moveItem(key,group,next);
+        pendingFocus.current=key;motion.capture(menu.current,'[data-sort-key]');moveItem(key,group,next);
       }
       React.useLayoutEffect(()=>{
         if(!open)return;
@@ -430,7 +448,7 @@ document.currentScript.__tanukiRegister(function(require){
         if(!open)return;
         const cancel=()=>finish(false,false),hidden=()=>{if(document.hidden)cancel();};
         const outside=event=>{if(!anchor.current?.contains(event.target)&&!menu.current?.contains(event.target)){cancel();setOpen(false);}};
-        const cleanup=()=>{cancel();window.removeEventListener('blur',cancel);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('pointerdown',outside,true);if(menuCleanup===cleanup)menuCleanup=null;};
+        const cleanup=()=>{cancel();motion.dispose();window.removeEventListener('blur',cancel);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('pointerdown',outside,true);if(menuCleanup===cleanup)menuCleanup=null;};
         menuCleanup=cleanup;window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',hidden);document.addEventListener('pointerdown',outside,true);
         menu.current?.querySelector('[role="menuitemcheckbox"]')?.focus({preventScroll:true});
         return cleanup;
@@ -451,20 +469,18 @@ document.currentScript.__tanukiRegister(function(require){
         rows[next]?.querySelector(event.target.closest('.tanuki-rail-sort-handle')?'.tanuki-rail-sort-handle':'.tanuki-rail-menu-item')?.focus();
       };
       const section=group=>h('div',{key:group,role:'group','aria-label':tr('order_'+group),'data-sort-group':group,className:'tanuki-rail-menu-group'},
-        h('div',{className:'tanuki-rail-sort-list','data-drop-end':preview?.target?.group===group&&!preview.target.before?'true':undefined},
-          ...order[group].map(key=>{
+        h('div',{className:'tanuki-rail-sort-list'},
+          ...visualOrder[group].map(key=>{
             const required=!optionalItems.includes(key),unavailable=key==='skills'&&!skillsAvailable||key==='recycleBin'&&!recycleAvailable,visible=!unavailable&&(required||visibility[key]);
-            return h('div',{key,role:'none','data-sort-key':key,'data-dragging':preview?.key===key?'true':undefined,'data-drop-before':preview?.target?.group===group&&preview.target.before===key?'true':undefined,className:'tanuki-rail-menu-row'},
+            return h('div',{key,role:'none','data-sort-key':key,'data-sort-motion-key':key,'data-dragging':preview?.key===key?'true':undefined,className:'tanuki-rail-menu-row'},
               h('button',{type:'button',role:'menuitem',tabIndex:-1,className:'tanuki-rail-sort-handle',title:tr('reorderHint'),'aria-label':tr('reorder')+' '+tr('menu_'+key),'aria-description':tr('reorderHint'),
-                onPointerDown:event=>begin(event,key),onPointerMove:pointerMove,
-                onPointerUp:event=>{if(drag.current?.id===event.pointerId){if(drag.current.started){drag.current.x=event.clientX;drag.current.y=event.clientY;locate(drag.current);}finish(true);}},
-                onPointerCancel:event=>{if(drag.current?.id===event.pointerId)finish(false);},onLostPointerCapture:event=>{if(drag.current?.id===event.pointerId)finish(false);},
+                draggable:false,onPointerDown:event=>begin(event,key),onDragStart:event=>event.preventDefault(),
                 onKeyDown:event=>reorderWithKeyboard(event,key),onClick:event=>{event.preventDefault();event.stopPropagation();}},h(Icon,{name:'reorder'})),
               h('button',{type:'button',role:'menuitemcheckbox','aria-checked':visible,'aria-disabled':required||unavailable||undefined,'data-unavailable':unavailable||undefined,title:tr(unavailable?(key==='recycleBin'?'recycleUnavailable':'skillsUnavailable'):required?'alwaysVisible':visible?'visibilityShown':'visibilityHidden'),tabIndex:-1,className:'tanuki-rail-menu-item',onClick:()=>{if(!required&&!unavailable)setVisible(key);}},
                 h(Icon,{name:key}),h('span',{className:'tanuki-rail-menu-label'},tr('menu_'+key)),h('span',{className:'tanuki-rail-menu-status','data-locked':required||unavailable?'true':undefined,'aria-hidden':true},h(Icon,{name:visible?'eyeOpen':'eyeClosed'}))));
-          }),order[group].length?null:h('div',{className:'tanuki-rail-drop-empty'},tr('dropHere'))));
+          }),visualOrder[group].length?null:h('div',{className:'tanuki-rail-drop-empty'},tr('dropHere'))));
       return h(React.Fragment,null,h('button',{ref:anchor,type:'button',className:'tanuki-rail-button',title:tr('more'),'aria-label':tr('more'),'aria-haspopup':'menu','aria-expanded':open,'aria-controls':open?menuId:undefined,onClick:()=>{if(open)close();else setOpen(true);},onKeyDown:event=>{if(event.key==='ArrowDown'){event.preventDefault();setOpen(true);}}},h(Icon,{name:'more'})),
-        open?createPortal(h('div',{id:menuId,ref:menu,role:'menu','aria-label':tr('more'),className:'tanuki-rail-menu',style:position,onKeyDown:keydown},section('top'),h('hr',{role:'separator',className:'tanuki-rail-menu-divider'}),section('bottom')),document.body):null);
+        open?createPortal(h('div',{id:menuId,ref:menu,role:'menu','aria-label':tr('more'),className:'tanuki-rail-menu',style:{...position,...drag.current?.started?{height:drag.current.height}:{}},onKeyDown:keydown},section('top'),h('hr',{role:'separator',className:'tanuki-rail-menu-divider'}),section('bottom')),document.body):null);
     }
     function Rail(props){
       const tr=useLocale(),model=React.useSyncExternalStore(subscribe,()=>state),panel=props.useSidebarPanel(s=>s.activePanelId);

@@ -1,6 +1,6 @@
 {
   "name": "tanuki-recycle-bin",
-  "version": "0.10.3",
+  "version": "0.11.3",
   "type": "module",
   "description": "Keep deleted conversations read-only for 30 days, with restoration to their original workspace.",
   "icon": "./icon.svg"

@@ -26,44 +26,52 @@ document.currentScript.__tanukiRegister(function(require){
       hasDetails?h('div',{id,className:'tanuki-settings-fold','data-expanded':expanded,'aria-hidden':!expanded,inert:!expanded,onTransitionEnd:event=>{if(event.target===event.currentTarget&&event.propertyName==='grid-template-rows'&&!expanded)setMounted(false);}},
         h('div',{className:'tanuki-settings-fold-inner'},mounted?h(React.Fragment,null,h('fieldset',{className:'tanuki-component-options','data-disabled':!enabled,disabled:!enabled},children),h('button',{type:'button',className:'tanuki-settings-collapse','aria-label':t('collapseSettings'),onClick:()=>collapse(true)},chevron)):null)):null);
   }
-  function apply(ctx,{ready}){
+  function apply(ctx,{ready,load}){
     let alive=true;const requests=new Set(),decoders=new Set(),previews=new Set();
     const toolboxLocale=(__LOCALE_FACTORY__)(ctx,NS,__LOCALES__),t=toolboxLocale.t;
     ctx.effect(()=>{const style=document.createElement('style');style.textContent=__CSS__;document.head.appendChild(style);return()=>style.remove();});
     async function request(path,options={}){
       const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);requests.add(controller);
+      const abort=()=>controller.abort();options.signal?.addEventListener('abort',abort,{once:true});if(options.signal?.aborted)abort();
       try{const r=await fetch(new URL('tanuki-toolbox/'+path,document.baseURI),{...options,credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:{'X-Tanuki-Settings':'1',...options.headers}});if(!r.ok)throw new Error(String(r.status));return await r.json();}
-      finally{clearTimeout(timer);requests.delete(controller);}
+      finally{clearTimeout(timer);requests.delete(controller);options.signal?.removeEventListener('abort',abort);}
+    }
+    function AgentPanel(){
+      const [Component,setComponent]=React.useState(null),[failed,setFailed]=React.useState(false);
+      React.useEffect(()=>{let mounted=true,child;const controller=new AbortController();load('agent-interface',controller.signal).then(module=>{if(alive&&mounted)child=ctx.plugin(module,{ready:component=>{if(alive&&mounted)setComponent(()=>component);}});}).catch(()=>{if(alive&&mounted&&!controller.signal.aborted)setFailed(true);});return()=>{mounted=false;controller.abort();child?.dispose();};},[]);
+      return Component?h(Component):h('p',{className:'tanuki-settings-note',role:failed?'alert':'status'},t(failed?'error':'agentLoading'));
     }
     function Settings({view}={}){
       React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());
       const [settings,setSettings]=React.useState(null),[rows,setRows]=React.useState([]),[busy,setBusy]=React.useState(false),[error,setError]=React.useState(false),[volume,setVolume]=React.useState(100),[switchBusy,setSwitchBusy]=React.useState(false),[permission,setPermission]=React.useState(()=>typeof window.Notification==='function'?window.Notification.permission:'unsupported');
       const [autostart,setAutostart]=React.useState(null),[autostartBusy,setAutostartBusy]=React.useState(false),[switchNotice,setSwitchNotice]=React.useState(null);
       const generation=React.useRef(0),operation=React.useRef(false),switchLock=React.useRef(false),autostartLock=React.useRef(false),preview=React.useRef(null),fileInput=React.useRef(null),refreshRows=React.useRef(null);
+      const settingsRead=React.useRef(0),settingsReader=React.useRef(null),inventoryRead=React.useRef(0),autostartRead=React.useRef(0),autostartReader=React.useRef(null);
+      function invalidateSettings(){++settingsRead.current;settingsReader.current?.abort();}
       const cancel=()=>{for(const controller of requests)controller.abort();for(const decoder of decoders)void decoder.close().catch(()=>{});decoders.clear();};
-      React.useEffect(()=>{++generation.current;let mounted=true,read=0;const player=createAudioPreview({baseURI:document.baseURI});preview.current=player;previews.add(player);
-        const refresh=async()=>{const token=++read;await Promise.allSettled([
-          (async()=>{const r=await ctx.remote.pluginManager.listPlugins();if(alive&&mounted&&token===read&&r.ok)setRows(r.value);})(),
-          request('autostart').then(value=>{if(alive&&mounted&&token===read)setAutostart(value);},()=>{if(alive&&mounted&&token===read)setAutostart(null);})
+      React.useEffect(()=>{++generation.current;let mounted=true;const player=createAudioPreview({baseURI:document.baseURI});preview.current=player;previews.add(player);
+        const refresh=async()=>{const token=++inventoryRead.current;await Promise.allSettled([
+          (async()=>{const r=await ctx.remote.pluginManager.listPlugins();if(alive&&mounted&&token===inventoryRead.current&&r.ok)setRows(r.value);})(),
+          (async()=>{if(autostartLock.current)return;const current=++autostartRead.current;autostartReader.current?.abort();const reader=new AbortController();autostartReader.current=reader;try{const value=await request('autostart',{signal:reader.signal});if(alive&&mounted&&current===autostartRead.current&&!reader.signal.aborted)setAutostart(value);}catch{if(alive&&mounted&&current===autostartRead.current&&!reader.signal.aborted)setAutostart(null);}finally{if(autostartReader.current===reader)autostartReader.current=null;}})()
         ]);};refreshRows.current=refresh;void refresh();const off=ctx.remote.$on('plugin-manager/changed',refresh);const syncPermission=()=>{if(alive&&mounted)setPermission(typeof window.Notification==='function'?window.Notification.permission:'unsupported');};window.addEventListener('focus',syncPermission);
-        request('settings').then(s=>{if(alive&&mounted){setSettings(s);setVolume(s.island.volume);}}).catch(()=>{if(alive&&mounted)setError(true);});
-        return()=>{mounted=false;++generation.current;operation.current=false;switchLock.current=false;refreshRows.current=null;cancel();off();window.removeEventListener('focus',syncPermission);player.dispose();previews.delete(player);if(preview.current){preview.current.dispose();previews.delete(preview.current);preview.current=null;}};
+        const readSettings=()=>{if(operation.current)return;invalidateSettings();const current=settingsRead.current,reader=new AbortController();settingsReader.current=reader;void request('settings',{signal:reader.signal}).then(s=>{if(alive&&mounted&&current===settingsRead.current&&!reader.signal.aborted&&!operation.current){setSettings(s);setVolume(s.island.volume);if(!s.island.soundEnabled)preview.current?.stop();}}).catch(()=>{if(alive&&mounted&&current===settingsRead.current&&!reader.signal.aborted)setError(true);}).finally(()=>{if(settingsReader.current===reader)settingsReader.current=null;});};readSettings();window.addEventListener('tanuki:settings-changed',readSettings);
+        return()=>{mounted=false;++generation.current;invalidateSettings();++inventoryRead.current;++autostartRead.current;autostartReader.current?.abort();operation.current=false;switchLock.current=false;autostartLock.current=false;refreshRows.current=null;cancel();off();window.removeEventListener('tanuki:settings-changed',readSettings);window.removeEventListener('focus',syncPermission);player.dispose();previews.delete(player);if(preview.current){preview.current.dispose();previews.delete(preview.current);preview.current=null;}};
       },[]);
       async function run(action){
-        if(operation.current||!alive)return;operation.current=true;const epoch=generation.current,valid=()=>alive&&epoch===generation.current;setBusy(true);setError(false);preview.current?.stop();
-        try{const value=await action(valid);if(!valid()||!value)return;setSettings(value);setVolume(value.island.volume);if(value.island.soundEnabled===false&&preview.current){preview.current.dispose();previews.delete(preview.current);preview.current=null;}window.dispatchEvent(new CustomEvent('tanuki:settings-changed'));}
-        catch{if(valid())setError(true);}finally{if(valid()){operation.current=false;setBusy(false);}}
+        if(operation.current||!alive)return;operation.current=true;invalidateSettings();const epoch=generation.current,valid=()=>alive&&epoch===generation.current;setBusy(true);setError(false);preview.current?.stop();
+        try{const value=await action(valid);if(!valid()||!value)return;setSettings(value);setVolume(value.island.volume);if(value.island.soundEnabled===false&&preview.current){preview.current.dispose();previews.delete(preview.current);preview.current=null;}}
+        catch{if(valid())setError(true);}finally{if(valid()){operation.current=false;setBusy(false);window.dispatchEvent(new CustomEvent('tanuki:settings-changed'));}}
       }
       const change=(path,options)=>run(()=>request(path,options));
       const patch=island=>change('settings',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({island})});
       async function toggleAutostart(enabled){
-        if(autostartLock.current||!alive)return;autostartLock.current=true;setAutostartBusy(true);setError(false);const epoch=generation.current,valid=()=>alive&&epoch===generation.current;
+        if(autostartLock.current||!alive)return;autostartLock.current=true;++autostartRead.current;autostartReader.current?.abort();setAutostartBusy(true);setError(false);const epoch=generation.current,valid=()=>alive&&epoch===generation.current;
         try{const value=await request('autostart',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({enabled})});if(valid())setAutostart(value);}
-        catch{if(valid())setError(true);}finally{if(valid()){autostartLock.current=false;setAutostartBusy(false);}}
+        catch{if(valid())setError(true);}finally{if(valid()){autostartLock.current=false;setAutostartBusy(false);void refreshRows.current?.();}}
       }
       async function toggle(row,enabled){
         if(switchLock.current||!alive||!row||row.entryId===undefined||row.readOnlyReason!==undefined)return;
-        switchLock.current=true;setSwitchBusy(true);setError(false);setSwitchNotice(null);const epoch=generation.current,valid=()=>alive&&epoch===generation.current;
+        switchLock.current=true;++inventoryRead.current;setSwitchBusy(true);setError(false);setSwitchNotice(null);const epoch=generation.current,valid=()=>alive&&epoch===generation.current;
         try{
           const r=await ctx.remote.pluginManager.setPluginEnabled(row.entryId,enabled);if(!valid())return;
           if(!r.ok)throw new Error('Toggle failed');
@@ -105,10 +113,11 @@ document.currentScript.__tanukiRegister(function(require){
         }finally{if(decoder&&decoders.delete(decoder))void decoder.close().catch(()=>{});}
         if(!valid())return;return request('settings/audio',{method:'PUT',headers:{'content-type':type,'x-audio-name':encodeURIComponent(file.name)},body:file});});
       }
-      const names=view==='composer'?['composer']:['startup-guard','sidebar','home','composer','rules','recycle-bin','settings-enhancements','dynamic-island','plugin-center'];
+      const names=view==='composer'?['composer']:['startup-guard','sidebar','home','composer','rules','recycle-bin','settings-enhancements','dynamic-island','plugin-center','agent-interface'];
       const localized=text=>text===undefined?'':toolboxLocale.text(text);
       return h('div',{className:'tanuki-base-settings'},h('h2',{className:'tanuki-settings-title'},h('span',null,t('title')),h('small',{className:'tanuki-settings-version'},'v'+__VERSION__)),error?h('p',{role:'alert'},t('error')):null,
         ...names.map(key=>{const row=rows.find(r=>r.moduleName==='dsh-local-plugin-center/'+key),title=localized(row?.meta?.title)||t(key),description=localized(row?.meta?.description)||(!row&&rows.length?t('componentRestart'):undefined);return h(SettingsCard,{key,name:key,title,description,t,notice:switchNotice?.entryId===row?.entryId?switchNotice:null,enabled:!!row?.enabled,onCollapse:()=>preview.current?.stop(),control:h(Switch,{checked:!!row?.enabled,label:t('toggle')+' '+title,disabled:switchBusy||!row||row.entryId===undefined||row.readOnlyReason!==undefined,onChange:enabled=>void toggle(row,enabled)})},
+          key==='agent-interface'?(row?.enabled?h(AgentPanel):h('p',{className:'tanuki-settings-note'},t('agentDisabled'))):null,
           key==='startup-guard'?h(React.Fragment,null,divider(false),h('div',{className:'tanuki-bubble-setting'},h('div',null,h('span',null,t('protection')),h('p',{className:'tanuki-settings-note'},t('protectionHint'))),h(Switch,{checked:settings?.startup?.protection!==false,label:t('protection'),disabled:busy||!settings,onChange:protection=>change('settings',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({startup:{protection}})})})),divider(true),h('div',{className:'tanuki-bubble-setting'},h('div',null,h('span',null,t('autostart')),h('p',{className:'tanuki-settings-note'},t(autostart?.supported===false?'autostartUnsupported':autostart?.status==='changed'?'autostartChanged':'autostartHint'))),h(Switch,{checked:autostart?.enabled===true,label:t('autostart'),disabled:autostartBusy||switchBusy||!autostart?.supported||!row?.enabled,onChange:enabled=>void toggleAutostart(enabled)}))):null,
           key==='composer'?h('div',{className:'tanuki-composer-settings'},divider(false),...['timeStats','modelSelection','fileMenu','sessionList'].map((flag,index)=>h(React.Fragment,{key:flag},index>0?divider(true):null,h('div',{className:'tanuki-bubble-setting'},h('div',null,h('span',null,t(flag)),h('p',{className:'tanuki-settings-note'},t(flag+'Hint'))),h(Switch,{checked:settings?.composer?.[flag]===true,label:t(flag),disabled:busy||!settings,onChange:enabled=>change('settings',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({composer:{[flag]:enabled}})})}))))):null,
           key==='settings-enhancements'?h('div',null,divider(false),h('div',{className:'tanuki-bubble-setting'},h('div',null,h('span',null,t('enhancedModels')),h('p',{className:'tanuki-settings-note'},t('enhancedModelsHint'))),h(Switch,{checked:settings?.settingsEnhancements?.models===true,label:t('enhancedModels'),disabled:busy||!settings,onChange:enabled=>change('settings',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({settingsEnhancements:{models:enabled}})})}))):null,

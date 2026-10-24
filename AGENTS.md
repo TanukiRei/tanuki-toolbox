@@ -1,5 +1,18 @@
 # Tanuki Toolbox / 黎猫工具箱
 
+## Agent Interface
+
+- Owner workflow (2026-10-24): use local file tools for source edits and the enabled Agent API for runtime settings, plugin installation/update/reload and graceful quit/restart. Discover credentials privately from the active profile, read status/operations first and verify durable receipts. Do not use mouse automation for routine management; explain any necessary UI operation to the owner first. Earlier one-time mouse permission does not authorize future routine control.
+- Keep physical Windows installation/profile paths in their real on-disk spelling. Lowercasing the path used to start Electron can split Node ESM singleton modules, losing app-boot's root Include registry and breaking settings persistence/HMR. Case-insensitive comparisons do not authorize rewriting executable/import paths to lowercase.
+
+- Do not return ctx.inject()/ctx.plugin() Fibers directly from apply or its startup promises. Cordis Fibers resolve to a Fiber, which is an invalid effect. Await readiness/errors and discard the value, returning void or a valid disposer. Test startup against the real Cordis lifecycle when authorized; parsing alone cannot catch this.
+- Raw ASAR work must use Electron original-fs. Even an Electron Node-mode preparer holds its own app.asar open; generate staged bytes, wait for that process to exit and commit from the copied native helper in the private profile snapshot. Never run the write phase from the OneDrive development executable or change global process.noAsar. Canonicalize Windows archive paths before identity comparisons.
+
+- Default off. Never embed generated connection keys, ports, machine paths or user receipts in source/packages. Keep stable per-profile key/port across disable/re-enable/restart/update.
+- Closing must synchronously revoke HTTP listener/keep-alive clients and refuse new/queued operations; already-started safe package/file transactions may finish with durable receipts. Agent access must use the explicit allowlist, loopback binding, Bearer auth and browser-origin rejection, never eval/shell/arbitrary proxy or native auth bypass.
+- Settings details are lazy and share DSH's locale/theme. Do not run functional API or native lifecycle tests without explicit user permission.
+- Native desktop setup is exact-version and digest checked, waits for normal main-process exit, backs up originals and preserves ASAR offsets. Never change EXE/fuses, patch unknown versions, force-kill DSH, restore an old backup over an upgrade or use mouse automation for routine lifecycle operations. Keep AgentSetup.cs/exe/build hashes together using scripts/build-agent-setup.ps1. The native dispatcher must remain dormant without requests.
+
 ## Version and delivery
 
 - Read the current version from package.json. Keep the package and every component manifest on the same version.
@@ -38,3 +51,9 @@ The one-shot native restart worker uses `scripts/build-restart-worker.ps1`. Keep
 - Popup and detached Rules windows MUST share lib/rules-editor-client.cjs, client-src/rules.css and rules.locale.json. scripts/build.cjs embeds these same sources into client-chunks/rules.js and launcher/RulesEditor.html. Do not implement a second native layout or separate translations.
 - RulesWindow.cs owns only native grouping/geometry/pipe/WebView hosting. Keep its SDK DLLs, license and build hashes together; never download/install the WebView2 Runtime silently. Preserve the in-app editor if the Runtime is unavailable.
 - Forking must copy all row contents, order and enabled states at creation, with independent parent/child storage. Disabled rows must never reach the request-only rules block.
+
+## Shared live sorting (owner request, 2026-10-24)
+
+- All Toolbox drag sorting previews the full row at its live list position, with no insertion lines. Keep the original order until an in-bounds release; leaving the whole list, cancellation or loss of focus restores it without saving.
+- Use lib/sort-motion-client.cjs through __SORT_MOTION_FACTORY__ for the same short spring-like row movement in the sidebar and provider/model lists. Keep React responsible for DOM order, capture pointers on a stable list container, and exclude animated transforms from hit testing. Honor reduced motion and clean up temporary listeners/frames/animations on cancellation or disposal.
+- The Workspace sidebar entry is always visible; ignore older saved hidden values for it.

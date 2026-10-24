@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Tanuki Toolbox",
-    "description": "Modular DeepSeek Harness enhancements: task rules, quick bar, start page, composer, model settings, notifications, plugin management and Windows startup protection."
+    "description": "Modular DeepSeek Harness enhancements: local Agent API, task rules, conversations, model settings, recycle bin, notifications, plugin management and startup protection."
   }
 }

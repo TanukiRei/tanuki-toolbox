@@ -1,0 +1,62 @@
+document.currentScript.__tanukiRegister(function(require){
+  const React=require('react'),h=React.createElement;
+  function apply(ctx,{ready}){
+    const locale=(function createToolboxLocale(ctx, namespace, dictionaries) {
+  const language = () => /^zh(?:[-_]|$)/i.test(ctx.locale.getSnapshot()?.active || '') ? 'zh' : 'en';
+  const text = value => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return '';
+    const result = language() === 'zh' ? value.zh ?? value['zh-CN'] ?? value['zh-cn'] ?? value['zh-TW'] ?? value['zh-tw'] ?? value.en : value.en;
+    return typeof result === 'string' ? result : '';
+  };
+  const t = (key, params) => {
+    const template = dictionaries[language()]?.[key] ?? dictionaries.en?.[key] ?? key;
+    return params ? template.replace(/\{(\w+)\}/g, (match, name) => Object.hasOwn(params, name) ? String(params[name]) : match) : template;
+  };
+  ctx.effect(() => {
+    const known = new Set(), disposers = [];
+    function registerLanguages() {
+      const entries = { en: dictionaries.en || {}, zh: dictionaries.zh || {} };
+      for (const locale of ctx.locale.getSnapshot()?.locales || []) {
+        const id = typeof locale === 'string' ? locale : locale.id;
+        if (typeof id === 'string') entries[id] = /^zh(?:[-_]|$)/i.test(id) ? dictionaries.zh || dictionaries.en : dictionaries.en;
+      }
+      const pending = Object.fromEntries(Object.entries(entries).filter(([id]) => !known.has(id.toLowerCase())));
+      if (!Object.keys(pending).length) return;
+      for (const id of Object.keys(pending)) known.add(id.toLowerCase());
+      disposers.push(ctx.locale.register(namespace, pending));
+    }
+    registerLanguages();
+    const off = ctx.locale.subscribe(registerLanguages);
+    return () => { off(); for (const dispose of disposers.reverse()) dispose(); };
+  });
+  return { t, text, language };
+})(ctx,'tanukiAgentInterface',{"zh":{"address":"接口地址","key":"接口密钥","copy":"复制","copied":"已复制","show":"显示","hide":"隐藏","connectionInstructions":"给 Agent 的连接说明","copyInstructions":"复制连接说明","refresh":"刷新状态","loading":"正在读取接口…","unavailable":"接口尚未就绪。请确认组件已开启，稍后刷新；仍失败时请重新开启组件。","portBusy":"保存的端口被其他程序占用。连接信息已保留，请释放端口后重新开启组件。","localHint":"由当前运行插件的电脑提供接口。换一台电脑安装后，会生成那台电脑自己的连接信息，支持能发送 HTTP 请求的本机 Agent。","retained":"关闭组件会立即停止连接，地址和密钥保留；再次开启后可继续使用原连接。密钥用于管理 DSH，请只交给你授权的 Agent。","manualCopy":"无法自动复制，已选中连接说明，请手动复制。","desktopReady":"设置、插件管理和桌面退出/重启适配已就绪。","desktopWaiting":"设置和插件管理已可用。首次桌面适配将在正常退出 DSH 后安装，下次打开后可使用正常退出/重启接口；不用现在退出。","desktopUnsupported":"设置和插件管理可用；当前系统或 DSH 版本暂不支持正常退出/重启接口。","desktopError":"设置和插件管理可用；桌面适配未完成。请重新开启组件后查看状态。","instructions":"请通过这台电脑上的黎猫工具箱 Agent接口管理 DeepSeek Harness。\n地址：{address}\n密钥：{key}\n\n使用 HTTP JSON。每个请求加请求头 Authorization: Bearer <上述密钥>。先 GET /v1/status 和 GET /v1/operations，按返回的实际能力与参数操作，不要猜测接口。\n修改操作使用新的 UUID 作为 X-Request-ID，收到 202 后查询 /v1/jobs/<requestId>。重复请求沿用同一 ID，断线不代表成功；自更新、停用或退出可能断线，可读取本机任务回执确认。\nProfile：{profile}\n回执目录：Profile/.tanuki-toolbox/agent-interface/jobs。\n可读取状态、组件/插件列表、工具箱设置及接口操作日志；可调整开关/设置，安装、更新、移除插件和重新加载。源码修改使用你自己的本机文件工具，然后调用安装或重新加载。正常退出和重启以 desktop 状态及原生任务检查为准，不强制结束进程，不操作鼠标。\n接口关闭时禁止连接，再次开启沿用当前地址和密钥。仅连接运行插件的这台电脑的 127.0.0.1 接口，不需要 DSH 登录 Cookie。","hiddenKey":"〈复制连接说明时会包含密钥〉"},"en":{"address":"API address","key":"API key","copy":"Copy","copied":"Copied","show":"Show","hide":"Hide","connectionInstructions":"Agent connection instructions","copyInstructions":"Copy connection instructions","refresh":"Refresh status","loading":"Reading the interface…","unavailable":"The interface is not ready. Check that the component is enabled and refresh; if it persists, disable and enable it again.","portBusy":"Another program is using the saved port. Your connection details are retained; free the port and enable the component again.","localHint":"The API runs on whichever computer has this plugin installed. Each computer creates its own connection details for local Agents that can make HTTP requests.","retained":"Disabling immediately stops connections and retains the address and key. Re-enabling restores the same connection. The key can manage DSH; share it only with an Agent you authorize.","manualCopy":"Automatic copying failed. The instructions are selected; copy them manually.","desktopReady":"Settings, plugin management and the graceful quit/restart adapter are ready.","desktopWaiting":"Settings and plugin management are available. First-time desktop setup runs after DSH exits normally; graceful quit/restart becomes available on the next launch. You do not need to exit now.","desktopUnsupported":"Settings and plugin management are available. Graceful quit/restart is not supported on this OS or DSH version yet.","desktopError":"Settings and plugin management are available; desktop setup is incomplete. Disable and enable this component to inspect its status again.","instructions":"Manage DeepSeek Harness through the Tanuki Toolbox Agent Interface on this computer.\nAddress: {address}\nKey: {key}\n\nUse HTTP JSON and Authorization: Bearer <the key above> on every request. First GET /v1/status and GET /v1/operations; use the returned capabilities and request shapes instead of guessing endpoints.\nFor mutations, send a fresh UUID in X-Request-ID. After HTTP 202, query /v1/jobs/<requestId>. Retry the same operation with the same ID. A disconnect is not proof of success; self-update, disabling or quitting may disconnect HTTP, so inspect the local receipt when needed.\nProfile: {profile}\nReceipts: Profile/.tanuki-toolbox/agent-interface/jobs.\nRead status, plugin/component inventory, Toolbox settings and API action logs; change switches/settings, install/update/remove plugins and reload the profile. Edit source using your own local file tools, then install or reload. Graceful quit/restart depends on desktop adapter availability and native task checks. Never force-kill DSH or operate the mouse for these actions.\nDisabling blocks connections; re-enabling retains this address and key. Connect to 127.0.0.1 on the computer running the plugin. No DSH login cookie is needed.","hiddenKey":"<included when you copy the connection instructions>"}}),t=locale.t;
+    let alive=true;const requests=new Set();
+    ctx.effect(()=>{const style=document.createElement('style');style.textContent=".tanuki-agent-settings{font-size:13px;min-width:0}.tanuki-agent-field{display:flex;align-items:flex-end;gap:8px;margin:12px 0}.tanuki-agent-field label{display:grid!important;gap:6px!important;flex:1;min-width:0;margin:0!important}.tanuki-agent-field input,.tanuki-agent-instructions textarea{width:100%;min-width:0;box-sizing:border-box;font:inherit;color:inherit;border:1px solid var(--dsw-alias-border-l2,color-mix(in srgb,currentColor 20%,transparent));border-radius:9px;background:var(--dsw-alias-bg-layer-2,color-mix(in srgb,currentColor 5%,transparent));padding:9px 11px}.tanuki-agent-field input{height:36px;font-family:ui-monospace,Consolas,monospace}.tanuki-agent-field button{flex:none;min-height:36px}.tanuki-agent-instructions{display:grid!important;gap:8px!important;align-items:start!important;margin-top:16px!important}.tanuki-agent-instructions textarea{height:190px;resize:vertical;font-size:12px;line-height:1.65;white-space:pre-wrap}.tanuki-agent-actions{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0}.tanuki-agent-settings>hr{margin-top:12px}\n";document.head.appendChild(style);return()=>style.remove();});
+    function Connection(){
+      React.useSyncExternalStore(fn=>ctx.locale.subscribe(fn),()=>ctx.locale.getSnapshot());
+      const [info,setInfo]=React.useState(null),[failed,setFailed]=React.useState(false),[retry,setRetry]=React.useState(0),[visible,setVisible]=React.useState(false),[copied,setCopied]=React.useState('');
+      const area=React.useRef(null);
+      React.useEffect(()=>{let mounted=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);requests.add(controller);setFailed(false);setInfo(null);
+        fetch(new URL('tanuki-toolbox/agent-interface',document.baseURI),{credentials:'same-origin',cache:'no-store',headers:{'X-Tanuki-Settings':'1'},signal:controller.signal}).then(async answer=>{if(!answer.ok)throw Error('UNAVAILABLE');return answer.json();}).then(value=>{if(alive&&mounted)setInfo(value);}).catch(()=>{if(alive&&mounted&&!controller.signal.aborted)setFailed(true);else if(alive&&mounted)setFailed(true);}).finally(()=>{clearTimeout(timer);requests.delete(controller);});
+        return()=>{mounted=false;controller.abort();clearTimeout(timer);requests.delete(controller);};
+      },[retry]);
+      const instructions=info?.address?t('instructions',{address:info.address,key:info.key,profile:info.profile}):'';
+      const previewInstructions=visible?instructions:instructions.replaceAll(info?.key||'\0',t('hiddenKey'));
+      async function copy(kind,value){try{await navigator.clipboard.writeText(value);if(alive)setCopied(kind);}catch{if(area.current){area.current.focus();area.current.select();}setCopied('manual');}}
+      const field=(label,value,secret=false)=>h('div',{className:'tanuki-agent-field'},h('label',null,label,h('input',{readOnly:true,type:secret&&!visible?'password':'text',value:value||'','aria-label':label,spellCheck:false,autoComplete:'off'})),secret?h('button',{type:'button',onClick:()=>setVisible(v=>!v)},t(visible?'hide':'show')):null,h('button',{type:'button',disabled:!value,onClick:()=>void copy(secret?'key':'address',value)},t(copied===(secret?'key':'address')?'copied':'copy')));
+      if(!info)return h('div',{className:'tanuki-agent-settings'},h('p',{className:'tanuki-settings-note',role:failed?'alert':'status'},t(failed?'unavailable':'loading')),failed?h('button',{type:'button',onClick:()=>setRetry(n=>n+1)},t('refresh')):null);
+      return h('div',{className:'tanuki-agent-settings'},h('hr',{className:'tanuki-settings-divider'}),h('p',{className:'tanuki-settings-note'},t('localHint')),
+        !info.address?h('p',{role:'alert'},t(info.error==='ADDRESS_IN_USE'?'portBusy':'unavailable')):null,
+        field(t('address'),info.address),field(t('key'),info.key,true),
+        info.address?h('p',{className:'tanuki-settings-note',role:'status'},t(info.desktop?.state==='ready'?'desktopReady':info.desktop?.state==='waiting'?'desktopWaiting':info.desktop?.state==='unsupported'?'desktopUnsupported':'desktopError')):null,
+        h('label',{className:'tanuki-agent-instructions'},h('span',null,t('connectionInstructions')),h('textarea',{ref:area,readOnly:true,value:previewInstructions,spellCheck:false,'aria-label':t('connectionInstructions')})),
+        h('div',{className:'tanuki-agent-actions'},h('button',{type:'button',disabled:!instructions,onClick:()=>void copy('instructions',instructions)},t(copied==='instructions'?'copied':'copyInstructions')),h('button',{type:'button',onClick:()=>{setCopied('');setRetry(n=>n+1);}},t('refresh'))),
+        copied==='manual'?h('p',{role:'status',className:'tanuki-settings-note'},t('manualCopy')):null,
+        h('p',{className:'tanuki-settings-note'},t('retained')));
+    }
+    ctx.effect(()=>()=>{alive=false;for(const controller of requests)controller.abort();requests.clear();});ready(Connection);
+  }
+  return {name:'tanuki-agent-interface-settings',inject:['locale'],apply};
+});

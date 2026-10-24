@@ -73,7 +73,10 @@
     "rules": "规则",
     "sessionList": "会话列表",
     "sessionListHint": "修改会话列表的显示，并且增加右键菜单。",
-    "recycle-bin": "回收站"
+    "recycle-bin": "回收站",
+    "agent-interface": "Agent接口",
+    "agentLoading": "正在读取接口…",
+    "agentDisabled": "开启后显示当前电脑的地址、密钥和连接说明。关闭后禁止连接，再次开启沿用原连接信息。"
   },
   "en": {
     "title": "Tanuki Toolbox · Basic settings",
@@ -149,6 +152,9 @@
     "rules": "Rules",
     "sessionList": "Conversation list",
     "sessionListHint": "Adjust the conversation list and add its native actions to the right-click menu.",
-    "recycle-bin": "Recycle Bin"
+    "recycle-bin": "Recycle Bin",
+    "agent-interface": "Agent Interface",
+    "agentLoading": "Reading the interface…",
+    "agentDisabled": "Enable to show this computer’s address, key and connection instructions. Disabling blocks connections; re-enabling retains the same details."
   }
 }

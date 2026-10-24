@@ -1,6 +1,6 @@
 window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
   'use strict';
-  const React=require('react'),h=React.createElement,VERSION="0.10.3";
+  const React=require('react'),h=React.createElement,VERSION="0.11.3";
   const SELF='dsh-local-plugin-center',NS='tanukiCore';
   function apply(ctx){
     let disposed=false,flight=null,again=false,timer,assetVersion=VERSION;
@@ -85,7 +85,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
       const entry={controller:new AbortController(),attempt:0,fiber:null,retry:null,lifecycle:{disabled:false}};entries.set(key,entry);
       const run=async()=>{
         try{
-          const module=await load(key,entry.controller.signal);
+          const module=await load(key==='agent-interface'?'agent-interface-events':key,entry.controller.signal);
           if(disposed||entries.get(key)!==entry||entry.controller.signal.aborted)return;
           entry.fiber=ctx.plugin(module,{lifecycle:entry.lifecycle,load});
         }catch(error){
@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({id:'dsh-local-plugin-center',factory(require){
           try{const answer=await fetch(new URL('tanuki-toolbox/component-state',document.baseURI),{credentials:'same-origin',cache:'no-store',signal:controller.signal});if(answer.ok)rulesEnabled=(await answer.json()).rules!==false;}catch{rulesEnabled=false;}finally{clearTimeout(timeout);loads.delete(controller);}
         }
         if(disposed)return;
-        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer','settings-enhancements','rules','recycle-bin']){
+        for(const key of ['plugin-center','home','dynamic-island','sidebar','composer','settings-enhancements','rules','recycle-bin','agent-interface']){
           const enabled=result.value.some(row=>row.moduleName===SELF+'/'+key&&row.enabled)&&(key!=='rules'||rulesEnabled);
           if(enabled)start(key);else stop(key);
         }

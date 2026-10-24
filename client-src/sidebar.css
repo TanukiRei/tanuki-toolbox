@@ -85,15 +85,15 @@ html[data-platform="darwin"] [data-tanuki-sidebar-col] :is(button,a,input,select
 .tanuki-rail-menu-divider{flex:none;height:0;margin:7px 4px;border:0;border-top:1px solid var(--dsw-alias-border-l2,rgba(128,128,128,.24));}
 .tanuki-rail-sort-list{position:relative;display:flex;flex-direction:column;gap:3px;min-height:38px;}
 .tanuki-rail-menu-row{position:relative;display:flex;align-items:center;flex:none;gap:2px;border-radius:7px;}
-.tanuki-rail-menu-row[data-dragging="true"]{background:var(--dsw-alias-interactive-bg-hover,rgba(128,128,128,.12));}
-.tanuki-rail-menu-row[data-dragging="true"]>.tanuki-rail-menu-item{opacity:.45;}
+.tanuki-rail-menu-row[data-dragging="true"]{z-index:2;background:var(--dsw-alias-interactive-bg-hover,rgba(128,128,128,.12));box-shadow:0 4px 12px #0002;}
+
 .tanuki-rail-sort-handle{display:flex;align-items:center;justify-content:center;flex:0 0 26px;height:36px;padding:5px;border:0;border-radius:6px;background:transparent;color:inherit;opacity:.45;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-app-region:no-drag;}
 .tanuki-rail-sort-handle svg{width:14.4px;height:21.6px;pointer-events:none;}
 .tanuki-rail-sort-handle:hover,.tanuki-rail-sort-handle:focus-visible{opacity:1;background:var(--dsw-alias-interactive-bg-hover,rgba(128,128,128,.12));}
 .tanuki-rail-sort-handle:active,.tanuki-rail-menu-row[data-dragging="true"]>.tanuki-rail-sort-handle{cursor:grabbing;opacity:1;}
-.tanuki-rail-menu-row[data-drop-before="true"]::before,.tanuki-rail-sort-list[data-drop-end="true"]::after{content:'';position:absolute;left:5px;right:5px;height:2px;z-index:1;pointer-events:none;border-radius:2px;background:var(--dsw-alias-brand-primary,#6c9deb);}
-.tanuki-rail-menu-row[data-drop-before="true"]::before{top:-2px;}
-.tanuki-rail-sort-list[data-drop-end="true"]::after{bottom:-2px;}
+
+
+
 .tanuki-rail-drop-empty{display:flex;align-items:center;min-height:38px;padding:0 9px;font-size:12px;opacity:.5;user-select:none;}
 .tanuki-rail-menu-item{display:flex;align-items:center;gap:7px;flex:1;min-width:0;min-height:38px;box-sizing:border-box;padding:7px 6px 7px 3px;border:0;border-radius:7px;background:transparent;color:inherit;text-align:left;font:inherit;font-size:13px;cursor:pointer;}
 .tanuki-rail-menu-item>svg,.tanuki-rail-menu-item>.tanuki-rail-home-mark{width:18px;height:18px;flex:none;}
@@ -108,18 +108,19 @@ html[data-platform="darwin"] [data-tanuki-sidebar-col] :is(button,a,input,select
 .tanuki-rail-menu-item:focus-visible,.tanuki-rail-sort-handle:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#4d90fe);outline-offset:-2px;}
 @media(max-height:400px){.tanuki-rail{gap:2px;padding-top:4px;padding-bottom:4px;overflow-y:auto;}.tanuki-rail-home{margin-bottom:2px;}.tanuki-rail-spacer{min-height:4px;}}
 
-/* Keep selected fills and idle outlines at the same visual ink strength.
-   Apply ink opacity to the glyph, leaving selection backgrounds and bubbles intact. */
-.tanuki-rail-button>svg,.tanuki-rail-button>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
-.tanuki-rail-home>.tanuki-rail-home-mark{color:var(--dsw-alias-brand-primary);opacity:1;}
-/* Use the rail's neutral ink for the daytime home glyph. The logo primitive
-   uses currentColor; leave its actual paths and eye cutouts intact. */
-body:not([data-ds-dark-theme]) .tanuki-rail-home{color:inherit;}
-body:not([data-ds-dark-theme]) .tanuki-rail-home>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
-body:not([data-ds-dark-theme]) .tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
+/* Dim idle glyphs only. Selected glyphs use full theme ink in light mode
+   and white in dark mode; backgrounds, notification bubbles and geometry stay intact. */
+.tanuki-rail{--tanuki-rail-icon-selected:var(--dsw-alias-label-primary);}
+body[data-ds-dark-theme] .tanuki-rail{--tanuki-rail-icon-selected:#fff;}
+.tanuki-rail-button>svg,.tanuki-rail-button>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 56%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;transition:color .15s;}
+.tanuki-rail-button:is([aria-current="page"],[aria-pressed="true"])>svg,.tanuki-rail-button:is([aria-current="page"],[aria-pressed="true"])>.tanuki-rail-home-mark{color:var(--tanuki-rail-icon-selected);}
+/* FishLogo also follows the glyph ink, including its selected spout. */
+.tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
 .tanuki-rail-menu-item{color:var(--dsw-alias-label-primary);}
 .tanuki-rail-menu-item .tanuki-rail-home-mark>:not(.tanuki-rail-home-spout){color:inherit;}
 .tanuki-rail-menu-item>svg,.tanuki-rail-menu-item>.tanuki-rail-home-mark{color:color-mix(in srgb,var(--dsw-alias-label-primary) 72%,var(--dsw-specific-sidebar-fill,var(--dsw-alias-bg-base)));opacity:1;}
 .tanuki-rail-menu-item[data-unavailable=true]>.tanuki-rail-menu-label,.tanuki-rail-menu-item[data-unavailable=true]>svg{opacity:.4;}
 
 html[data-platform=darwin]:not([data-fullscreen]) .tanuki-rail-menu{max-height:calc(100vh - var(--dsh-frame-top-clearance,48px) - 16px);}
+
+html[data-tanuki-list-dragging],html[data-tanuki-list-dragging] *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}

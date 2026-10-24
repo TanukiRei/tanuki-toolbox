@@ -6,7 +6,7 @@
 
 A collection of independently switchable UI and interaction enhancements for **DeepSeek Harness (DSH)**: an editable quick bar, start page, composer controls, model settings, notifications, and plugin management, plus protected startup on Windows. Supports light/dark themes and follows DSH's Chinese or English UI language.
 
-Current version: **0.10.3**. Includes model settings, gateway speed controls, notifications and Windows protected restart. This is a community plugin, not an official DeepSeek product.
+Current version: **0.11.3**. Includes model settings, gateway speed controls, notifications and Windows protected restart. This is a community plugin, not an official DeepSeek product.
 
 ## Install
 
@@ -30,6 +30,10 @@ The complete current rules are injected once at formal task dispatch, without en
 
 Drag the header out to open a resizable Windows native editor owned by DSH. It stays above its owner, can be covered by other applications and minimizes with DSH. Clicking the composer Rules button again returns the detached editor to the popup. Closing the editor retains its rules. Both modes share one DOM renderer, stylesheet and translations. The Windows editor uses an already installed WebView2 Runtime; the plugin does not install or update the Runtime. If unavailable, in-app editing remains usable. Other platforms currently use a draggable, resizable in-app panel. Disabling the component closes editors and removes injection while retaining saved rules.
 
+## Agent Interface
+
+Enable and expand this component in Toolbox settings, then copy its instructions to an Agent on the computer running DSH. Every computer creates its own address and key; disabling blocks connections, while re-enabling, restarting or updating retains them. Inspect status, change Toolbox preferences/components, install/update plugins and reload. First-time Windows graceful quit/restart setup completes after a normal exit and takes effect next launch; the native adapter currently supports reviewed DSH 0.2.1-rc.2 only. Other platforms/versions retain the base API. See the [interface documentation](AGENT-INTERFACE.md).
+
 ## Components
 
 | Component | What it does |
@@ -40,7 +44,8 @@ Drag the header out to open a resizable Windows native editor owned by DSH. It s
 | **Conversation Enhancements** | Adds time statistics, a compact model/effort/speed/output-detail selector, file context-menu actions, and a conversation-list right-click menu backed by the native menu. Each subfeature has its own switch. |
 | **Recycle Bin** | Workspace-style task list and native conversation/trajectory views, with bottom/right-panel plugins and statistics preserved. Replaces the composer with Restore and a live deletion countdown; retains tasks for 30 days and supports confirmed per-task permanent deletion or clearing. |
 | **Rules** | Edit and autosave per-task rules. Each formal task request receives the complete current version; the editor can be detached. |
-| **Settings Enhancements** | Offers a compact Models page with provider/model switches, six-dot grips with pointer-captured dragging and white insertion indicators (including the original row), default model selection, and separate provider/model editing dialogs. |
+| **Agent Interface** | Shows this computer's address, key and instructions for local Agents to manage DSH. Disabling disconnects clients; re-enabling retains the connection. |
+| **Settings Enhancements** | Offers a compact Models page with provider/model switches, six-dot grips with live full-row movement and a subtle spring animation; leaving the list restores its order, default model selection, and separate provider/model editing dialogs. |
 | **Message Center** | Provides top-of-app Dynamic Island banners, system notifications, persistent status bubbles, and notification sounds. |
 | **Plugin Center** | Combines plugin management with optional [Plugin Market](https://github.com/dsh-market/dsh-market) integration, update indicators, custom names, repository links, and recommendations. |
 

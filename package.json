@@ -1,9 +1,9 @@
 {
   "name": "dsh-local-plugin-center",
-  "version": "0.10.3",
+  "version": "0.11.3",
   "private": true,
   "type": "module",
-  "description": "Modular DeepSeek Harness enhancements: task rules, quick bar, start page, conversations, recycle bin, model settings, notifications, plugin management and Windows startup protection.",
+  "description": "Modular DeepSeek Harness enhancements: local Agent API, task rules, conversations, model settings, recycle bin, notifications, plugin management and startup protection.",
   "icon": "./assets/toolbox.png",
   "main": "./index.js",
   "license": "MIT",
@@ -45,7 +45,10 @@
     "./rules/locale/*.json": "./components/rules/locale/*.json",
     "./recycle-bin": "./components/recycle-bin/index.js",
     "./recycle-bin/package.json": "./components/recycle-bin/package.json",
-    "./recycle-bin/locale/*.json": "./components/recycle-bin/locale/*.json"
+    "./recycle-bin/locale/*.json": "./components/recycle-bin/locale/*.json",
+    "./agent-interface": "./components/agent-interface/index.js",
+    "./agent-interface/package.json": "./components/agent-interface/package.json",
+    "./agent-interface/locale/*.json": "./components/agent-interface/locale/*.json"
   },
   "dsh": {
     "manifestVersion": 1,
@@ -79,7 +82,8 @@
     "README.md",
     "LICENSE",
     "scripts",
-    "README.en.md"
+    "README.en.md",
+    "AGENT-INTERFACE.md"
   ],
   "tanuki": {
     "versionScheme": 1

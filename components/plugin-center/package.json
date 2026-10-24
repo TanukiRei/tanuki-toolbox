@@ -1,6 +1,6 @@
 {
   "name": "tanuki-plugin-center",
-  "version": "0.10.3",
+  "version": "0.11.3",
   "type": "module",
   "description": "Reorganize plugin pages, improve their presentation, and integrate with Plugin Market.",
   "icon": "./icon.svg"

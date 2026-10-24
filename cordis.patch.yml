@@ -1,4 +1,7 @@
 - insert:
+    - id: tanuki-agent-interface
+      name: dsh-local-plugin-center/agent-interface
+      disabled: true
     - id: tanuki-startup-guard
       name: dsh-local-plugin-center/startup-guard
     - id: tanuki-sidebar

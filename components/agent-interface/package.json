@@ -1,0 +1,7 @@
+{
+  "name": "tanuki-agent-interface",
+  "version": "0.11.3",
+  "type": "module",
+  "description": "Let a local Agent manage DSH through an authenticated, switchable loopback API.",
+  "icon": "./icon.svg"
+}

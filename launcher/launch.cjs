@@ -11,6 +11,10 @@ const os=require('node:os');
 const options={install:path.join(process.env.LOCALAPPDATA||path.join(os.homedir(),'AppData/Local'),'Programs','DeepSeek Harness'),profile:path.join(process.env.DSH_HOME||path.join(os.homedir(),'.dsh'),'profiles','desktop')};
 if(process.env.TANUKI_DSH_INSTALL)options.install=path.resolve(process.env.TANUKI_DSH_INSTALL);
 if(process.env.TANUKI_DSH_PROFILE)options.profile=path.resolve(process.env.TANUKI_DSH_PROFILE);
+// Node's ESM cache keys are case-sensitive even on Windows. Launch and resolve
+// native modules from one physical spelling so profile services share boot state.
+options.install=fs.realpathSync.native(options.install);
+options.profile=fs.realpathSync.native(options.profile);
 let locale=resolveLocale({profile:options.profile});
 async function main() {
   const dryRun=process.argv.includes('--dry-run');

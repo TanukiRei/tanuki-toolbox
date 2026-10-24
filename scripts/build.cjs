@@ -14,12 +14,16 @@ const {createBubbleModel}=require(path.join(root,'lib/global-bubbles-client.cjs'
 const {createPluginAliases}=require(path.join(root,'lib/plugin-aliases-client.cjs'));
 const {createPluginArtwork}=require(path.join(root,'lib/plugin-artwork-client.cjs'));
 const {createWorkspaceSplitter}=require(path.join(root,'lib/workspace-splitter-client.cjs'));
+const {createSortMotion}=require(path.join(root,'lib/sort-motion-client.cjs'));
 const {createToolboxLocale}=require(path.join(root,'lib/locale-client.cjs'));
 const {createModelForms}=require(path.join(root,'client-src/settings-model-forms.cjs'));
 const {createSettingsSelect}=require(path.join(root,'lib/settings-select-client.cjs'));
 const {createRulesEditor}=require(path.join(root,'lib/rules-editor-client.cjs'));
 const {startRulesWindow}=require(path.join(root,'lib/rules-window-client.cjs'));
 async function main(){
+  const agentBuild=JSON.parse(fs.readFileSync(path.join(root,'launcher/AgentSetup.build.json'),'utf8'));
+  const agentSha=file=>require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,'launcher',file))).digest('hex');
+  if(agentSha('AgentSetup.cs')!==agentBuild.sourceSha256||agentSha('AgentSetup.exe')!==agentBuild.binarySha256)throw new Error('Rebuild Agent setup using scripts/build-agent-setup.ps1');
   // Validate checked-in native artifacts without starting the restart worker.
   const workerBuild=JSON.parse(fs.readFileSync(path.join(root,'launcher/RestartWorker.build.json'),'utf8'));
   const sha=file=>require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,'launcher',file))).digest('hex');
@@ -27,10 +31,11 @@ async function main(){
   const rulesBuild=JSON.parse(fs.readFileSync(path.join(root,'launcher/RulesWindow.build.json'),'utf8'));
   if(sha('RulesWindow.cs')!==rulesBuild.sourceSha256||sha('RulesWindow.exe')!==rulesBuild.binarySha256)throw new Error('Rebuild the rules editor using scripts/build-rules-window.ps1');
   for(const [file,digest]of Object.entries(rulesBuild.assets||{}))if(sha(file)!==digest)throw new Error('Native rule editor asset mismatch: '+file);
-  for(const file of ['launcher/auth-cookie-cleanup.cjs','launcher/launch.cjs','launcher/restart-controller.cjs','launcher/preflight.cjs','lib/autostart.cjs','lib/shortcut-controller.cjs','lib/toolbox-settings.cjs','lib/sidebar-restart.cjs','lib/rules-store.cjs','lib/rules-runtime.cjs','lib/rules-window.cjs','lib/recycle-bin.cjs'])new vm.Script(fs.readFileSync(path.join(root,file),'utf8'),{filename:file});
+  for(const file of ['launcher/auth-cookie-cleanup.cjs','launcher/launch.cjs','launcher/restart-controller.cjs','launcher/preflight.cjs','lib/autostart.cjs','lib/shortcut-controller.cjs','lib/toolbox-settings.cjs','lib/sidebar-restart.cjs','lib/rules-store.cjs','lib/rules-runtime.cjs','lib/rules-window.cjs','lib/recycle-bin.cjs','lib/agent-interface.cjs','lib/agent-interface-store.cjs','lib/agent-interface-spec.cjs','lib/agent-desktop.cjs','launcher/agent-desktop-install.cjs'])new vm.Script(fs.readFileSync(path.join(root,file),'utf8'),{filename:file});
   const data=file=>'data:image/'+(file.endsWith('.svg')?'svg+xml':'png')+';base64,'+fs.readFileSync(path.join(root,file)).toString('base64');
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
   const substitutions={
+    __SORT_MOTION_FACTORY__:createSortMotion.toString(),
     __RULES_EDITOR_FACTORY__:createRulesEditor.toString(),
     __SETTINGS_SELECT_FACTORY__:createSettingsSelect.toString(),
     __LOCALE_FACTORY__:createToolboxLocale.toString(),
@@ -38,7 +43,7 @@ async function main(){
     __VERSION__:JSON.stringify(version),__VERSION_TEXT__:version,__WORKSPACE_SPLITTER_FUNCTION__:createWorkspaceSplitter.toString(),
     __CENTER_ICON__:JSON.stringify(data('components/plugin-center/icon.svg')),
     __DSH_NOTIFICATION_ICON__:JSON.stringify(data('assets/dsh-notification.png')),
-    __COMPONENT_ICONS__:JSON.stringify(Object.fromEntries(['plugin-center','home','dynamic-island','startup-guard','sidebar','composer','settings-enhancements','rules','recycle-bin'].map(name=>[name,data('components/'+name+'/icon.svg')]))),
+    __COMPONENT_ICONS__:JSON.stringify(Object.fromEntries(['plugin-center','home','dynamic-island','startup-guard','sidebar','composer','settings-enhancements','rules','recycle-bin','agent-interface'].map(name=>[name,data('components/'+name+'/icon.svg')]))),
     __AUDIO_PREVIEW_FACTORY__:createAudioPreview.toString(),__BUBBLES_FUNCTION__:createBubbleModel.toString(),__ARTWORK_FUNCTION__:createPluginArtwork.toString(),
     __COUNT_FUNCTION__:enabledUpdateCounts.toString(),__UPDATE_FUNCTION__:createMarketUpdater.toString(),
     __RECOMMENDATIONS_FUNCTION__:createRecommendationComponents.toString(),__REPOSITORIES_FUNCTION__:createRepositoryTools.toString(),
@@ -57,7 +62,7 @@ async function main(){
   fs.writeFileSync(path.join(root,'launcher/RulesEditor.html'),page);
   const clientBytes=compile(fs.readFileSync(path.join(root,'client.template.js'),'utf8'),substitutions,'client.js');
   fs.mkdirSync(path.join(root,'client-chunks'),{recursive:true});const chunks={};
-  for(const name of ['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files','system-settings','settings-window','settings-enhancements','settings-models','gateway-speed','rules','composer-list','recycle-bin']){
+  for(const name of ['plugin-center','home','dynamic-island','sidebar','toolbox-details','guard-settings','toolbox-settings','model-settings','model-policy','global-bubbles','composer','composer-clock','composer-model','composer-files','system-settings','settings-window','settings-enhancements','settings-models','gateway-speed','rules','composer-list','recycle-bin','agent-interface','agent-interface-events']){
     const source=path.join(root,'client-src',name),css=fs.existsSync(source+'.css')?fs.readFileSync(source+'.css','utf8'):'';
     const selectCss=name==='settings-models'?fs.readFileSync(path.join(root,'client-src/settings-select.css'),'utf8'):'';
     const locales=JSON.parse(fs.readFileSync(source+'.locale.json','utf8'));

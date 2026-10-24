@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "黎猫工具箱",
-    "description": "为 DeepSeek Harness 提供任务规则、快捷栏、起始页、对话框与模型设置优化、消息通知、插件管理及 Windows 启动保护。"
+    "description": "为 DeepSeek Harness 提供本机 Agent 接口、任务规则、会话与模型设置优化、回收站、消息通知、插件管理及启动保护。"
   }
 }

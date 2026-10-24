@@ -1,5 +1,11 @@
-黎猫工具箱 0.8.33 — 组件加载与释放约定
-Tanuki Toolbox 0.8.33 — Component lifecycle
+黎猫工具箱 0.11.3 — 组件加载与释放约定
+Tanuki Toolbox 0.11.3 — Component lifecycle
+
+0.11.1：Agent接口等待注入的子运行时启动，返回 void，不向 Cordis 返回内部 Fiber。回归检查停用后监听/连接释放，以及重开时原地址、密钥和偏好保留。原始 ASAR 使用局部 original-fs，不改变影响其他模块的全局 noAsar。
+0.11.1: Agent Interface awaits runtime readiness and returns void instead of a Fiber. Regression checks disconnect/disposal and retained address/key/preferences on re-enable. Raw ASAR IO uses local original-fs, never global noAsar.
+
+0.11.0：Agent接口默认关闭，仅开启后动态导入 Host 业务并监听当前电脑的 127.0.0.1。密钥与端口保存到当前 profile，不随开关或升级重置。停用同步停止监听、断开连接、取消读取及未开始的排队操作，保留已开始安全文件/包事务的回执。设置视图仅展开且启用时读取连接信息，收起即卸载，无轮询。Windows 桌面适配的单次原生安装事务等待精确主进程句柄退出后校验/备份/原子写入；停用取消可取消的事务，正常退出或热更新允许已接受安装安全完成。主进程只留很小的第二实例命令分发钩子，不常驻业务模块、端口或计时器；实际请求才加载适配并重新校验组件开关。退出前复用原生任务准入锁，明确拒绝活动任务、未知状态和安装中操作。无功能测试或性能实测，不承诺零内存。
+0.11.0: Agent Interface is default-off and imports host logic/listens on that computer's loopback only while enabled. Its saved key/port survive disable, restart and update. Disabling synchronously closes listener/sockets, aborts reads and refuses queued actions; accepted safe file/package transactions retain their receipts. Connection settings mount only when enabled and expanded, with no polling. One-shot Windows setup waits on the exact main-process handle, then verifies/backs up/atomically installs a supported adapter; accepted setup can finish on normal exit/hot update, with cancellable work revoked on disable. The tiny native second-instance dispatcher loads business code only on a request, rechecks enablement and uses native task admission/cleanup. No functional or performance measurements; no zero-memory claim.
 
 0.7.8：一键重启的原生后台程序仅在 1 秒长按完成后按需创建，先验证当前实例与启动入口，再关闭并通过保护入口重开。移除重复 PowerShell/WMI 探测及固定等待；仅在已开始的单次事务中短暂读取回执。原生句柄、文件锁和互斥量随事务退出释放，无常驻进程、自动重试或关闭组件预热。已接受的关闭/重开事务不随组件停用而取消。
 0.7.8: The native restart worker starts only after a one-second hold. It validates the current instance and reopen entry, closes DSH, then delegates protected startup. No repeated PowerShell/WMI probes, resident watcher or automatic retry. Receipt polling exists only during a submitted transaction; native handles, file locks and mutexes are released on exit. Accepted transactions finish independently of component disposal.
@@ -136,6 +142,12 @@ Startup: The protection switch controls compatibility checks, old local-auth coo
 - 原生归档集合保留只读限制。永久清理仅处理回收站中到期的精确会话，获取原生写锁后删除已核验的日志；不能安全处理时保留并稍后重试。
 - No functional tests or browser acceptance were run for this release; build and local update only.
 
+0.11.3：设置回读只在挂载、现有变更事件和保存结束时进行，旧请求通过取消与版本标记失效。开机启动/组件列表各自保留小型请求计数。模型和速度控件只增加失效判断；无新增后台轮询、预热或闲置任务，卸载释放请求及监听。
+0.11.3: Settings reads occur on mounting, existing events and explicit save completion. Cancellation/generations discard obsolete reads; autostart and inventory have independent counters. Models and speed controls add stale-response checks only, with no polling/prewarming/idle work; disposal clears requests/listeners.
+
+0.11.2：启动路径规范化为单次文件系统读取，无后台轮询。Agent 原生主题端点复用现有监听及原生设置服务；设置服务订阅随组件释放，不读取模型或账号配置。
+0.11.2: One-shot physical path normalization, with no polling. Native appearance endpoints share the existing Agent listener and settings service, disposed with the component; no account/model settings are exported.
+
 0.10.1：回收站视图使用原生 main.conversation 会话绑定及授权子槽，导航别名只选择原生会话主面板；独立回收站列表只在该视图挂载。只对回收站只读浏览放行客户端归档导航检查，持久归档集合和宿主派发拦截保持不变。输入卡片禁用且隐藏，只保留原生统计 dock；倒计时只随活动任务显示运行，列表分钟更新，离开释放。清空请求绑定已确认列表的摘要，先释放当前浏览，再串行处理已核验的原生日志；失败保留 purging 状态，下次启用或重试继续。停用恢复自己的方法／槽装饰、关闭 SSE、清理计时器与请求；已接受的删除事务安全完成。
 0.10.1: Recycle Bin uses the native main.conversation binding and authorized child slots, preserving conversation/trajectory views and bottom/right plugins. Its list mounts only in Bin mode; the composer is disabled/hidden while the original statistics dock remains. Only client view navigation is exempted from archived-selection clearing; durable archive state and host dispatch admission remain intact. Countdown timers belong to the visible task/list. Confirmed clearing is bound to the exact item-set digest, releases the viewed task first, and uses serialized, verified native-log cleanup. Failed purges remain pending for safe retries. Disable restores owned methods/slot decorations and clears views, SSE, requests and timers; accepted durable transactions finish safely.
 
@@ -144,3 +156,15 @@ Startup: The protection switch controls compatibility checks, old local-auth coo
 
 0.10.3：侧边栏与回收站图标调整只修改 SVG 和 CSS，不增加扫描、请求或计时器；仍随对应组件懒加载与停用清理。
 0.10.3: Sidebar and Recycle Bin icon changes affect SVG/CSS only, add no scans, requests or timers, and retain existing lazy loading and cleanup.
+
+0.10.7：规则栏展开时才按需准备隐藏的原生 WebView，普通收起释放隐藏进程，已接受的拖出则交给独立窗持有。冷启动、关闭规则组件及没有打开规则栏时不预热。首次拖动保留页面内指针捕获，原生短时光标跟随只运行至松手；每次拖动以手势 ID 匹配最终位置，避免晚到的松手消息影响后续拖动。窗口联动只订阅 DSH 主窗的原生位置事件，不增加空闲位置轮询，不使用全局置顶。关闭独立窗、宿主退出或停用释放 WebView、进程、原生事件钩子、托管委托和临时计时器。页面内和独立窗仍共享同一编辑工厂、CSS 和字典。
+0.10.7: A hidden native WebView is prepared only while a Rules popup is open. Ordinary dismissal releases it; an accepted detach transfers ownership to the standalone window. No cold-start or disabled-component prewarming is added. Popup pointer capture continues through handoff; native cursor following runs only for the held gesture, whose ID also guards the final drop message. Owner movement uses a DSH-window-scoped native location event, without idle position polling or global topmost behavior. Closing/disabling releases the view, process, native hook, rooted delegate and temporary timers. Both editor modes still share one DOM factory, CSS and dictionary.
+
+0.10.8：原生规则窗只导航到映射于自身运行目录的固定本地虚拟主机页面，拒绝其他资源和导航，不连接网络服务、不共享 DSH 认证。宿主存活使用 SYNCHRONIZE 进程句柄和一次注册等待，不依赖性能计数器枚举或轮询；关闭时释放等待与句柄。启动失败后拖动页面内浮窗不再自动重试；关闭准备过程会取消子进程等待。准备期间替换拖动手势只在按下和松手时提交位置，不增加鼠标移动请求流。
+0.10.8: Native Rules navigation is restricted to one local virtual-host document in its isolated runtime directory; other resources/navigation remain blocked, with no network service or shared DSH authentication. Host lifetime uses a SYNCHRONIZE handle and one registered wait, without process enumeration or polling; close releases both. Dragging a fallback panel does not automatically retry a failed startup. Closing cancels preparation. Replacement gestures submit placement only on press/release, without a pointer-move request stream.
+
+0.10.9：独立规则窗的位置钩子只排队一次短时移动更新，不在 WinEvent 回调内移动窗口；更新读取最新主窗坐标并合并中间事件，不积累位置队列。跟随使用 NOSIZE、NOZORDER、NOACTIVATE、NOOWNERZORDER 和 DEFERERASE，避免重新定位宿主层级及同步重绘。计时器完成即停止，手动拖动/重新挂接取消旧更新，关闭/停用释放计时器、钩子及委托。不新增空闲轮询、预载或全局置顶。
+0.10.9: The detached editor’s owner hook schedules a single short deferred move rather than moving windows inside WinEvent delivery. Each update reads the latest owner coordinates and coalesces intermediate events without a position backlog. NOSIZE, NOZORDER, NOACTIVATE, NOOWNERZORDER and DEFERERASE preserve geometry/focus/owner Z order and avoid synchronous painting. The timer stops after processing; manual movement/attachment cancels stale updates, and close/disable disposes it with the hook and delegate. No idle polling, preloading or global topmost behavior is added.
+
+0.10.10：侧栏显示设置和模型设置共用 sort-motion-client 工厂，只随各自懒加载脚本和已挂载列表使用。排序预览仅保存在本次手势，框内松手后才写入顺序；取消、离框和失焦不发保存请求。稳定列表容器捕获指针，手势结束/停用释放临时事件和边缘滚动帧。整行动画只在实际换位或复原时创建，完成即释放；关闭菜单、隐藏模型设置或停用取消动画，无空闲轮询/动画循环或原生 HTML 拖放。旧工作区隐藏值仅读取时忽略，不增加迁移扫描。
+0.10.10: Sidebar visibility and model settings share the lazy sort-motion-client factory for mounted lists. Preview order belongs to the current gesture; only an in-bounds release persists it. Leaving, cancellation and focus loss send no save. Stable list containers capture pointers; completion/disable removes temporary listeners and edge-scroll frames. Row animations exist only for a reorder/restore, release on completion, and cancel on menu close, settings hide or disable. There is no idle polling/animation loop or native HTML drag/drop. Legacy hidden Workspace values are ignored when read, with no migration scan.

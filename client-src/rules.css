@@ -3,7 +3,7 @@
 .tanuki-rules-trigger:hover,.tanuki-rules-trigger[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
 .tanuki-rules-panel{position:fixed;z-index:1205;display:flex;flex-direction:column;box-sizing:border-box;width:390px;height:320px;max-width:calc(100vw - 16px);max-height:calc(100vh - 24px);min-width:260px;min-height:180px;border:1px solid var(--dsw-alias-border-l2);border-radius:15px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);box-shadow:0 10px 32px #0003;font:inherit;font-size:13px;line-height:1.5;overflow:hidden;outline:none;-webkit-app-region:no-drag;animation:tanuki-rules-appear .14s ease-out}
 .tanuki-rules-panel{font-family:"Segoe UI","Microsoft YaHei UI",sans-serif;transition:opacity .16s ease-out,transform .18s ease-out;transform-origin:top left}
-.tanuki-rules-panel[data-floating=true]{resize:both}.tanuki-rules-panel[data-detaching=true]{opacity:.08;transform:translateY(-4px) scale(.99);pointer-events:none}
+.tanuki-rules-panel[data-floating=true]{resize:both;animation:none;transform:none}.tanuki-rules-panel[data-detaching=true]{opacity:0;pointer-events:none}
 .tanuki-rules-header{height:42px;min-height:42px;display:flex;align-items:center;gap:8px;margin:0 10px;padding:0 2px;border-bottom:1px solid var(--dsw-alias-border-l2);cursor:grab;touch-action:none;user-select:none}
 .tanuki-rules-header:active{cursor:grabbing}.tanuki-rules-header strong{font-size:13px;font-weight:600;flex:1}.tanuki-rules-grip{color:var(--dsw-alias-label-tertiary);font-size:19px}
 .tanuki-rules-icon{width:28px;height:28px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:20px;cursor:pointer}

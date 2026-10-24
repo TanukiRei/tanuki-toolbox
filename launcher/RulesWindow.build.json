@@ -1,9 +1,9 @@
 {
-  "sourceSha256": "921bddba9087562185f553a0d93097e2897186fbbebab205346e1ce790735516",
-  "binarySha256": "1fdc192af703f3f83a039b7c5132bea6332493461ef5c794ccdf2adfd5f07fe6",
+  "binarySha256": "39d980ad744559f2c864e9b9643839dc85598bd43f8dabc091ff0b6177c2e0f3",
   "assets": {
-    "webview2/Microsoft.Web.WebView2.WinForms.dll": "6a9e6856f23c463783c3afb0ca5d78f56324c86657162ccb16d5227b3233b32a",
     "webview2/Microsoft.Web.WebView2.Core.dll": "d60e6e94245078cb56e44ebd5f360dc04bf18e460136be93bfc4cfca43b98505",
-    "webview2/WebView2Loader.dll": "3426dcc55fdfb8b5e7ac623cf33b4ccf283fbf68a0c5a65bddfdb4d749a8abee"
-  }
+    "webview2/WebView2Loader.dll": "3426dcc55fdfb8b5e7ac623cf33b4ccf283fbf68a0c5a65bddfdb4d749a8abee",
+    "webview2/Microsoft.Web.WebView2.WinForms.dll": "6a9e6856f23c463783c3afb0ca5d78f56324c86657162ccb16d5227b3233b32a"
+  },
+  "sourceSha256": "2acceab97055053dd7f811c2dbbbb065d3a586dd85a0845ce7d93ff2d5e5ff12"
 }
